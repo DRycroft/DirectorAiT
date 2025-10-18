@@ -7,6 +7,10 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import SignUp from "./pages/SignUp";
 import BoardLibrary from "./pages/BoardLibrary";
+import Dashboard from "./pages/Dashboard";
+import Boards from "./pages/Boards";
+import BoardDetail from "./pages/BoardDetail";
+import MemberIntake from "./pages/MemberIntake";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,8 +25,11 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/boards" element={<Boards />} />
+          <Route path="/boards/:boardId" element={<BoardDetail />} />
           <Route path="/library" element={<BoardLibrary />} />
-          <Route path="/dashboard" element={<BoardLibrary />} />
+          <Route path="/member-intake" element={<MemberIntake />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

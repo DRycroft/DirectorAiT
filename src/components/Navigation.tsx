@@ -12,17 +12,17 @@ const Navigation = () => {
         </Link>
         
         <div className="hidden md:flex items-center gap-8">
-          <Link to="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Features
+          <Link to="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Dashboard
+          </Link>
+          <Link to="/boards" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Boards
           </Link>
           <Link to="/library" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Document Library
+            Documents
           </Link>
-          <Link to="#security" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Security
-          </Link>
-          <Link to="#pilot" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Pilot Program
+          <Link to="/member-intake" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Member Intake
           </Link>
         </div>
         
