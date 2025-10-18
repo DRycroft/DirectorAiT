@@ -47,7 +47,7 @@ const Hero = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Button size="lg" variant="accent" className="group" asChild>
-                <Link to="/auth">
+                <Link to="/signup">
                   Start Free Pilot
                   <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>

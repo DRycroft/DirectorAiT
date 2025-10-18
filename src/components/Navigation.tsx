@@ -31,7 +31,7 @@ const Navigation = () => {
             <Link to="/auth">Sign In</Link>
           </Button>
           <Button variant="accent" asChild>
-            <Link to="/auth">Get Started</Link>
+            <Link to="/signup">Get Started</Link>
           </Button>
         </div>
       </div>
