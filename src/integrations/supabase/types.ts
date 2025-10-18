@@ -303,6 +303,93 @@ export type Database = {
           },
         ]
       }
+      board_role_overrides: {
+        Row: {
+          board_id: string
+          created_at: string
+          id: string
+          profile_id: string
+          role_id: string
+        }
+        Insert: {
+          board_id: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          role_id: string
+        }
+        Update: {
+          board_id?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_role_overrides_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_role_overrides_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_role_overrides_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_settings: {
+        Row: {
+          board_id: string
+          created_at: string
+          quorum_percent: number | null
+          reveal_policy: string | null
+          silent_vote_window: number | null
+          supermajority_threshold: number | null
+          updated_at: string
+          vote_threshold: number | null
+        }
+        Insert: {
+          board_id: string
+          created_at?: string
+          quorum_percent?: number | null
+          reveal_policy?: string | null
+          silent_vote_window?: number | null
+          supermajority_threshold?: number | null
+          updated_at?: string
+          vote_threshold?: number | null
+        }
+        Update: {
+          board_id?: string
+          created_at?: string
+          quorum_percent?: number | null
+          reveal_policy?: string | null
+          silent_vote_window?: number | null
+          supermajority_threshold?: number | null
+          updated_at?: string
+          vote_threshold?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_settings_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: true
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       boards: {
         Row: {
           created_at: string
@@ -437,6 +524,47 @@ export type Database = {
           uploaded_at?: string
         }
         Relationships: []
+      }
+      document_submissions: {
+        Row: {
+          comments: string | null
+          created_at: string
+          document_id: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_by: string
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string
+          document_id: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_by: string
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string
+          document_id?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_submissions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "archived_documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       extracted_decisions: {
         Row: {
@@ -615,6 +743,48 @@ export type Database = {
           },
         ]
       }
+      roles: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_name: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_name: string
+          id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -639,6 +809,13 @@ export type Database = {
       halfvec_typmod_in: {
         Args: { "": unknown[] }
         Returns: number
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       hnsw_bit_support: {
         Args: { "": unknown }
@@ -714,7 +891,15 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "super_admin"
+        | "org_admin"
+        | "chair"
+        | "director"
+        | "executive"
+        | "staff"
+        | "observer"
+        | "external_guest"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -841,6 +1026,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "super_admin",
+        "org_admin",
+        "chair",
+        "director",
+        "executive",
+        "staff",
+        "observer",
+        "external_guest",
+      ],
+    },
   },
 } as const
