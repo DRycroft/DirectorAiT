@@ -15,6 +15,9 @@ const Navigation = () => {
           <Link to="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Features
           </Link>
+          <Link to="/library" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Document Library
+          </Link>
           <Link to="#security" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Security
           </Link>
