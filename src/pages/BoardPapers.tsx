@@ -220,7 +220,7 @@ const BoardPapers = () => {
           </Tabs>
           <Dialog open={createPaperDialogOpen} onOpenChange={setCreatePaperDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="accent" className="shadow-lg hover:shadow-xl whitespace-nowrap h-10 -mt-1">
+              <Button variant="accent" className="shadow-lg hover:shadow-xl whitespace-nowrap h-10 -mt-2">
                 Create New Board Paper
               </Button>
             </DialogTrigger>
