@@ -12,7 +12,29 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Missing authorization header" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const { documentId } = await req.json();
+    
+    if (!documentId || typeof documentId !== "string") {
+      return new Response(
+        JSON.stringify({ error: "Invalid documentId parameter" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
     
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",

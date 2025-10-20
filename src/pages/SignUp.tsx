@@ -7,6 +7,14 @@ import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const signUpSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters").max(100, "Password must be less than 100 characters"),
+  organization: z.string().trim().min(2, "Organization name must be at least 2 characters").max(100, "Organization name must be less than 100 characters"),
+});
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -23,13 +31,16 @@ const SignUp = () => {
     setLoading(true);
 
     try {
+      // Validate input
+      const validatedData = signUpSchema.parse(formData);
+
       // Sign up the user
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
+        email: validatedData.email,
+        password: validatedData.password,
         options: {
           data: {
-            name: formData.name,
+            name: validatedData.name,
           },
           emailRedirectTo: `${window.location.origin}/`,
         },
@@ -42,7 +53,7 @@ const SignUp = () => {
         const { data: org, error: orgError } = await supabase
           .from("organizations")
           .insert({
-            name: formData.organization,
+            name: validatedData.organization,
           })
           .select()
           .single();
@@ -54,18 +65,31 @@ const SignUp = () => {
           .from("profiles")
           .update({
             org_id: org.id,
-            role: "admin",
           })
           .eq("id", authData.user.id);
 
         if (profileError) throw profileError;
 
+        // Assign org_admin role to the user
+        const { error: roleError } = await supabase
+          .from("user_roles")
+          .insert({
+            user_id: authData.user.id,
+            role: "org_admin",
+          });
+
+        if (roleError) throw roleError;
+
         toast.success("Account created successfully!");
         navigate("/dashboard");
       }
     } catch (error) {
-      console.error("Signup error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to create account");
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        console.error("Signup error:", error);
+        toast.error(error instanceof Error ? error.message : "Failed to create account");
+      }
     } finally {
       setLoading(false);
     }
