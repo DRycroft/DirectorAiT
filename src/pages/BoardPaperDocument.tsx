@@ -114,7 +114,7 @@ const BoardPaperDocument = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
       <Navigation />
-      <main className="flex-1 container mx-auto px-4 pt-16 pb-8 max-w-4xl">
+      <main className="flex-1 container mx-auto px-4 pt-20 pb-8 max-w-4xl">
         <div className="mb-6 flex items-center gap-4">
           <Button
             variant="ghost"
@@ -127,7 +127,7 @@ const BoardPaperDocument = () => {
           </Button>
         </div>
 
-        <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+        <Card className="shadow-xl">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-accent p-8 text-white">
             <h1 className="text-4xl font-bold mb-2">{paperInfo.companyName}</h1>
@@ -138,18 +138,16 @@ const BoardPaperDocument = () => {
           </div>
 
           {/* Table of Contents */}
-          <div className="p-12 border-b border-slate-200 bg-slate-50/50">
+          <CardContent className="p-12 border-b border-slate-200 bg-slate-50/50">
             <h2 className="text-2xl font-bold mb-6 text-foreground">Table of Contents</h2>
             <div className="space-y-2">
               {sections.map((section, index) => (
                 <div 
                   key={`toc-${section.id}`} 
-                  className="flex justify-between items-center py-1 hover:bg-slate-100 px-2 rounded transition-colors"
-                  style={{ paddingLeft: `${section.level * 2 + 0.5}rem` }}
+                  className="flex justify-between items-center py-2 px-3 hover:bg-slate-100 rounded transition-colors"
                 >
-                  <span className="text-foreground">
-                    {section.level === 0 && `${index + 1}. `}
-                    {section.title}
+                  <span className="text-foreground font-medium">
+                    {index + 1}. {section.title}
                   </span>
                   <span className="text-muted-foreground text-sm">
                     Section {index + 1}
@@ -157,33 +155,22 @@ const BoardPaperDocument = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </CardContent>
 
           {/* Document Sections */}
-          <div className="p-12 space-y-10">
+          <CardContent className="p-12 space-y-10">
             {sections.map((section, index) => {
               const reportType = getReportType(section.title);
               const subheadings = reportType ? reportSectionConfig[reportType] : null;
               
               return (
                 <div key={section.id} className="space-y-4">
-                  <div 
-                    className="border-l-4 border-primary pl-4"
-                    style={{ marginLeft: `${section.level * 2}rem` }}
-                  >
-                    <h3 
-                      className="font-bold text-foreground"
-                      style={{ 
-                        fontSize: section.level === 0 ? '1.5rem' : '1.25rem'
-                      }}
-                    >
-                      {section.level === 0 ? `${index + 1}. ` : ''}{section.title}
+                  <div className="border-l-4 border-primary pl-4">
+                    <h3 className="text-2xl font-bold text-foreground">
+                      {index + 1}. {section.title}
                     </h3>
                   </div>
-                  <div 
-                    className="min-h-[100px] p-6 bg-slate-50 rounded-lg border border-slate-200"
-                    style={{ marginLeft: `${section.level * 2}rem` }}
-                  >
+                  <div className="min-h-[100px] p-6 bg-slate-50 rounded-lg border border-slate-200">
                     {reportType && subheadings ? (
                       <div className="space-y-6">
                         {subheadings.map((subheading, idx) => (
@@ -218,14 +205,14 @@ const BoardPaperDocument = () => {
                 </div>
               );
             })}
-          </div>
+          </CardContent>
 
           {/* Footer */}
           <div className="border-t border-slate-200 bg-slate-50 p-6 text-center text-sm text-muted-foreground">
             <p>Confidential - For Board Members Only</p>
             <p className="mt-1">{paperInfo.companyName} © {new Date().getFullYear()}</p>
           </div>
-        </div>
+        </Card>
       </main>
       <Footer />
     </div>
