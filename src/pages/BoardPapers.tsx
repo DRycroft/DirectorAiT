@@ -56,11 +56,20 @@ const defaultBoardPaperSections: TemplateSection[] = [
   { id: "glossary", title: "Glossary / Definitions / Abbreviations", required: false, enabled: true, order: 40, level: 0 },
 ];
 
+interface BoardPaper {
+  id: string;
+  date: string;
+  companyName: string;
+  periodCovered: string;
+  createdBy: string;
+}
+
 const BoardPapers = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [boardPaperSections, setBoardPaperSections] = useState<TemplateSection[]>(defaultBoardPaperSections);
+  const [boardPapers, setBoardPapers] = useState<BoardPaper[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -72,6 +81,21 @@ const BoardPapers = () => {
     privacy: false,
     terms: false,
   });
+
+  const handleCreateBoardPaper = () => {
+    const newPaper: BoardPaper = {
+      id: Date.now().toString(),
+      date: new Date().toLocaleDateString(),
+      companyName: "Company Name",
+      periodCovered: "Q1 2024",
+      createdBy: "Current User",
+    };
+    setBoardPapers([...boardPapers, newPaper]);
+    toast({
+      title: "Board Paper Created",
+      description: "A new board paper has been added.",
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,64 +167,84 @@ const BoardPapers = () => {
           </TabsList>
 
           <TabsContent value="papers" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-2xl">Board Papers</CardTitle>
-                    <CardDescription className="text-base mt-1">
-                      Create and manage regular board papers using your template
-                    </CardDescription>
-                  </div>
-                  <div className="flex gap-3">
-                    <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="lg" className="shadow-lg hover:shadow-xl">
-                          Board Paper Template
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Board Paper Template</DialogTitle>
-                          <DialogDescription>
-                            Configure the sections for your board papers. Required sections cannot be removed or disabled.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="py-4">
-                          <TemplateSectionEditor
-                            sections={boardPaperSections}
-                            onSectionsChange={setBoardPaperSections}
-                            isAdmin={false}
-                          />
-                        </div>
-                        <div className="flex justify-end gap-3 pt-4 border-t">
-                          <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button onClick={() => {
-                            toast({
-                              title: "Template Saved",
-                              description: "Your board paper template has been updated.",
-                            });
-                            setTemplateDialogOpen(false);
-                          }}>
-                            Save Template
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                    <Button variant="accent" size="lg" className="shadow-lg hover:shadow-xl">
-                      Add New Board Paper
+            <div className="bg-card rounded-lg border p-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Board Papers</h2>
+              <div className="flex gap-3">
+                <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="shadow-lg hover:shadow-xl">
+                      Board Paper Template
                     </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Board Paper Template</DialogTitle>
+                      <DialogDescription>
+                        Configure the sections for your board papers. Required sections cannot be removed or disabled.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <TemplateSectionEditor
+                        sections={boardPaperSections}
+                        onSectionsChange={setBoardPaperSections}
+                        isAdmin={false}
+                      />
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4 border-t">
+                      <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={() => {
+                        toast({
+                          title: "Template Saved",
+                          description: "Your board paper template has been updated.",
+                        });
+                        setTemplateDialogOpen(false);
+                      }}>
+                        Save Template
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Button variant="accent" onClick={handleCreateBoardPaper} className="shadow-lg hover:shadow-xl">
+                  Create New Board Paper
+                </Button>
+              </div>
+            </div>
+
+            {boardPapers.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Board Paper Documents</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {boardPapers.map((paper) => (
+                      <div key={paper.id} className="p-4 border rounded-lg hover:border-primary/50 transition-colors">
+                        <div className="grid grid-cols-4 gap-4">
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Date</Label>
+                            <p className="text-sm font-medium mt-1">{paper.date}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Company Name</Label>
+                            <p className="text-sm font-medium mt-1">{paper.companyName}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Period Covered</Label>
+                            <p className="text-sm font-medium mt-1">{paper.periodCovered}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Created By</Label>
+                            <p className="text-sm font-medium mt-1">{paper.createdBy}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <p className="text-sm text-muted-foreground">
-                  Board papers list will appear here once you create your first template.
-                </p>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="minutes" className="space-y-4">
