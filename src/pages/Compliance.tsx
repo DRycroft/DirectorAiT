@@ -63,6 +63,7 @@ const Compliance = () => {
   const [open, setOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [scanning, setScanning] = useState(false);
 
   const [newItem, setNewItem] = useState<NewComplianceItem>({
     title: "",
@@ -167,6 +168,35 @@ const Compliance = () => {
     }
   };
 
+  const handleAIScan = async () => {
+    if (!profile?.org_id) {
+      toast.error("Please set up your organization first");
+      return;
+    }
+
+    if (!profile.organizations?.industry_sector || !profile.organizations?.business_category) {
+      toast.error("Please set your industry sector and business category in Settings first");
+      return;
+    }
+
+    setScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("scan-compliance", {
+        body: { org_id: profile.org_id }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Successfully scanned and added ${data.count} compliance requirements!`);
+      fetchData();
+    } catch (error: any) {
+      console.error("Error scanning compliance:", error);
+      toast.error(error.message || "Failed to scan compliance requirements");
+    } finally {
+      setScanning(false);
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "compliant":
@@ -212,6 +242,23 @@ const Compliance = () => {
             <p className="text-muted-foreground">Track and manage regulatory compliance requirements</p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant="default" 
+              onClick={handleAIScan}
+              disabled={scanning}
+            >
+              {scanning ? (
+                <>
+                  <Clock className="mr-2 h-4 w-4 animate-spin" />
+                  Scanning...
+                </>
+              ) : (
+                <>
+                  <Building2 className="mr-2 h-4 w-4" />
+                  AI Compliance Scan
+                </>
+              )}
+            </Button>
             <Dialog open={templatesOpen} onOpenChange={setTemplatesOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">

@@ -246,6 +246,9 @@ const Settings = () => {
     gst_period: "quarterly",
     financial_year_end: "",
     agm_date: "",
+    industry_sector: "",
+    business_category: "",
+    compliance_scan_completed: false,
   });
   const [countryCode, setCountryCode] = useState("+64");
 
@@ -375,6 +378,9 @@ const Settings = () => {
             gst_period: org.gst_period || "quarterly",
             financial_year_end: org.financial_year_end || "",
             agm_date: org.agm_date || "",
+            industry_sector: org.industry_sector || "",
+            business_category: org.business_category || "",
+            compliance_scan_completed: org.compliance_scan_completed || false,
           });
         }
       }
@@ -696,6 +702,37 @@ const Settings = () => {
                             )}
                           </div>
                         </div>
+                      </div>
+                    </div>
+                    <div className="pt-6 mt-4 border-t">
+                      <h3 className="text-base font-semibold mb-3">Industry & Compliance</h3>
+                      <div className="grid gap-3">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="industrySector">Industry Sector</Label>
+                          <Input 
+                            id="industrySector" 
+                            placeholder="e.g., Restaurant/Bar, Technology, Healthcare"
+                            value={companyData.industry_sector}
+                            onChange={(e) => setCompanyData({ ...companyData, industry_sector: e.target.value })}
+                          />
+                          <p className="text-xs text-muted-foreground">Specify your primary industry sector for compliance scanning</p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="businessCategory">Government Business Category</Label>
+                          <Input 
+                            id="businessCategory" 
+                            placeholder="e.g., Small Business, Food Service, Professional Services"
+                            value={companyData.business_category}
+                            onChange={(e) => setCompanyData({ ...companyData, business_category: e.target.value })}
+                          />
+                          <p className="text-xs text-muted-foreground">Government classification for regulatory requirements</p>
+                        </div>
+                        {companyData.compliance_scan_completed && (
+                          <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <Save className="h-4 w-4 text-green-600" />
+                            <p className="text-sm text-green-700">Compliance scan completed</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

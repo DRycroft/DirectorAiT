@@ -1185,13 +1185,17 @@ export type Database = {
           admin_phone: string | null
           admin_role: string | null
           agm_date: string | null
+          business_category: string | null
           business_number: string | null
           company_phone: string | null
+          compliance_scan_completed: boolean | null
+          compliance_scan_date: string | null
           created_at: string
           domain: string | null
           financial_year_end: string | null
           gst_period: string | null
           id: string
+          industry_sector: string | null
           logo_url: string | null
           name: string
           primary_contact_email: string | null
@@ -1207,13 +1211,17 @@ export type Database = {
           admin_phone?: string | null
           admin_role?: string | null
           agm_date?: string | null
+          business_category?: string | null
           business_number?: string | null
           company_phone?: string | null
+          compliance_scan_completed?: boolean | null
+          compliance_scan_date?: string | null
           created_at?: string
           domain?: string | null
           financial_year_end?: string | null
           gst_period?: string | null
           id?: string
+          industry_sector?: string | null
           logo_url?: string | null
           name: string
           primary_contact_email?: string | null
@@ -1229,13 +1237,17 @@ export type Database = {
           admin_phone?: string | null
           admin_role?: string | null
           agm_date?: string | null
+          business_category?: string | null
           business_number?: string | null
           company_phone?: string | null
+          compliance_scan_completed?: boolean | null
+          compliance_scan_date?: string | null
           created_at?: string
           domain?: string | null
           financial_year_end?: string | null
           gst_period?: string | null
           id?: string
+          industry_sector?: string | null
           logo_url?: string | null
           name?: string
           primary_contact_email?: string | null

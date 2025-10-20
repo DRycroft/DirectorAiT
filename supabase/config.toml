@@ -1,1 +1,16 @@
 project_id = "lomksomekpysjgtnlguq"
+
+[functions.export-member-pdf]
+verify_jwt = true
+
+[functions.export-team-csv]
+verify_jwt = true
+
+[functions.process-document]
+verify_jwt = true
+
+[functions.send-annual-review]
+verify_jwt = false
+
+[functions.scan-compliance]
+verify_jwt = true
