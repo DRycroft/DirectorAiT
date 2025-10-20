@@ -4,6 +4,10 @@ import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import BoardMemberCard from "@/components/BoardMemberCard";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, FileText, Users, Settings, Plus, CheckCircle2 } from "lucide-react";
@@ -19,6 +23,11 @@ const BoardDetail = () => {
   const [board, setBoard] = useState<any>(null);
   const [agendas, setAgendas] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
+  const [boardMembers, setBoardMembers] = useState<any[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviting, setInviting] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     if (boardId) {
@@ -54,6 +63,16 @@ const BoardDetail = () => {
 
       if (boardError) throw boardError;
 
+      // Fetch board members
+      const { data: teamData, error: teamError } = await supabase
+        .from("board_members")
+        .select("*")
+        .eq("board_id", boardId)
+        .order("full_name");
+
+      if (teamError) console.error("Error fetching board members:", teamError);
+      else setBoardMembers(teamData || []);
+
       // Fetch agendas
       const { data: agendasData, error: agendasError } = await supabase
         .from("agendas")
@@ -86,6 +105,58 @@ const BoardDetail = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleInviteMember = async () => {
+    if (!inviteEmail || !inviteName) {
+      toast({
+        title: "Error",
+        description: "Please provide both name and email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setInviting(true);
+    try {
+      const { data: inviteData, error: inviteError } = await supabase.rpc(
+        "generate_member_invite_token"
+      );
+
+      if (inviteError) throw inviteError;
+
+      const { error } = await supabase.from("board_members").insert({
+        board_id: boardId,
+        full_name: inviteName,
+        personal_email: inviteEmail,
+        status: "invited",
+        invite_token: inviteData,
+        invite_sent_at: new Date().toISOString(),
+      });
+
+      if (error) throw error;
+
+      const inviteLink = `${window.location.origin}/member-invite?token=${inviteData}`;
+      
+      toast({
+        title: "Member invited",
+        description: `Invitation sent to ${inviteEmail}. Share this link: ${inviteLink}`,
+      });
+
+      setInviteEmail("");
+      setInviteName("");
+      setDialogOpen(false);
+      fetchBoardData();
+    } catch (error: any) {
+      console.error("Error inviting member:", error);
+      toast({
+        title: "Error",
+        description: "Failed to invite member",
+        variant: "destructive",
+      });
+    } finally {
+      setInviting(false);
     }
   };
 
@@ -137,21 +208,91 @@ const BoardDetail = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="agendas" className="w-full">
+        <Tabs defaultValue="team" className="w-full">
           <TabsList>
+            <TabsTrigger value="team">
+              <Users className="h-4 w-4 mr-2" />
+              Team
+            </TabsTrigger>
             <TabsTrigger value="agendas">
               <Calendar className="h-4 w-4 mr-2" />
               Agendas
             </TabsTrigger>
-            <TabsTrigger value="members">
+            <TabsTrigger value="access">
               <Users className="h-4 w-4 mr-2" />
-              Members
+              Board Access
             </TabsTrigger>
             <TabsTrigger value="documents">
               <FileText className="h-4 w-4 mr-2" />
               Documents
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="team" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Board Team</h3>
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Users className="mr-2 h-4 w-4" />
+                    Invite Member
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Invite Board Member</DialogTitle>
+                    <DialogDescription>
+                      Send an invitation to complete their profile via mobile
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input
+                        id="name"
+                        value={inviteName}
+                        onChange={(e) => setInviteName(e.target.value)}
+                        placeholder="Jane Smith"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        placeholder="jane@example.com"
+                      />
+                    </div>
+                    <Button onClick={handleInviteMember} disabled={inviting} className="w-full">
+                      {inviting ? "Sending..." : "Send Invite"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {boardMembers.length === 0 ? (
+              <Card>
+                <CardContent className="py-12">
+                  <div className="text-center">
+                    <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                    <h3 className="text-lg font-semibold mb-2">No team members yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Invite board members to complete their profiles
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {boardMembers.map((member) => (
+                  <BoardMemberCard key={member.id} member={member} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="agendas" className="space-y-4">
             <div className="flex justify-between items-center">
@@ -217,8 +358,8 @@ const BoardDetail = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="members" className="space-y-4">
-            <h2 className="text-2xl font-semibold mb-4">Board Members</h2>
+          <TabsContent value="access" className="space-y-4">
+            <h2 className="text-2xl font-semibold mb-4">Board Access</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {members.map((member) => (
                 <Card key={member.id}>

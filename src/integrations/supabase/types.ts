@@ -268,6 +268,216 @@ export type Database = {
         }
         Relationships: []
       }
+      board_member_audit: {
+        Row: {
+          change_type: string
+          changed_by: string | null
+          field_name: string
+          id: string
+          member_id: string
+          new_value: string | null
+          old_value: string | null
+          timestamp: string | null
+        }
+        Insert: {
+          change_type: string
+          changed_by?: string | null
+          field_name: string
+          id?: string
+          member_id: string
+          new_value?: string | null
+          old_value?: string | null
+          timestamp?: string | null
+        }
+        Update: {
+          change_type?: string
+          changed_by?: string | null
+          field_name?: string
+          id?: string
+          member_id?: string
+          new_value?: string | null
+          old_value?: string | null
+          timestamp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_member_audit_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "board_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_member_coi: {
+        Row: {
+          created_at: string | null
+          date_declared: string
+          declared_interest: string
+          id: string
+          management_steps: string | null
+          member_id: string
+          related_party_name: string | null
+          status: string | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_declared?: string
+          declared_interest: string
+          id?: string
+          management_steps?: string | null
+          member_id: string
+          related_party_name?: string | null
+          status?: string | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date_declared?: string
+          declared_interest?: string
+          id?: string
+          management_steps?: string | null
+          member_id?: string
+          related_party_name?: string | null
+          status?: string | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_member_coi_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "board_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_members: {
+        Row: {
+          appointment_date: string | null
+          board_id: string
+          consent_signature: string | null
+          consent_signed_at: string | null
+          created_at: string | null
+          cv_file_url: string | null
+          detailed_work_history: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          full_name: string
+          home_address: string | null
+          id: string
+          invite_sent_at: string | null
+          invite_token: string | null
+          legal_name: string | null
+          national_id: string | null
+          personal_email: string | null
+          personal_mobile: string | null
+          preferred_title: string | null
+          professional_qualifications: string | null
+          profile_completed_at: string | null
+          public_company_affiliations: string | null
+          public_contact_email: string | null
+          public_job_title: string | null
+          public_photo_url: string | null
+          public_social_links: Json | null
+          publish_preferences: Json | null
+          reappointment_history: Json | null
+          sensitive_notes: string | null
+          short_bio: string | null
+          skills_competencies: Json | null
+          status: string | null
+          term_expiry: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          appointment_date?: string | null
+          board_id: string
+          consent_signature?: string | null
+          consent_signed_at?: string | null
+          created_at?: string | null
+          cv_file_url?: string | null
+          detailed_work_history?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          full_name: string
+          home_address?: string | null
+          id?: string
+          invite_sent_at?: string | null
+          invite_token?: string | null
+          legal_name?: string | null
+          national_id?: string | null
+          personal_email?: string | null
+          personal_mobile?: string | null
+          preferred_title?: string | null
+          professional_qualifications?: string | null
+          profile_completed_at?: string | null
+          public_company_affiliations?: string | null
+          public_contact_email?: string | null
+          public_job_title?: string | null
+          public_photo_url?: string | null
+          public_social_links?: Json | null
+          publish_preferences?: Json | null
+          reappointment_history?: Json | null
+          sensitive_notes?: string | null
+          short_bio?: string | null
+          skills_competencies?: Json | null
+          status?: string | null
+          term_expiry?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          appointment_date?: string | null
+          board_id?: string
+          consent_signature?: string | null
+          consent_signed_at?: string | null
+          created_at?: string | null
+          cv_file_url?: string | null
+          detailed_work_history?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          full_name?: string
+          home_address?: string | null
+          id?: string
+          invite_sent_at?: string | null
+          invite_token?: string | null
+          legal_name?: string | null
+          national_id?: string | null
+          personal_email?: string | null
+          personal_mobile?: string | null
+          preferred_title?: string | null
+          professional_qualifications?: string | null
+          profile_completed_at?: string | null
+          public_company_affiliations?: string | null
+          public_contact_email?: string | null
+          public_job_title?: string | null
+          public_photo_url?: string | null
+          public_social_links?: Json | null
+          publish_preferences?: Json | null
+          reappointment_history?: Json | null
+          sensitive_notes?: string | null
+          short_bio?: string | null
+          skills_competencies?: Json | null
+          status?: string | null
+          term_expiry?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_members_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       board_memberships: {
         Row: {
           accepted_at: string | null
@@ -1047,6 +1257,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_member_invite_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_org_id: {
         Args: { user_id: string }
         Returns: string

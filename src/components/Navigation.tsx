@@ -47,7 +47,7 @@ const Navigation = () => {
             Dashboard
           </Link>
           <Link to="/boards" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Boards
+            Board & Team
           </Link>
           <Link to="/board-papers" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Board Papers

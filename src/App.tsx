@@ -13,6 +13,7 @@ import BoardDetail from "./pages/BoardDetail";
 import BoardPapers from "./pages/BoardPapers";
 import BoardPaperDocument from "./pages/BoardPaperDocument";
 import MemberIntake from "./pages/MemberIntake";
+import MemberInvite from "./pages/MemberInvite";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/library" element={<BoardLibrary />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/member-intake" element={<MemberIntake />} />
+          <Route path="/member-invite" element={<MemberInvite />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
