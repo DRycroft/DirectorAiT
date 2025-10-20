@@ -87,7 +87,7 @@ const BoardPapers = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
       <main className="flex-1 container mx-auto px-4 pt-16 pb-4 max-w-7xl">
-        <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="mb-2 flex items-center justify-between gap-4">
           <Tabs defaultValue="papers" className="w-full flex-1">
             <TabsList className="grid w-full grid-cols-4 h-10">
               <TabsTrigger value="papers" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Board Papers</TabsTrigger>
@@ -151,7 +151,7 @@ const BoardPapers = () => {
         </div>
 
         <Tabs defaultValue="papers" className="w-full">
-          <TabsContent value="papers" className="space-y-4">
+          <TabsContent value="papers" className="space-y-4 mt-4">
             {boardPapers.length > 0 && (
               <div className="space-y-3">
                 <div className="grid grid-cols-5 gap-4 px-4 py-2 text-sm font-medium text-muted-foreground">
