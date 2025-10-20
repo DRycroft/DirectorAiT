@@ -86,7 +86,7 @@ const BoardPapers = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
-      <main className="flex-1 container mx-auto px-4 pt-14 pb-4 max-w-7xl">
+      <main className="flex-1 container mx-auto px-4 pt-16 pb-4 max-w-7xl">
         <div className="mb-4 flex items-center justify-between gap-4">
           <Tabs defaultValue="papers" className="w-full flex-1">
             <TabsList className="grid w-full grid-cols-4 h-10">
