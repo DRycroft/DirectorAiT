@@ -474,17 +474,20 @@ const Settings = () => {
                       <div className="grid gap-3">
                         <div className="space-y-1.5">
                           <Label htmlFor="reportingFrequency">Reporting Frequency</Label>
-                          <select
-                            id="reportingFrequency"
-                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          <Select
                             value={companyData.reporting_frequency}
-                            onChange={(e) => setCompanyData({ ...companyData, reporting_frequency: e.target.value })}
+                            onValueChange={(value) => setCompanyData({ ...companyData, reporting_frequency: value })}
                           >
-                            <option value="monthly">Monthly</option>
-                            <option value="bi-monthly">Bi-Monthly</option>
-                            <option value="quarterly">Quarterly</option>
-                            <option value="biannually">Biannually</option>
-                          </select>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="bi-monthly">Bi-Monthly</SelectItem>
+                              <SelectItem value="quarterly">Quarterly</SelectItem>
+                              <SelectItem value="biannually">Biannually</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="space-y-1.5">
                           <Label htmlFor="financialYearEnd">Financial Year End</Label>
