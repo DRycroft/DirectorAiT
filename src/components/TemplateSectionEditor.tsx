@@ -61,11 +61,13 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
       title: "New Section",
       required: false,
       enabled: true,
-      order: sections.length,
+      order: 0,
       level: 0,
       label: "For Noting",
     };
-    onSectionsChange([...sections, newSection]);
+    // Increment order of all existing sections
+    const updatedSections = sections.map((s) => ({ ...s, order: s.order + 1 }));
+    onSectionsChange([newSection, ...updatedSections]);
   };
 
   const handleRemoveSection = (id: string) => {
