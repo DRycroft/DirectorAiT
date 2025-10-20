@@ -14,6 +14,7 @@ import { Save, Users, Briefcase, UserCog } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import BoardManagement from "@/components/settings/BoardManagement";
 import { BOARD_POSITIONS, EXECUTIVE_POSITIONS, KEY_STAFF_POSITIONS } from "@/config/positions";
+import { Combobox } from "@/components/ui/combobox";
 
 const templateTypes = [
   "Board Papers",
@@ -769,7 +770,11 @@ const Settings = () => {
                       <div className="grid gap-3">
                         <div className="space-y-1.5">
                           <Label htmlFor="industrySector">Industry Sector</Label>
-                          <Select
+                          <Combobox
+                            options={Object.keys(industryCategories).map(industry => ({
+                              value: industry,
+                              label: industry
+                            }))}
                             value={companyData.industry_sector}
                             onValueChange={(value) => {
                               setCompanyData({ 
@@ -778,19 +783,11 @@ const Settings = () => {
                                 business_category: "" // Reset category when industry changes
                               });
                             }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select industry sector" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Object.keys(industryCategories).map((industry) => (
-                                <SelectItem key={industry} value={industry}>
-                                  {industry}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <p className="text-xs text-muted-foreground">Select your primary industry sector</p>
+                            placeholder="Type to search industries..."
+                            searchPlaceholder="Search industry sector..."
+                            emptyText="No industry found. Try different keywords."
+                          />
+                          <p className="text-xs text-muted-foreground">Type to search and select your industry sector</p>
                         </div>
                         <div className="space-y-1.5">
                           <Label htmlFor="businessCategory">Government Business Category</Label>
@@ -806,7 +803,7 @@ const Settings = () => {
                                   : "Select industry sector first"
                               } />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-background z-50">
                               {companyData.industry_sector && 
                                 industryCategories[companyData.industry_sector]?.map((category) => (
                                   <SelectItem key={category} value={category}>
