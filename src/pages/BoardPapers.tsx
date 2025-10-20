@@ -30,10 +30,15 @@ const BoardPapers = () => {
           <TabsContent value="papers" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Board Papers</CardTitle>
-                <CardDescription>
-                  Create and manage regular board papers using your template
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Board Papers</CardTitle>
+                    <CardDescription>
+                      Create and manage regular board papers using your template
+                    </CardDescription>
+                  </div>
+                  <Button>Add New Board Paper</Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
@@ -94,10 +99,15 @@ const BoardPapers = () => {
           <TabsContent value="exec" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Executive Reports</CardTitle>
-                <CardDescription>
-                  Select report type to view or create reports
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Executive Reports</CardTitle>
+                    <CardDescription>
+                      Select report type to view or create reports
+                    </CardDescription>
+                  </div>
+                  <Button>Add New Report</Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
