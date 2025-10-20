@@ -6,9 +6,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Briefcase, UserCog, Eye } from "lucide-react";
+import { Users, Briefcase, UserCog, Eye, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const BoardAndTeam = () => {
@@ -320,6 +321,10 @@ const BoardAndTeam = () => {
       <Navigation />
       <main className="container mx-auto px-4 py-8 pt-24">
         <div className="mb-8">
+          <Button variant="ghost" onClick={() => navigate(`/boards/${boardId}`)} className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Board
+          </Button>
           <h1 className="text-4xl font-bold mb-2">Board & Team</h1>
           <p className="text-muted-foreground">
             {board?.title} • {board?.organizations?.name}
@@ -329,29 +334,77 @@ const BoardAndTeam = () => {
           </Badge>
         </div>
 
-        <div className="space-y-8">
-          <MemberTable 
-            members={boardMembers} 
-            title="Board Members" 
-            description="Elected directors responsible for governance and strategic oversight"
-            icon={Users}
-            accentColor="primary"
-          />
-          <MemberTable 
-            members={executives} 
-            title="Executive Team" 
-            description="Senior leadership responsible for day-to-day operations"
-            icon={Briefcase}
-            accentColor="accent"
-          />
-          <MemberTable 
-            members={keyStaff} 
-            title="Key Staff" 
-            description="Essential personnel supporting organizational operations"
-            icon={UserCog}
-            accentColor="secondary"
-          />
-        </div>
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="mb-8">
+            <TabsTrigger value="all">All Groups</TabsTrigger>
+            <TabsTrigger value="board">
+              <Users className="mr-2 h-4 w-4" />
+              Board Members
+            </TabsTrigger>
+            <TabsTrigger value="executives">
+              <Briefcase className="mr-2 h-4 w-4" />
+              Executive Team
+            </TabsTrigger>
+            <TabsTrigger value="staff">
+              <UserCog className="mr-2 h-4 w-4" />
+              Key Staff
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="space-y-8">
+            <MemberTable 
+              members={boardMembers} 
+              title="Board Members" 
+              description="Elected directors responsible for governance and strategic oversight"
+              icon={Users}
+              accentColor="primary"
+            />
+            <MemberTable 
+              members={executives} 
+              title="Executive Team" 
+              description="Senior leadership responsible for day-to-day operations"
+              icon={Briefcase}
+              accentColor="accent"
+            />
+            <MemberTable 
+              members={keyStaff} 
+              title="Key Staff" 
+              description="Essential personnel supporting organizational operations"
+              icon={UserCog}
+              accentColor="secondary"
+            />
+          </TabsContent>
+
+          <TabsContent value="board">
+            <MemberTable 
+              members={boardMembers} 
+              title="Board Members" 
+              description="Elected directors responsible for governance and strategic oversight"
+              icon={Users}
+              accentColor="primary"
+            />
+          </TabsContent>
+
+          <TabsContent value="executives">
+            <MemberTable 
+              members={executives} 
+              title="Executive Team" 
+              description="Senior leadership responsible for day-to-day operations"
+              icon={Briefcase}
+              accentColor="accent"
+            />
+          </TabsContent>
+
+          <TabsContent value="staff">
+            <MemberTable 
+              members={keyStaff} 
+              title="Key Staff" 
+              description="Essential personnel supporting organizational operations"
+              icon={UserCog}
+              accentColor="secondary"
+            />
+          </TabsContent>
+        </Tabs>
 
         <MemberDetailDialog />
       </main>
