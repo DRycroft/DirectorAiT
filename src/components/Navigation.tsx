@@ -46,7 +46,7 @@ const Navigation = () => {
           <Link to="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Dashboard
           </Link>
-          <Link to="/boards" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/team" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Board & Team
           </Link>
           <Link to="/board-papers" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">

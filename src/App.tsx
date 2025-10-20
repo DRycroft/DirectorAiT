@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Boards from "./pages/Boards";
 import BoardDetail from "./pages/BoardDetail";
 import BoardAndTeam from "./pages/BoardAndTeam";
+import TeamOverview from "./pages/TeamOverview";
 import BoardPapers from "./pages/BoardPapers";
 import BoardPaperDocument from "./pages/BoardPaperDocument";
 import MemberIntake from "./pages/MemberIntake";
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/team" element={<TeamOverview />} />
           <Route path="/boards" element={<Boards />} />
           <Route path="/boards/:boardId" element={<BoardDetail />} />
           <Route path="/boards/:boardId/team" element={<BoardAndTeam />} />
