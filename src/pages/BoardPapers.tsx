@@ -68,8 +68,14 @@ const BoardPapers = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [createPaperDialogOpen, setCreatePaperDialogOpen] = useState(false);
   const [boardPaperSections, setBoardPaperSections] = useState<TemplateSection[]>(defaultBoardPaperSections);
   const [boardPapers, setBoardPapers] = useState<BoardPaper[]>([]);
+  const [newPaperData, setNewPaperData] = useState({
+    date: new Date().toISOString().split('T')[0],
+    companyName: "",
+    periodCovered: "",
+  });
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -83,17 +89,34 @@ const BoardPapers = () => {
   });
 
   const handleCreateBoardPaper = () => {
+    if (!newPaperData.companyName || !newPaperData.periodCovered) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newPaper: BoardPaper = {
       id: Date.now().toString(),
-      date: new Date().toLocaleDateString(),
-      companyName: "Company Name",
-      periodCovered: "Q1 2024",
+      date: new Date(newPaperData.date).toLocaleDateString(),
+      companyName: newPaperData.companyName,
+      periodCovered: newPaperData.periodCovered,
       createdBy: "Current User",
     };
+    
     setBoardPapers([...boardPapers, newPaper]);
+    setCreatePaperDialogOpen(false);
+    setNewPaperData({
+      date: new Date().toISOString().split('T')[0],
+      companyName: "",
+      periodCovered: "",
+    });
+    
     toast({
       title: "Board Paper Created",
-      description: "A new board paper has been added.",
+      description: `Board paper for ${newPaperData.companyName} (${newPaperData.periodCovered}) has been created using your template.`,
     });
   };
 
@@ -199,9 +222,58 @@ const BoardPapers = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
-                <Button variant="accent" size="sm" onClick={handleCreateBoardPaper} className="shadow-lg hover:shadow-xl h-8">
-                  Create New Board Paper
-                </Button>
+                <Dialog open={createPaperDialogOpen} onOpenChange={setCreatePaperDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="accent" size="sm" className="shadow-lg hover:shadow-xl h-8">
+                      Create New Board Paper
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create New Board Paper</DialogTitle>
+                      <DialogDescription>
+                        Enter the details for your new board paper. It will use your saved template structure.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="date">Date</Label>
+                        <Input
+                          id="date"
+                          type="date"
+                          value={newPaperData.date}
+                          onChange={(e) => setNewPaperData({ ...newPaperData, date: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="companyName">Company Name</Label>
+                        <Input
+                          id="companyName"
+                          placeholder="Enter company name"
+                          value={newPaperData.companyName}
+                          onChange={(e) => setNewPaperData({ ...newPaperData, companyName: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="periodCovered">Period Covered</Label>
+                        <Input
+                          id="periodCovered"
+                          placeholder="e.g., Q1 2024, January 2024"
+                          value={newPaperData.periodCovered}
+                          onChange={(e) => setNewPaperData({ ...newPaperData, periodCovered: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setCreatePaperDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateBoardPaper}>
+                        Create Board Paper
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
 
@@ -213,8 +285,11 @@ const BoardPapers = () => {
                 <CardContent>
                   <div className="space-y-3">
                     {boardPapers.map((paper) => (
-                      <div key={paper.id} className="p-4 border rounded-lg hover:border-primary/50 transition-colors">
-                        <div className="grid grid-cols-4 gap-4">
+                      <div 
+                        key={paper.id} 
+                        className="p-4 border rounded-lg hover:border-primary hover:bg-accent/5 transition-all cursor-pointer group"
+                      >
+                        <div className="grid grid-cols-5 gap-4 items-center">
                           <div>
                             <Label className="text-xs text-muted-foreground">Date</Label>
                             <p className="text-sm font-medium mt-1">{paper.date}</p>
@@ -230,6 +305,11 @@ const BoardPapers = () => {
                           <div>
                             <Label className="text-xs text-muted-foreground">Created By</Label>
                             <p className="text-sm font-medium mt-1">{paper.createdBy}</p>
+                          </div>
+                          <div className="flex justify-end">
+                            <Button size="sm" variant="outline" className="group-hover:bg-primary group-hover:text-white transition-colors">
+                              Open Document
+                            </Button>
                           </div>
                         </div>
                       </div>
