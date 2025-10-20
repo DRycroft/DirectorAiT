@@ -114,7 +114,7 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
             onDragEnd={handleDragEnd}
             className={cn(
               "flex items-center gap-3 p-3 rounded-lg border bg-card cursor-move hover:border-primary/50 transition-colors",
-              section.level === 1 && "ml-8"
+              section.level === 1 && "ml-12 border-l-4 border-l-primary/30"
             )}
           >
             <Checkbox
@@ -126,7 +126,10 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
             <Input
               value={section.title}
               onChange={(e) => handleUpdateSection(section.id, { title: e.target.value })}
-              className="flex-1 font-medium"
+              className={cn(
+                "flex-1",
+                section.level === 0 ? "font-semibold" : "font-normal"
+              )}
               disabled={section.required && !isAdmin}
               placeholder="Section title"
             />
@@ -135,13 +138,20 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
               <Badge variant="secondary" className="text-xs">Required</Badge>
             )}
 
+            {section.level === 1 && (
+              <Badge variant="outline" className="text-xs">Sub-heading</Badge>
+            )}
+
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleIndent(section.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleIndent(section.id);
+                }}
                 disabled={section.level >= 1}
-                title="Make sub-heading"
+                title="Make sub-heading (indent)"
                 className="h-8 w-8"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -149,9 +159,12 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleOutdent(section.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOutdent(section.id);
+                }}
                 disabled={section.level <= 0}
-                title="Make main heading"
+                title="Make main heading (outdent)"
                 className="h-8 w-8"
               >
                 <ChevronLeft className="h-4 w-4" />
