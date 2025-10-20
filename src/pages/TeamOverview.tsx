@@ -364,7 +364,7 @@ const TeamOverview = () => {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Position</TableHead>
-                <TableHead>{memberType === 'board' ? 'Board' : 'Direct Report'}</TableHead>
+                <TableHead>{memberType === 'board' ? 'Board' : 'Reports To'}</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
