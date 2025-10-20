@@ -164,7 +164,7 @@ const BoardPapers = () => {
                 {boardPapers.map((paper) => (
                   <div 
                     key={paper.id} 
-                    className="px-4 py-0.5 border rounded-lg hover:border-primary transition-all cursor-pointer group bg-slate-50"
+                    className="px-4 py-0 border rounded-lg hover:border-primary transition-all cursor-pointer group bg-slate-50"
                   >
                     <div className="grid grid-cols-5 gap-4 items-center">
                       <div>
@@ -180,7 +180,7 @@ const BoardPapers = () => {
                         <p className="text-sm font-medium text-black">{paper.createdBy}</p>
                       </div>
                       <div className="flex justify-end">
-                        <Button size="sm" variant="outline" className="group-hover:bg-primary group-hover:text-white transition-colors">
+                        <Button size="sm" variant="outline" className="text-black border-black hover:bg-primary hover:text-white hover:border-primary transition-colors">
                           Open Document
                         </Button>
                       </div>
