@@ -10,6 +10,7 @@ import BoardLibrary from "./pages/BoardLibrary";
 import Dashboard from "./pages/Dashboard";
 import Boards from "./pages/Boards";
 import BoardDetail from "./pages/BoardDetail";
+import BoardPapers from "./pages/BoardPapers";
 import MemberIntake from "./pages/MemberIntake";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/boards" element={<Boards />} />
           <Route path="/boards/:boardId" element={<BoardDetail />} />
+          <Route path="/board-papers" element={<BoardPapers />} />
           <Route path="/library" element={<BoardLibrary />} />
           <Route path="/member-intake" element={<MemberIntake />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
