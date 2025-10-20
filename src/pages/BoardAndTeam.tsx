@@ -127,16 +127,31 @@ const BoardAndTeam = () => {
     };
   };
 
-  const MemberTable = ({ members, title, icon: Icon }: { members: any[], title: string, icon: any }) => {
+  const MemberTable = ({ members, title, description, icon: Icon, accentColor }: { 
+    members: any[], 
+    title: string, 
+    description: string,
+    icon: any,
+    accentColor: string 
+  }) => {
     if (members.length === 0) return null;
 
     return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Icon className="h-5 w-5" />
-            <CardTitle>{title}</CardTitle>
-            <Badge variant="outline">{members.length}</Badge>
+      <Card className="border-l-4 shadow-sm hover:shadow-md transition-shadow" style={{ borderLeftColor: `hsl(var(--${accentColor}))` }}>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg bg-${accentColor}/10`}>
+                <Icon className="h-6 w-6" style={{ color: `hsl(var(--${accentColor}))` }} />
+              </div>
+              <div>
+                <CardTitle className="text-xl">{title}</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">{description}</p>
+              </div>
+            </div>
+            <Badge variant="secondary" className="text-base px-3 py-1">
+              {members.length} {members.length === 1 ? 'Member' : 'Members'}
+            </Badge>
           </div>
         </CardHeader>
         <CardContent>
@@ -153,7 +168,7 @@ const BoardAndTeam = () => {
               {members.map((member) => {
                 const filtered = getFilteredMember(member);
                 return (
-                  <TableRow key={member.id}>
+                  <TableRow key={member.id} className="hover:bg-muted/50">
                     <TableCell className="font-medium">
                       {filtered.preferred_title && `${filtered.preferred_title} `}
                       {filtered.full_name || <span className="text-muted-foreground italic">Name not published</span>}
@@ -169,6 +184,7 @@ const BoardAndTeam = () => {
                         size="sm"
                         variant="ghost"
                         onClick={() => setSelectedMember(member)}
+                        className="hover:bg-primary/10"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -306,10 +322,28 @@ const BoardAndTeam = () => {
           </Badge>
         </div>
 
-        <div className="space-y-6">
-          <MemberTable members={boardMembers} title="Board Members" icon={Users} />
-          <MemberTable members={executives} title="Executive Team" icon={Briefcase} />
-          <MemberTable members={keyStaff} title="Key Staff" icon={UserCog} />
+        <div className="space-y-8">
+          <MemberTable 
+            members={boardMembers} 
+            title="Board Members" 
+            description="Elected directors responsible for governance and strategic oversight"
+            icon={Users}
+            accentColor="primary"
+          />
+          <MemberTable 
+            members={executives} 
+            title="Executive Team" 
+            description="Senior leadership responsible for day-to-day operations"
+            icon={Briefcase}
+            accentColor="accent"
+          />
+          <MemberTable 
+            members={keyStaff} 
+            title="Key Staff" 
+            description="Essential personnel supporting organizational operations"
+            icon={UserCog}
+            accentColor="secondary"
+          />
         </div>
 
         <MemberDetailDialog />
