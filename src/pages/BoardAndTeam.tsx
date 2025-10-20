@@ -134,8 +134,6 @@ const BoardAndTeam = () => {
     icon: any,
     accentColor: string 
   }) => {
-    if (members.length === 0) return null;
-
     return (
       <Card className="border-l-4 shadow-sm hover:shadow-md transition-shadow" style={{ borderLeftColor: `hsl(var(--${accentColor}))` }}>
         <CardHeader className="pb-4">
@@ -155,45 +153,54 @@ const BoardAndTeam = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Position</TableHead>
-                {viewerRole !== 'public' && <TableHead>Contact</TableHead>}
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {members.map((member) => {
-                const filtered = getFilteredMember(member);
-                return (
-                  <TableRow key={member.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">
-                      {filtered.preferred_title && `${filtered.preferred_title} `}
-                      {filtered.full_name || <span className="text-muted-foreground italic">Name not published</span>}
-                    </TableCell>
-                    <TableCell>{filtered.position || "-"}</TableCell>
-                    {viewerRole !== 'public' && (
-                      <TableCell className="text-sm text-muted-foreground">
-                        {member.personal_email || "-"}
+          {members.length === 0 ? (
+            <div className="text-center py-12">
+              <Icon className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-30" />
+              <p className="text-muted-foreground text-sm">
+                No members added yet. Add members in Settings to populate this section.
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Position</TableHead>
+                  {viewerRole !== 'public' && <TableHead>Contact</TableHead>}
+                  <TableHead className="w-[100px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {members.map((member) => {
+                  const filtered = getFilteredMember(member);
+                  return (
+                    <TableRow key={member.id} className="hover:bg-muted/50">
+                      <TableCell className="font-medium">
+                        {filtered.preferred_title && `${filtered.preferred_title} `}
+                        {filtered.full_name || <span className="text-muted-foreground italic">Name not published</span>}
                       </TableCell>
-                    )}
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setSelectedMember(member)}
-                        className="hover:bg-primary/10"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                      <TableCell>{filtered.position || "-"}</TableCell>
+                      {viewerRole !== 'public' && (
+                        <TableCell className="text-sm text-muted-foreground">
+                          {member.personal_email || "-"}
+                        </TableCell>
+                      )}
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setSelectedMember(member)}
+                          className="hover:bg-primary/10"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     );
