@@ -478,6 +478,7 @@ const Settings = () => {
                           <Input 
                             id="companyPhone"
                             type="tel"
+                            placeholder="+64 21 123 4567"
                             value={companyData.company_phone}
                             onChange={(e) => setCompanyData({ ...companyData, company_phone: e.target.value })}
                           />
@@ -518,6 +519,7 @@ const Settings = () => {
                           <Input 
                             id="primaryContactPhone" 
                             type="tel"
+                            placeholder="+64 21 123 4567"
                             value={companyData.primary_contact_phone}
                             onChange={(e) => setCompanyData({ ...companyData, primary_contact_phone: e.target.value })}
                           />
@@ -619,6 +621,7 @@ const Settings = () => {
                           <Input 
                             id="adminPhone" 
                             type="tel"
+                            placeholder="+64 21 123 4567"
                             value={companyData.admin_phone}
                             onChange={(e) => setCompanyData({ ...companyData, admin_phone: e.target.value })}
                           />
