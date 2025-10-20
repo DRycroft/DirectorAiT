@@ -316,15 +316,42 @@ const Settings = () => {
         return;
       }
 
-      if (!profile?.org_id) {
-        sonnerToast.error("No organization found for your account");
-        return;
+      let orgId = profile?.org_id;
+
+      // If no organization exists, create one
+      if (!orgId) {
+        const { data: newOrg, error: orgError } = await supabase
+          .from("organizations")
+          .insert([{ name: companyData.name || "My Organization" }])
+          .select()
+          .single();
+
+        if (orgError) {
+          console.error("Error creating organization:", orgError);
+          sonnerToast.error("Failed to create organization");
+          return;
+        }
+
+        orgId = newOrg.id;
+
+        // Link the organization to the user's profile
+        const { error: linkError } = await supabase
+          .from("profiles")
+          .update({ org_id: orgId })
+          .eq("id", user.id);
+
+        if (linkError) {
+          console.error("Error linking organization:", linkError);
+          sonnerToast.error("Failed to link organization to your profile");
+          return;
+        }
       }
 
+      // Now update the organization with the provided data
       const { error } = await supabase
         .from("organizations")
         .update(companyData)
-        .eq("id", profile.org_id);
+        .eq("id", orgId);
 
       if (error) {
         console.error("Update error:", error);
@@ -332,6 +359,9 @@ const Settings = () => {
       }
       
       sonnerToast.success("Company details saved successfully!");
+      
+      // Refresh the data
+      await fetchCompanyData();
     } catch (error) {
       console.error("Error updating company data:", error);
       sonnerToast.error("Failed to save company details. Please try again.");
