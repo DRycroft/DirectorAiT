@@ -22,6 +22,8 @@ const MemberInvite = () => {
     preferred_title: "",
     public_job_title: "",
     short_bio: "",
+    public_company_affiliations: "",
+    professional_qualifications: "",
     personal_mobile: "",
     personal_email: "",
     emergency_contact_name: "",
@@ -31,6 +33,8 @@ const MemberInvite = () => {
     full_name: false,
     public_job_title: false,
     short_bio: false,
+    public_company_affiliations: false,
+    professional_qualifications: false,
     public_contact_email: false,
   });
 
@@ -75,6 +79,8 @@ const MemberInvite = () => {
         preferred_title: data.preferred_title || "",
         public_job_title: data.public_job_title || "",
         short_bio: data.short_bio || "",
+        public_company_affiliations: data.public_company_affiliations || "",
+        professional_qualifications: data.professional_qualifications || "",
         personal_mobile: data.personal_mobile || "",
         personal_email: data.personal_email || "",
         emergency_contact_name: data.emergency_contact_name || "",
@@ -189,6 +195,44 @@ const MemberInvite = () => {
                       checked={publishToggles.public_job_title}
                       onCheckedChange={(checked) =>
                         setPublishToggles({ ...publishToggles, public_job_title: checked as boolean })
+                      }
+                    />
+                    <Label className="text-sm text-muted-foreground">Make public</Label>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="public_company_affiliations">Company Affiliations</Label>
+                  <Input
+                    id="public_company_affiliations"
+                    value={formData.public_company_affiliations || ""}
+                    onChange={(e) => setFormData({ ...formData, public_company_affiliations: e.target.value })}
+                    placeholder="Current companies/organizations"
+                  />
+                  <div className="flex items-center mt-2 space-x-2">
+                    <Checkbox
+                      checked={publishToggles.public_company_affiliations}
+                      onCheckedChange={(checked) =>
+                        setPublishToggles({ ...publishToggles, public_company_affiliations: checked as boolean })
+                      }
+                    />
+                    <Label className="text-sm text-muted-foreground">Make public</Label>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="professional_qualifications">Professional Qualifications</Label>
+                  <Input
+                    id="professional_qualifications"
+                    value={formData.professional_qualifications || ""}
+                    onChange={(e) => setFormData({ ...formData, professional_qualifications: e.target.value })}
+                    placeholder="e.g., MBA, CPA, PhD"
+                  />
+                  <div className="flex items-center mt-2 space-x-2">
+                    <Checkbox
+                      checked={publishToggles.professional_qualifications}
+                      onCheckedChange={(checked) =>
+                        setPublishToggles({ ...publishToggles, professional_qualifications: checked as boolean })
                       }
                     />
                     <Label className="text-sm text-muted-foreground">Make public</Label>

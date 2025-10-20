@@ -43,6 +43,19 @@ const BoardMemberCard = ({ member, onClick }: BoardMemberCardProps) => {
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "active":
+        return "Active";
+      case "pending":
+        return "Pending Approval";
+      case "invited":
+        return "Invited";
+      default:
+        return status;
+    }
+  };
+
   return (
     <Card 
       className="cursor-pointer hover:shadow-lg transition-shadow"
@@ -61,7 +74,7 @@ const BoardMemberCard = ({ member, onClick }: BoardMemberCardProps) => {
                 {member.full_name}
               </CardTitle>
               <Badge variant={getStatusColor(member.status)}>
-                {member.status}
+                {getStatusLabel(member.status)}
               </Badge>
             </div>
             {member.public_job_title && (

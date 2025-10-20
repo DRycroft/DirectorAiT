@@ -288,7 +288,15 @@ const BoardDetail = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {boardMembers.map((member) => (
-                  <BoardMemberCard key={member.id} member={member} />
+                  <BoardMemberCard 
+                    key={member.id} 
+                    member={member}
+                    onClick={() => {
+                      if (member.status === "pending") {
+                        navigate(`/member-approval/${member.id}`);
+                      }
+                    }}
+                  />
                 ))}
               </div>
             )}
