@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, FileText, Users, Settings, Plus, CheckCircle2 } from "lucide-react";
+import { Calendar, FileText, Users, Settings, Plus, CheckCircle2, XCircle, Loader2, ArrowLeft, Download } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -231,7 +231,12 @@ const BoardDetail = () => {
           <TabsContent value="team" className="space-y-6">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">Board Team</h3>
-              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => navigate(`/export-team/${boardId}`)}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export
+                </Button>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
                     <Users className="mr-2 h-4 w-4" />
@@ -270,7 +275,8 @@ const BoardDetail = () => {
                     </Button>
                   </div>
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+              </div>
             </div>
 
             {boardMembers.length === 0 ? (

@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, XCircle, Loader2, ArrowLeft } from "lucide-react";
 import MemberProfileTabs from "@/components/MemberProfileTabs";
+import COIManagement from "@/components/COIManagement";
+import AuditHistory from "@/components/AuditHistory";
 import { Badge } from "@/components/ui/badge";
 
 const MemberApproval = () => {
@@ -203,6 +205,10 @@ const MemberApproval = () => {
 
         <div className="space-y-6">
           <MemberProfileTabs member={member} isAdmin={true} />
+          
+          <COIManagement memberId={member.id} isEditable={false} />
+          
+          <AuditHistory memberId={member.id} />
 
           {member.status === "pending" && (
             <Card>
