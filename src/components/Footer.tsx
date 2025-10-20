@@ -15,8 +15,8 @@ const Footer = () => {
           </div>
           
           <div className="flex items-start gap-2">
-            <h3 className="font-semibold text-xs">Product:</h3>
-            <div className="flex gap-3 text-muted-foreground">
+            <h3 className="font-semibold text-xs whitespace-nowrap">Product:</h3>
+            <div className="flex flex-col gap-1 text-muted-foreground">
               <Link to="#features" className="hover:text-foreground transition-colors">Features</Link>
               <Link to="#security" className="hover:text-foreground transition-colors">Security</Link>
               <Link to="#pilot" className="hover:text-foreground transition-colors">Pilot Program</Link>
@@ -24,16 +24,16 @@ const Footer = () => {
           </div>
           
           <div className="flex items-start gap-2">
-            <h3 className="font-semibold text-xs">Company:</h3>
-            <div className="flex gap-3 text-muted-foreground">
+            <h3 className="font-semibold text-xs whitespace-nowrap">Company:</h3>
+            <div className="flex flex-col gap-1 text-muted-foreground">
               <a href="#" className="hover:text-foreground transition-colors">About Aigentia</a>
               <a href="#" className="hover:text-foreground transition-colors">Contact</a>
             </div>
           </div>
           
           <div className="flex items-start gap-2">
-            <h3 className="font-semibold text-xs">Legal:</h3>
-            <div className="flex gap-3 text-muted-foreground">
+            <h3 className="font-semibold text-xs whitespace-nowrap">Legal:</h3>
+            <div className="flex flex-col gap-1 text-muted-foreground">
               <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
               <a href="#" className="hover:text-foreground transition-colors">Security</a>
