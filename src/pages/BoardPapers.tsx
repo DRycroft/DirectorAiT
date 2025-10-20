@@ -168,16 +168,16 @@ const BoardPapers = () => {
                   >
                     <div className="grid grid-cols-5 gap-4 items-center">
                       <div>
-                        <p className="text-sm font-medium">{paper.date}</p>
+                        <p className="text-sm font-medium text-black">{paper.date}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium">{paper.companyName}</p>
+                        <p className="text-sm font-medium text-black">{paper.companyName}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium">{paper.periodCovered}</p>
+                        <p className="text-sm font-medium text-black">{paper.periodCovered}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium">{paper.createdBy}</p>
+                        <p className="text-sm font-medium text-black">{paper.createdBy}</p>
                       </div>
                       <div className="flex justify-end">
                         <Button size="sm" variant="outline" className="group-hover:bg-primary group-hover:text-white transition-colors">
