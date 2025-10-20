@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { GripVertical, Lock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { GripVertical, Lock, Upload, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface TemplateSection {
@@ -60,6 +62,9 @@ const defaultSections: TemplateSection[] = [
 export const BoardPaperTemplateBuilder = () => {
   const [sections, setSections] = useState<TemplateSection[]>(defaultSections);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleToggleSection = (id: string) => {
     setSections(sections.map(section => 
@@ -97,26 +102,104 @@ export const BoardPaperTemplateBuilder = () => {
     setDraggedItem(null);
   };
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoUrl(reader.result as string);
+        toast.success("Logo uploaded successfully");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSaveTemplate = () => {
     const enabledSections = sections.filter(s => s.enabled);
     console.log("Saving template with sections:", enabledSections);
     toast.success(`Template saved with ${enabledSections.length} sections`);
   };
 
+  const handleCreateTemplate = () => {
+    if (!companyName) {
+      toast.error("Please enter your company name");
+      return;
+    }
+    const enabledSections = sections.filter(s => s.enabled);
+    console.log("Creating template:", { companyName, logoUrl, sections: enabledSections });
+    toast.success("Board paper template created successfully!");
+  };
+
   const handleResetTemplate = () => {
     setSections(defaultSections);
+    setCompanyName("");
+    setLogoUrl(null);
     toast.success("Template reset to defaults");
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Set Up Board Paper Template</CardTitle>
+        <CardTitle>Board Paper Template Settings</CardTitle>
         <CardDescription>
-          Customize your board paper sections. Required sections cannot be removed. Drag to reorder.
+          Set up your company branding and customize board paper sections
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
+        {/* Company Branding Section */}
+        <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            Company Branding
+          </h3>
+          
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="companyName">Company Name</Label>
+              <Input
+                id="companyName"
+                placeholder="Enter company name"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="logo">Company Logo</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {logoUrl ? "Change Logo" : "Upload Logo"}
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoUpload}
+                />
+              </div>
+              {logoUrl && (
+                <div className="mt-2 p-2 border rounded-lg bg-background">
+                  <img src={logoUrl} alt="Company logo" className="h-12 object-contain" />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Template Sections */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Template Sections</h3>
+          <p className="text-xs text-muted-foreground">
+            Required sections cannot be removed. Drag to reorder optional sections.
+          </p>
+        </div>
         <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
           {sections.map((section) => (
             <div
@@ -159,11 +242,14 @@ export const BoardPaperTemplateBuilder = () => {
         </div>
 
         <div className="flex gap-3 pt-4 border-t">
-          <Button onClick={handleSaveTemplate} className="flex-1">
-            Save Template
+          <Button onClick={handleCreateTemplate} size="lg" className="flex-1">
+            Create Template
           </Button>
-          <Button onClick={handleResetTemplate} variant="outline">
-            Reset to Defaults
+          <Button onClick={handleSaveTemplate} variant="outline" size="lg">
+            Save Changes
+          </Button>
+          <Button onClick={handleResetTemplate} variant="ghost" size="lg">
+            Reset
           </Button>
         </div>
       </CardContent>
