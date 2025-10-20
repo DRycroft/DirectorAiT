@@ -299,26 +299,42 @@ const Settings = () => {
   const handleSaveCompany = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        sonnerToast.error("You must be logged in to save company details");
+        return;
+      }
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("org_id")
         .eq("id", user.id)
         .single();
 
-      if (profile?.org_id) {
-        const { error } = await supabase
-          .from("organizations")
-          .update(companyData)
-          .eq("id", profile.org_id);
-
-        if (error) throw error;
-        sonnerToast.success("Company details updated successfully");
+      if (profileError) {
+        console.error("Profile error:", profileError);
+        sonnerToast.error("Failed to load your profile");
+        return;
       }
+
+      if (!profile?.org_id) {
+        sonnerToast.error("No organization found for your account");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("organizations")
+        .update(companyData)
+        .eq("id", profile.org_id);
+
+      if (error) {
+        console.error("Update error:", error);
+        throw error;
+      }
+      
+      sonnerToast.success("Company details saved successfully!");
     } catch (error) {
       console.error("Error updating company data:", error);
-      sonnerToast.error("Failed to update company details");
+      sonnerToast.error("Failed to save company details. Please try again.");
     }
   };
 
