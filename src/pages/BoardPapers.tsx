@@ -151,7 +151,7 @@ const BoardPapers = () => {
         </div>
 
         <Tabs defaultValue="papers" className="w-full">
-          <TabsContent value="papers" className="space-y-4 mt-4">
+          <TabsContent value="papers" className="space-y-4">
             {boardPapers.length > 0 && (
               <div className="space-y-3">
                 <div className="grid grid-cols-5 gap-4 px-4 text-sm font-medium text-muted-foreground">
