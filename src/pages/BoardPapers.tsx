@@ -19,6 +19,7 @@ const BoardPapers = () => {
     { value: "sm-report", label: "S&M Report" },
     { value: "hr-report", label: "HR Report" },
     { value: "kpi-report", label: "KPIs Report" },
+    { value: "one-off-report", label: "One-Off Report" },
     { value: "minutes", label: "Minutes" },
     { value: "special-papers", label: "Special Papers" },
     { value: "financial-updates", label: "Financial Updates" },
