@@ -6,10 +6,10 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-3">
         <div className="flex flex-wrap items-start gap-x-8 gap-y-2 text-xs">
           <div className="flex-shrink-0">
-            <div className="text-sm font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <div className="text-sm font-bold leading-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               BoardConnect
             </div>
-            <p className="text-xs text-muted-foreground max-w-[200px]">
+            <p className="text-xs text-muted-foreground max-w-[200px] leading-tight mt-0.5">
               AI-assisted board governance for evidence-driven decision making.
             </p>
           </div>
@@ -39,10 +39,10 @@ const Footer = () => {
               <a href="#" className="hover:text-foreground transition-colors">Security</a>
             </div>
           </div>
-          
-          <div className="ml-auto text-muted-foreground">
-            © 2025 Aigentia Ltd.
-          </div>
+        </div>
+        
+        <div className="mt-2 pt-2 border-t border-border text-center text-xs text-muted-foreground">
+          © 2025 Aigentia Ltd.
         </div>
       </div>
     </footer>
