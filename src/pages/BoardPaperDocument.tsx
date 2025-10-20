@@ -115,6 +115,7 @@ const BoardPaperDocument = () => {
         </div>
 
         <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+          {/* Header */}
           <div className="bg-gradient-to-r from-primary to-accent p-8 text-white">
             <h1 className="text-4xl font-bold mb-2">{paperInfo.companyName}</h1>
             <h2 className="text-2xl font-light mb-1">Board Papers</h2>
@@ -123,6 +124,29 @@ const BoardPaperDocument = () => {
             </p>
           </div>
 
+          {/* Table of Contents */}
+          <div className="p-12 border-b border-slate-200 bg-slate-50/50">
+            <h2 className="text-2xl font-bold mb-6 text-foreground">Table of Contents</h2>
+            <div className="space-y-2">
+              {sections.map((section, index) => (
+                <div 
+                  key={`toc-${section.id}`} 
+                  className="flex justify-between items-center py-1 hover:bg-slate-100 px-2 rounded transition-colors"
+                  style={{ paddingLeft: `${section.level * 2 + 0.5}rem` }}
+                >
+                  <span className="text-foreground">
+                    {section.level === 0 && `${index + 1}. `}
+                    {section.title}
+                  </span>
+                  <span className="text-muted-foreground text-sm">
+                    Section {index + 1}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Document Sections */}
           <div className="p-12 space-y-10">
             {sections.map((section, index) => (
               <div key={section.id} className="space-y-4">
@@ -144,19 +168,33 @@ const BoardPaperDocument = () => {
                   style={{ marginLeft: `${section.level * 2}rem` }}
                 >
                   {isReportSection(section.title) ? (
-                    <div className="flex items-center justify-center h-full">
-                      <p className="text-muted-foreground italic text-center">
-                        [ Awaiting Report ]
+                    <div className="space-y-4">
+                      <p className="text-foreground font-medium mb-3">Executive Summary</p>
+                      <p className="text-foreground leading-relaxed">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas vehicula nunc at magna tristique, id consequat turpis facilisis. Proin euismod lectus vel mauris dignissim, at varius leo tincidunt.
                       </p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+                      </p>
+                      <div className="mt-4 pt-4 border-t border-slate-300">
+                        <p className="text-sm text-muted-foreground italic">
+                          [ Detailed report to be provided by {section.title.split(' ')[0]} ]
+                        </p>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       <p className="text-foreground leading-relaxed">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
                       </p>
                       <p className="text-muted-foreground leading-relaxed">
-                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.
+                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
                       </p>
+                      {section.required && (
+                        <p className="text-foreground leading-relaxed">
+                          Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -164,6 +202,7 @@ const BoardPaperDocument = () => {
             ))}
           </div>
 
+          {/* Footer */}
           <div className="border-t border-slate-200 bg-slate-50 p-6 text-center text-sm text-muted-foreground">
             <p>Confidential - For Board Members Only</p>
             <p className="mt-1">{paperInfo.companyName} © {new Date().getFullYear()}</p>
