@@ -4,8 +4,25 @@ import { BoardPaperTemplateBuilder } from "@/components/BoardPaperTemplateBuilde
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 const BoardPapers = () => {
+  const [selectedTemplate, setSelectedTemplate] = useState("");
+
+  const templateOptions = [
+    { value: "board-papers", label: "Board Papers" },
+    { value: "chair-report", label: "Chair Report" },
+    { value: "ceo-report", label: "CEO Report" },
+    { value: "cfo-report", label: "CFO Report" },
+    { value: "osh-report", label: "OSH Report" },
+    { value: "finance-report", label: "Finance Report" },
+    { value: "sm-report", label: "S&M Report" },
+    { value: "hr-report", label: "HR Report" },
+    { value: "kpi-report", label: "KPIs Report" },
+    { value: "minutes", label: "Minutes" },
+    { value: "special-papers", label: "Special Papers" },
+    { value: "financial-updates", label: "Financial Updates" },
+  ];
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
@@ -26,7 +43,7 @@ const BoardPapers = () => {
             <TabsTrigger value="special" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Special Papers</TabsTrigger>
             <TabsTrigger value="financial" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Financial Updates</TabsTrigger>
             <TabsTrigger value="exec" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Exec Reports</TabsTrigger>
-            <TabsTrigger value="template" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Template Settings</TabsTrigger>
+            <TabsTrigger value="template" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Templates</TabsTrigger>
           </TabsList>
 
           <TabsContent value="papers" className="space-y-4">
@@ -167,7 +184,50 @@ const BoardPapers = () => {
           </TabsContent>
 
           <TabsContent value="template" className="space-y-4">
-            <BoardPaperTemplateBuilder />
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Document Templates</CardTitle>
+                    <CardDescription>
+                      Select a template type to configure its structure and fields (Admin access required)
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium min-w-32">Select Template:</label>
+                  <select 
+                    className="flex h-10 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={selectedTemplate}
+                    onChange={(e) => setSelectedTemplate(e.target.value)}
+                  >
+                    <option value="">Choose a template type...</option>
+                    {templateOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                {selectedTemplate ? (
+                  <div className="border border-border rounded-lg p-6 bg-muted/30">
+                    <h3 className="text-lg font-semibold mb-2">
+                      {templateOptions.find(t => t.value === selectedTemplate)?.label} Template
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Template builder will appear here. This section will allow you to configure headers and structure for this document type.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Please select a template type to begin configuring its structure.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
