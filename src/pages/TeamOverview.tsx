@@ -83,19 +83,86 @@ const TeamOverview = () => {
     }
   };
 
+  // Define default positions for each member type
+  const getDefaultPositions = (memberType: 'board' | 'executive' | 'staff') => {
+    if (memberType === 'board') {
+      return [
+        'Chair',
+        'Deputy Chair',
+        'Secretary',
+        'Board Member',
+        'Board Member',
+        'Board Member',
+        'Board Member',
+        'Board Member',
+        'Board Member'
+      ];
+    } else if (memberType === 'executive') {
+      return [
+        'Chief Executive Officer',
+        'Chief Financial Officer',
+        'Chief Operating Officer',
+        'Chief Technology Officer',
+        'Chief Marketing Officer',
+        'Chief People Officer'
+      ];
+    } else {
+      return [
+        'Manager',
+        'Manager',
+        'Coordinator',
+        'Coordinator',
+        'Specialist',
+        'Specialist'
+      ];
+    }
+  };
+
   const MemberTable = ({ 
     members, 
     title, 
     description, 
     icon: Icon, 
-    accentColor 
+    accentColor,
+    memberType 
   }: { 
     members: any[], 
     title: string, 
     description: string,
     icon: any,
-    accentColor: string 
+    accentColor: string,
+    memberType: 'board' | 'executive' | 'staff'
   }) => {
+    const defaultPositions = getDefaultPositions(memberType);
+    
+    // Create a map of positions to members
+    const positionMap = new Map<string, any>();
+    members.forEach(member => {
+      if (member.position) {
+        positionMap.set(member.position, member);
+      }
+    });
+
+    // Build display rows: default positions with actual members where they exist
+    const displayRows = defaultPositions.map((position, index) => {
+      const member = positionMap.get(position) || members.find(m => !defaultPositions.includes(m.position));
+      if (member && positionMap.has(member.position)) {
+        positionMap.delete(member.position);
+      }
+      return { position, member, index };
+    });
+
+    // Add any members with non-standard positions that weren't matched
+    Array.from(positionMap.values()).forEach((member, index) => {
+      displayRows.push({ 
+        position: member.position || 'Additional Member', 
+        member, 
+        index: displayRows.length + index 
+      });
+    });
+
+    const filledCount = displayRows.filter(row => row.member).length;
+
     return (
       <Card className="border-l-4 shadow-sm" style={{ borderLeftColor: `hsl(var(--${accentColor}))` }}>
         <CardHeader className="pb-4">
@@ -110,47 +177,47 @@ const TeamOverview = () => {
               </div>
             </div>
             <Badge variant="secondary" className="text-base px-3 py-1">
-              {members.length} {members.length === 1 ? 'Member' : 'Members'}
+              {filledCount} / {displayRows.length} Filled
             </Badge>
           </div>
         </CardHeader>
         <CardContent>
-          {members.length === 0 ? (
-            <div className="text-center py-12">
-              <Icon className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-30" />
-              <p className="text-muted-foreground text-sm">
-                No members added yet. Add members in Settings to populate this section.
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Position</TableHead>
-                  <TableHead>Board</TableHead>
-                  <TableHead>Contact</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Position</TableHead>
+                <TableHead>Board</TableHead>
+                <TableHead>Contact</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {displayRows.map((row) => (
+                <TableRow 
+                  key={`${row.position}-${row.index}`} 
+                  className={row.member ? "hover:bg-muted/50" : "opacity-40"}
+                >
+                  <TableCell className="font-medium">
+                    {row.member ? (
+                      <>
+                        {row.member.preferred_title && `${row.member.preferred_title} `}
+                        {row.member.full_name}
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground italic">Position available</span>
+                    )}
+                  </TableCell>
+                  <TableCell>{row.position}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {row.member?.boards?.title || "-"}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {row.member?.personal_email || "-"}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {members.map((member) => (
-                  <TableRow key={member.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">
-                      {member.preferred_title && `${member.preferred_title} `}
-                      {member.full_name}
-                    </TableCell>
-                    <TableCell>{member.position || "-"}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {member.boards?.title || "-"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {member.personal_email || "-"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     );
@@ -206,6 +273,7 @@ const TeamOverview = () => {
               description="Elected directors responsible for governance and strategic oversight"
               icon={Users}
               accentColor="primary"
+              memberType="board"
             />
             <MemberTable 
               members={allExecutives} 
@@ -213,6 +281,7 @@ const TeamOverview = () => {
               description="Senior leadership responsible for day-to-day operations"
               icon={Briefcase}
               accentColor="accent"
+              memberType="executive"
             />
             <MemberTable 
               members={allKeyStaff} 
@@ -220,6 +289,7 @@ const TeamOverview = () => {
               description="Essential personnel supporting organizational operations"
               icon={UserCog}
               accentColor="secondary"
+              memberType="staff"
             />
           </TabsContent>
 
@@ -230,6 +300,7 @@ const TeamOverview = () => {
               description="Elected directors responsible for governance and strategic oversight"
               icon={Users}
               accentColor="primary"
+              memberType="board"
             />
           </TabsContent>
 
@@ -240,6 +311,7 @@ const TeamOverview = () => {
               description="Senior leadership responsible for day-to-day operations"
               icon={Briefcase}
               accentColor="accent"
+              memberType="executive"
             />
           </TabsContent>
 
@@ -250,6 +322,7 @@ const TeamOverview = () => {
               description="Essential personnel supporting organizational operations"
               icon={UserCog}
               accentColor="secondary"
+              memberType="staff"
             />
           </TabsContent>
         </Tabs>
