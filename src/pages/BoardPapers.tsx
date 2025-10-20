@@ -86,7 +86,7 @@ const BoardPapers = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
-      <main className="flex-1 container mx-auto px-4 pt-16 pb-4 max-w-7xl">
+      <main className="flex-1 container mx-auto px-4 pt-14 pb-4 max-w-7xl">
         <div className="mb-4 flex items-center justify-between gap-4">
           <Tabs defaultValue="papers" className="w-full flex-1">
             <TabsList className="grid w-full grid-cols-4 h-10">
@@ -98,7 +98,7 @@ const BoardPapers = () => {
           </Tabs>
           <Dialog open={createPaperDialogOpen} onOpenChange={setCreatePaperDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="accent" className="shadow-lg hover:shadow-xl whitespace-nowrap h-10 -mt-2">
+              <Button variant="accent" className="shadow-lg hover:shadow-xl whitespace-nowrap h-10 -mt-1">
                 Create New Board Paper
               </Button>
             </DialogTrigger>
