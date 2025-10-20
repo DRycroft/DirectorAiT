@@ -187,7 +187,7 @@ const TeamOverview = () => {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Position</TableHead>
-                <TableHead>Board</TableHead>
+                <TableHead>{memberType === 'board' ? 'Board' : 'Direct Report'}</TableHead>
                 <TableHead>Contact</TableHead>
               </TableRow>
             </TableHeader>
@@ -209,7 +209,10 @@ const TeamOverview = () => {
                   </TableCell>
                   <TableCell>{row.position}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {row.member?.boards?.title || "-"}
+                    {memberType === 'board' 
+                      ? (row.member?.boards?.title || "-")
+                      : (row.member?.sensitive_notes || "-")
+                    }
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {row.member?.personal_email || "-"}
