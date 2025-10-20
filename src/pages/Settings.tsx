@@ -421,81 +421,85 @@ const Settings = () => {
                 </div>
 
                 <div className="pt-4 border-t">
-                  <h3 className="text-lg font-semibold mb-4">Primary Contact (CEO/Chair)</h3>
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="primaryContactName">Name</Label>
-                      <Input 
-                        id="primaryContactName" 
-                        value={companyData.primary_contact_name}
-                        onChange={(e) => setCompanyData({ ...companyData, primary_contact_name: e.target.value })}
-                      />
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Primary Contact (CEO/Chair)</h3>
+                      <div className="grid gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="primaryContactName">Name</Label>
+                          <Input 
+                            id="primaryContactName" 
+                            value={companyData.primary_contact_name}
+                            onChange={(e) => setCompanyData({ ...companyData, primary_contact_name: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="primaryContactRole">Role</Label>
+                          <Input 
+                            id="primaryContactRole" 
+                            value={companyData.primary_contact_role}
+                            onChange={(e) => setCompanyData({ ...companyData, primary_contact_role: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="primaryContactEmail">Email</Label>
+                          <Input 
+                            id="primaryContactEmail" 
+                            type="email"
+                            value={companyData.primary_contact_email}
+                            onChange={(e) => setCompanyData({ ...companyData, primary_contact_email: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="primaryContactPhone">Phone</Label>
+                          <Input 
+                            id="primaryContactPhone" 
+                            type="tel"
+                            value={companyData.primary_contact_phone}
+                            onChange={(e) => setCompanyData({ ...companyData, primary_contact_phone: e.target.value })}
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="primaryContactRole">Role</Label>
-                      <Input 
-                        id="primaryContactRole" 
-                        value={companyData.primary_contact_role}
-                        onChange={(e) => setCompanyData({ ...companyData, primary_contact_role: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="primaryContactEmail">Email</Label>
-                      <Input 
-                        id="primaryContactEmail" 
-                        type="email"
-                        value={companyData.primary_contact_email}
-                        onChange={(e) => setCompanyData({ ...companyData, primary_contact_email: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="primaryContactPhone">Phone</Label>
-                      <Input 
-                        id="primaryContactPhone" 
-                        type="tel"
-                        value={companyData.primary_contact_phone}
-                        onChange={(e) => setCompanyData({ ...companyData, primary_contact_phone: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                </div>
 
-                <div className="pt-4 border-t">
-                  <h3 className="text-lg font-semibold mb-4">Admin Person</h3>
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="adminName">Name</Label>
-                      <Input 
-                        id="adminName" 
-                        value={companyData.admin_name}
-                        onChange={(e) => setCompanyData({ ...companyData, admin_name: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="adminRole">Role</Label>
-                      <Input 
-                        id="adminRole" 
-                        value={companyData.admin_role}
-                        onChange={(e) => setCompanyData({ ...companyData, admin_role: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="adminEmail">Email</Label>
-                      <Input 
-                        id="adminEmail" 
-                        type="email"
-                        value={companyData.admin_email}
-                        onChange={(e) => setCompanyData({ ...companyData, admin_email: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="adminPhone">Phone</Label>
-                      <Input 
-                        id="adminPhone" 
-                        type="tel"
-                        value={companyData.admin_phone}
-                        onChange={(e) => setCompanyData({ ...companyData, admin_phone: e.target.value })}
-                      />
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Admin Person</h3>
+                      <div className="grid gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="adminName">Name</Label>
+                          <Input 
+                            id="adminName" 
+                            value={companyData.admin_name}
+                            onChange={(e) => setCompanyData({ ...companyData, admin_name: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="adminRole">Role</Label>
+                          <Input 
+                            id="adminRole" 
+                            value={companyData.admin_role}
+                            onChange={(e) => setCompanyData({ ...companyData, admin_role: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="adminEmail">Email</Label>
+                          <Input 
+                            id="adminEmail" 
+                            type="email"
+                            value={companyData.admin_email}
+                            onChange={(e) => setCompanyData({ ...companyData, admin_email: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="adminPhone">Phone</Label>
+                          <Input 
+                            id="adminPhone" 
+                            type="tel"
+                            value={companyData.admin_phone}
+                            onChange={(e) => setCompanyData({ ...companyData, admin_phone: e.target.value })}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
