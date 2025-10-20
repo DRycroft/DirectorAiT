@@ -495,28 +495,20 @@ const Settings = () => {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="countryCode">Country</Label>
-                          <Select value={countryCode} onValueChange={setCountryCode}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {countryCodes.map((item) => (
-                                <SelectItem key={item.code} value={item.code}>
-                                  {item.code} - {item.country}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label htmlFor="companyPhone">Phone Number</Label>
+                          <Label htmlFor="companyPhone">Country / Phone Number</Label>
                           <div className="flex gap-2">
-                            <Input 
-                              value={countryCode}
-                              disabled
-                              className="w-20"
-                            />
+                            <Select value={countryCode} onValueChange={setCountryCode}>
+                              <SelectTrigger className="w-[140px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {countryCodes.map((item) => (
+                                  <SelectItem key={item.code} value={item.code}>
+                                    {item.code} - {item.country}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <Input 
                               id="companyPhone"
                               type="tel"
