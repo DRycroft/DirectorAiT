@@ -6,11 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { TemplateSectionEditor, TemplateSection } from "@/components/TemplateSectionEditor";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Users, Briefcase, UserCog, Building2, Clock } from "lucide-react";
+import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCircle } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import BoardManagement from "@/components/settings/BoardManagement";
 import { BOARD_POSITIONS, EXECUTIVE_POSITIONS, KEY_STAFF_POSITIONS } from "@/config/positions";
@@ -553,6 +554,12 @@ const Settings = () => {
         throw error;
       }
       
+      // Check if industry/business category changed - trigger compliance scan
+      const previousIndustrySector = companyData.industry_sector;
+      const previousBusinessCategory = companyData.business_category;
+      const industryChanged = previousIndustrySector !== formattedData.industry_sector || 
+                              previousBusinessCategory !== formattedData.business_category;
+      
       sonnerToast.success("Company details saved successfully!");
       
       // Clear AI suggestions after save
@@ -561,9 +568,81 @@ const Settings = () => {
       
       // Refresh the data
       await fetchCompanyData();
+      
+      // If industry changed and both sector and category are set, trigger compliance scan
+      if (industryChanged && formattedData.industry_sector && formattedData.business_category) {
+        sonnerToast.info("Scanning compliance requirements for your industry...");
+        try {
+          const { data: scanData, error: scanError } = await supabase.functions.invoke("scan-compliance", {
+            body: { org_id: orgId }
+          });
+          
+          if (scanError) throw scanError;
+          
+          sonnerToast.success(`Found ${scanData.mandatory_count} mandatory and ${scanData.optional_count} optional compliance requirements!`);
+          fetchComplianceItems(); // Fetch the new items
+        } catch (scanError: any) {
+          console.error("Error scanning compliance:", scanError);
+          sonnerToast.error("Failed to scan compliance requirements. You can manually scan from the Compliance page.");
+        }
+      }
     } catch (error) {
       console.error("Error updating company data:", error);
       sonnerToast.error("Failed to save company details. Please try again.");
+    }
+  };
+
+  const [complianceItems, setComplianceItems] = useState<any[]>([]);
+  const [loadingCompliance, setLoadingCompliance] = useState(false);
+  
+  const fetchComplianceItems = async () => {
+    setLoadingCompliance(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("org_id")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.org_id) {
+        const { data: items } = await supabase
+          .from("compliance_items")
+          .select("*")
+          .eq("org_id", profile.org_id)
+          .order("notes", { ascending: false }); // Mandatory items first
+        
+        setComplianceItems(items || []);
+      }
+    } catch (error) {
+      console.error("Error fetching compliance items:", error);
+    } finally {
+      setLoadingCompliance(false);
+    }
+  };
+  
+  useEffect(() => {
+    if (companyData.industry_sector && companyData.compliance_scan_completed) {
+      fetchComplianceItems();
+    }
+  }, [companyData.industry_sector, companyData.compliance_scan_completed]);
+  
+  const handleToggleCompliance = async (itemId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("compliance_items")
+        .update({ is_active: !currentStatus })
+        .eq("id", itemId);
+      
+      if (error) throw error;
+      
+      sonnerToast.success("Compliance item updated");
+      fetchComplianceItems();
+    } catch (error: any) {
+      console.error("Error toggling compliance:", error);
+      sonnerToast.error("Failed to update compliance item");
     }
   };
 
@@ -1078,6 +1157,125 @@ const Settings = () => {
                 </div>
               </CardContent>
             </Card>
+            
+            {/* Compliance Requirements Section */}
+            {companyData.industry_sector && companyData.business_category && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Compliance Requirements</CardTitle>
+                  <CardDescription>
+                    Based on your industry classification, here are your compliance obligations. 
+                    Mandatory items are automatically enabled. Toggle optional items that you want to track.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {loadingCompliance ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Clock className="h-6 w-6 animate-spin text-muted-foreground mr-2" />
+                      <span>Loading compliance requirements...</span>
+                    </div>
+                  ) : complianceItems.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                      <p className="text-muted-foreground mb-4">
+                        No compliance items found. Click the button below to scan for requirements.
+                      </p>
+                      <Button
+                        onClick={async () => {
+                          const { data: { user } } = await supabase.auth.getUser();
+                          if (!user) return;
+                          const { data: profile } = await supabase.from("profiles").select("org_id").eq("id", user.id).single();
+                          if (profile?.org_id) {
+                            sonnerToast.info("Scanning compliance requirements...");
+                            try {
+                              const { data: scanData, error: scanError } = await supabase.functions.invoke("scan-compliance", {
+                                body: { org_id: profile.org_id }
+                              });
+                              if (scanError) throw scanError;
+                              sonnerToast.success(`Found ${scanData.mandatory_count} mandatory and ${scanData.optional_count} optional requirements!`);
+                              fetchComplianceItems();
+                            } catch (error: any) {
+                              sonnerToast.error("Failed to scan compliance requirements");
+                            }
+                          }
+                        }}
+                      >
+                        <Building2 className="mr-2 h-4 w-4" />
+                        Scan Compliance Requirements
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Mandatory Requirements */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          <AlertCircle className="h-5 w-5 text-red-500" />
+                          Mandatory Requirements ({complianceItems.filter(i => i.notes?.includes('Mandatory')).length})
+                        </h3>
+                        <div className="space-y-2">
+                          {complianceItems.filter(i => i.notes?.includes('Mandatory')).map((item) => (
+                            <div key={item.id} className="flex items-start justify-between p-3 border rounded-lg bg-red-50">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-medium">{item.title}</span>
+                                  <Badge variant="destructive" className="text-xs">Required</Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground mb-1">{item.description}</p>
+                                <div className="flex gap-4 text-xs text-muted-foreground">
+                                  <span>Authority: {item.authority}</span>
+                                  <span>Frequency: {item.frequency.replace('_', ' ')}</span>
+                                </div>
+                              </div>
+                              <div className="ml-4">
+                                <CheckCircle className="h-5 w-5 text-green-600" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Optional/Recommended Requirements */}
+                      {complianceItems.filter(i => !i.notes?.includes('Mandatory')).length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                            <Clock className="h-5 w-5 text-blue-500" />
+                            Optional Requirements ({complianceItems.filter(i => !i.notes?.includes('Mandatory')).length})
+                          </h3>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            These are recommended best practices. Toggle them on if you want to track them in your board papers.
+                          </p>
+                          <div className="space-y-2">
+                            {complianceItems.filter(i => !i.notes?.includes('Mandatory')).map((item) => (
+                              <div key={item.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-medium">{item.title}</span>
+                                    <Badge variant="outline" className="text-xs">Optional</Badge>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground mb-1">{item.description}</p>
+                                  <div className="flex gap-4 text-xs text-muted-foreground">
+                                    <span>Authority: {item.authority}</span>
+                                    <span>Frequency: {item.frequency.replace('_', ' ')}</span>
+                                  </div>
+                                </div>
+                                <div className="ml-4">
+                                  <input
+                                    type="checkbox"
+                                    checked={item.is_active}
+                                    onChange={() => handleToggleCompliance(item.id, item.is_active)}
+                                    className="h-5 w-5 rounded border-gray-300 cursor-pointer"
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="board" className="space-y-6">

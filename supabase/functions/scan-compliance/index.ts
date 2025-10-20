@@ -173,6 +173,7 @@ Be thorough and specific to New Zealand regulations. Include at least 10-15 rele
     const categoryMap = new Map(categories?.map(c => [c.name, c.id]) || []);
 
     // Insert compliance items
+    // Mandatory items are set as active, optional items are inactive by default
     const complianceItems = requirements.map(req => ({
       org_id: org_id,
       title: req.title,
@@ -182,8 +183,9 @@ Be thorough and specific to New Zealand regulations. Include at least 10-15 rele
       category_id: categoryMap.get(req.category) || null,
       status: 'in_progress' as const,
       industry_sector: org.industry_sector,
-      notes: req.is_mandatory ? 'Mandatory requirement' : 'Recommended requirement',
-      reference_url: req.reference_url || null
+      notes: req.is_mandatory ? 'Mandatory government requirement' : 'Optional/Recommended - Nice to have',
+      reference_url: req.reference_url || null,
+      is_active: req.is_mandatory // Mandatory items active by default, optional items inactive
     }));
 
     const { data: insertedItems, error: insertError } = await supabase
@@ -208,11 +210,16 @@ Be thorough and specific to New Zealand regulations. Include at least 10-15 rele
       })
       .eq('id', org_id);
 
-    console.log(`Successfully created ${insertedItems?.length} compliance items`);
+    const mandatoryCount = insertedItems?.filter(item => item.notes?.includes('Mandatory')) || [];
+    const optionalCount = (insertedItems?.length || 0) - mandatoryCount.length;
+    
+    console.log(`Successfully created ${insertedItems?.length} compliance items (${mandatoryCount.length} mandatory, ${optionalCount} optional)`);
 
     return new Response(JSON.stringify({
       success: true,
       count: insertedItems?.length || 0,
+      mandatory_count: mandatoryCount.length,
+      optional_count: optionalCount,
       items: insertedItems
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

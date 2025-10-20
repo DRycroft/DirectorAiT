@@ -94,7 +94,10 @@ const Compliance = () => {
       setProfile(profileData);
 
       const [itemsRes, categoriesRes, templatesRes] = await Promise.all([
-        supabase.from("compliance_items").select("*").order("next_due_date", { ascending: true }),
+        supabase.from("compliance_items")
+          .select("*")
+          .eq("is_active", true) // Only show active items
+          .order("next_due_date", { ascending: true }),
         supabase.from("compliance_categories").select("*"),
         supabase.from("compliance_templates").select("*")
       ]);
