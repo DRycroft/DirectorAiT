@@ -11,7 +11,9 @@ const BoardPapers = () => {
       <Navigation />
       <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Board Papers</h1>
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+            Board Papers
+          </h1>
           <p className="text-muted-foreground">
             Manage all aspects of your board documentation
           </p>
@@ -37,7 +39,7 @@ const BoardPapers = () => {
                       Create and manage regular board papers using your template
                     </CardDescription>
                   </div>
-                  <Button>Add New Board Paper</Button>
+                  <Button variant="accent">Add New Board Paper</Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -106,7 +108,7 @@ const BoardPapers = () => {
                       Select report type to view or create reports
                     </CardDescription>
                   </div>
-                  <Button>Add New Report</Button>
+                  <Button variant="accent">Add New Report</Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
