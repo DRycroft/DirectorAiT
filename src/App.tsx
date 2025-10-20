@@ -12,6 +12,7 @@ import Boards from "./pages/Boards";
 import BoardDetail from "./pages/BoardDetail";
 import BoardPapers from "./pages/BoardPapers";
 import MemberIntake from "./pages/MemberIntake";
+import Templates from "./pages/Templates";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/boards/:boardId" element={<BoardDetail />} />
           <Route path="/board-papers" element={<BoardPapers />} />
           <Route path="/library" element={<BoardLibrary />} />
+          <Route path="/templates" element={<Templates />} />
           <Route path="/member-intake" element={<MemberIntake />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

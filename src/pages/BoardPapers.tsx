@@ -1,29 +1,76 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { BoardPaperTemplateBuilder } from "@/components/BoardPaperTemplateBuilder";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const BoardPapers = () => {
-  const [selectedTemplate, setSelectedTemplate] = useState("");
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    linkedin: "",
+    personalWebsite: "",
+    bio: "",
+  });
+  const [consent, setConsent] = useState({
+    privacy: false,
+    terms: false,
+  });
 
-  const templateOptions = [
-    { value: "board-papers", label: "Board Papers" },
-    { value: "chair-report", label: "Chair Report" },
-    { value: "ceo-report", label: "CEO Report" },
-    { value: "cfo-report", label: "CFO Report" },
-    { value: "osh-report", label: "OSH Report" },
-    { value: "finance-report", label: "Finance Report" },
-    { value: "sm-report", label: "S&M Report" },
-    { value: "hr-report", label: "HR Report" },
-    { value: "kpi-report", label: "KPIs Report" },
-    { value: "one-off-report", label: "One-Off Report" },
-    { value: "minutes", label: "Minutes" },
-    { value: "special-papers", label: "Special Papers" },
-    { value: "financial-updates", label: "Financial Updates" },
-  ];
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!consent.privacy || !consent.terms) {
+      toast({
+        title: "Consent Required",
+        description: "Please accept the privacy policy and terms to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("member-intake", {
+        body: formData,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile Submitted Successfully",
+        description: "We'll process your information and get back to you soon.",
+      });
+
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        linkedin: "",
+        personalWebsite: "",
+        bio: "",
+      });
+      setConsent({ privacy: false, terms: false });
+    } catch (error) {
+      console.error("Error submitting profile:", error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
@@ -44,7 +91,7 @@ const BoardPapers = () => {
             <TabsTrigger value="special" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Special Papers</TabsTrigger>
             <TabsTrigger value="financial" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Financial Updates</TabsTrigger>
             <TabsTrigger value="exec" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Exec Reports</TabsTrigger>
-            <TabsTrigger value="template" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Templates</TabsTrigger>
+            <TabsTrigger value="member-intake" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Member Intake</TabsTrigger>
           </TabsList>
 
           <TabsContent value="papers" className="space-y-4">
@@ -184,53 +231,135 @@ const BoardPapers = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="template" className="space-y-4">
+          <TabsContent value="member-intake" className="space-y-4">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Document Templates</CardTitle>
-                    <CardDescription>
-                      Select a template type to configure its structure and fields (Admin access required)
-                    </CardDescription>
-                  </div>
-                </div>
+                <CardTitle>Board Member Profile Intake</CardTitle>
+                <CardDescription>
+                  Submit your information to create your board member profile
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <label className="text-sm font-medium min-w-32">Select Template:</label>
-                  <select 
-                    className="flex h-10 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    value={selectedTemplate}
-                    onChange={(e) => setSelectedTemplate(e.target.value)}
-                  >
-                    <option value="">Choose a template type...</option>
-                    {templateOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                {selectedTemplate ? (
-                  <div className="border border-border rounded-lg p-8 bg-muted/30 min-h-[600px]">
-                    <h3 className="text-xl font-semibold mb-4">
-                      {templateOptions.find(t => t.value === selectedTemplate)?.label} Template
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-6">
-                      Configure the structure and headers for this document template. This will serve as the base for all documents of this type.
-                    </p>
-                    {/* Template builder will go here */}
-                    <div className="bg-background rounded-lg p-6 border border-border min-h-[400px]">
-                      <p className="text-sm text-muted-foreground">Template editor area - document customization interface will appear here</p>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Full Name *</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                        placeholder="Enter your full name"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        required
+                        placeholder="your.email@example.com"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="linkedin">LinkedIn Profile URL</Label>
+                      <Input
+                        id="linkedin"
+                        type="url"
+                        value={formData.linkedin}
+                        onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                        placeholder="https://linkedin.com/in/yourprofile"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="website">Personal Website URL</Label>
+                      <Input
+                        id="website"
+                        type="url"
+                        value={formData.personalWebsite}
+                        onChange={(e) => setFormData({ ...formData, personalWebsite: e.target.value })}
+                        placeholder="https://yourwebsite.com"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bio">Professional Bio</Label>
+                      <textarea
+                        id="bio"
+                        value={formData.bio}
+                        onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                        className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        placeholder="Brief professional background and expertise..."
+                      />
                     </div>
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground py-8">
-                    Please select a template type to begin configuring its structure.
-                  </p>
-                )}
+
+                  <div className="space-y-4 pt-4 border-t">
+                    <div className="flex items-start space-x-2">
+                      <Checkbox
+                        id="privacy"
+                        checked={consent.privacy}
+                        onCheckedChange={(checked) => 
+                          setConsent({ ...consent, privacy: checked as boolean })
+                        }
+                      />
+                      <label htmlFor="privacy" className="text-sm leading-relaxed cursor-pointer">
+                        I consent to my information being scanned and processed to create my board member profile *
+                      </label>
+                    </div>
+
+                    <div className="flex items-start space-x-2">
+                      <Checkbox
+                        id="terms"
+                        checked={consent.terms}
+                        onCheckedChange={(checked) => 
+                          setConsent({ ...consent, terms: checked as boolean })
+                        }
+                      />
+                      <label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
+                        I agree to the terms and conditions *
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <h3 className="font-semibold mb-2">What happens next?</h3>
+                    <p className="text-sm text-muted-foreground">
+                      After submission, our AI will scan your provided information and URLs to create a comprehensive board member profile. You'll receive confirmation once your profile is ready for review.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <Button
+                      type="submit"
+                      disabled={isLoading || !consent.privacy || !consent.terms}
+                      className="flex-1"
+                    >
+                      {isLoading ? "Submitting..." : "Submit Profile"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setFormData({
+                          name: "",
+                          email: "",
+                          linkedin: "",
+                          personalWebsite: "",
+                          bio: "",
+                        });
+                        setConsent({ privacy: false, terms: false });
+                      }}
+                    >
+                      Clear Form
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
           </TabsContent>
