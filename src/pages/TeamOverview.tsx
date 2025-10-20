@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Briefcase, UserCog, Eye } from "lucide-react";
+import { Users, Briefcase, UserCog, Eye, FileText, GitBranch, Clock, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 
 const TeamOverview = () => {
   const navigate = useNavigate();
@@ -19,6 +21,8 @@ const TeamOverview = () => {
   const [allBoardMembers, setAllBoardMembers] = useState<any[]>([]);
   const [allExecutives, setAllExecutives] = useState<any[]>([]);
   const [allKeyStaff, setAllKeyStaff] = useState<any[]>([]);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -81,6 +85,179 @@ const TeamOverview = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewDetails = (member: any) => {
+    setSelectedMember(member);
+    setDetailDialogOpen(true);
+  };
+
+  const MemberDetailDialog = () => {
+    if (!selectedMember) return null;
+
+    return (
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              {selectedMember.preferred_title && `${selectedMember.preferred_title} `}
+              {selectedMember.full_name}
+            </DialogTitle>
+            <p className="text-muted-foreground">{selectedMember.position}</p>
+          </DialogHeader>
+
+          <Tabs defaultValue="bio" className="w-full mt-4">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="bio">
+                <FileText className="h-4 w-4 mr-2" />
+                Bio
+              </TabsTrigger>
+              <TabsTrigger value="responsibilities">
+                <Briefcase className="h-4 w-4 mr-2" />
+                Responsibilities
+              </TabsTrigger>
+              <TabsTrigger value="reports">
+                <GitBranch className="h-4 w-4 mr-2" />
+                Reports
+              </TabsTrigger>
+              <TabsTrigger value="history">
+                <Clock className="h-4 w-4 mr-2" />
+                History
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="bio" className="space-y-4 mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Biography</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <h4 className="font-medium mb-1">Short Bio</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedMember.short_bio || "No biography available"}
+                    </p>
+                  </div>
+                  <Separator />
+                  <div>
+                    <h4 className="font-medium mb-1">Professional Qualifications</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedMember.professional_qualifications || "Not specified"}
+                    </p>
+                  </div>
+                  <Separator />
+                  <div>
+                    <h4 className="font-medium mb-1">Company Affiliations</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedMember.public_company_affiliations || "None listed"}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="responsibilities" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Role & Responsibilities</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <h4 className="font-medium mb-1">Position</h4>
+                    <p className="text-sm text-muted-foreground">{selectedMember.position}</p>
+                  </div>
+                  <Separator />
+                  <div>
+                    <h4 className="font-medium mb-1">Skills & Competencies</h4>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedMember.skills_competencies && Array.isArray(selectedMember.skills_competencies) && selectedMember.skills_competencies.length > 0 ? (
+                        selectedMember.skills_competencies.map((skill: string, index: number) => (
+                          <Badge key={index} variant="secondary">{skill}</Badge>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No skills listed</p>
+                      )}
+                    </div>
+                  </div>
+                  <Separator />
+                  <div>
+                    <h4 className="font-medium mb-1">Work History</h4>
+                    <p className="text-sm text-muted-foreground whitespace-pre-line">
+                      {selectedMember.detailed_work_history || "No work history available"}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="reports" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Reporting Structure</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <h4 className="font-medium mb-1">Reports To</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedMember.sensitive_notes || "Not specified"}
+                    </p>
+                  </div>
+                  <Separator />
+                  <div>
+                    <h4 className="font-medium mb-1">Direct Reports</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Information about team members reporting to this person will be shown here
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Appointment History</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <h4 className="font-medium mb-1">Appointment Date</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedMember.appointment_date 
+                        ? new Date(selectedMember.appointment_date).toLocaleDateString()
+                        : "Not specified"}
+                    </p>
+                  </div>
+                  <Separator />
+                  <div>
+                    <h4 className="font-medium mb-1">Term Expiry</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedMember.term_expiry 
+                        ? new Date(selectedMember.term_expiry).toLocaleDateString()
+                        : "Not specified"}
+                    </p>
+                  </div>
+                  <Separator />
+                  <div>
+                    <h4 className="font-medium mb-1">Reappointment History</h4>
+                    {selectedMember.reappointment_history && Array.isArray(selectedMember.reappointment_history) && selectedMember.reappointment_history.length > 0 ? (
+                      <ul className="space-y-2 mt-2">
+                        {selectedMember.reappointment_history.map((record: any, index: number) => (
+                          <li key={index} className="text-sm text-muted-foreground">
+                            {JSON.stringify(record)}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No reappointment history</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+    );
   };
 
   // Define default positions for each member type
@@ -189,6 +366,7 @@ const TeamOverview = () => {
                 <TableHead>Position</TableHead>
                 <TableHead>{memberType === 'board' ? 'Board' : 'Direct Report'}</TableHead>
                 <TableHead>Contact</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -217,6 +395,20 @@ const TeamOverview = () => {
                   <TableCell className="text-sm text-muted-foreground">
                     {row.member?.personal_email || "-"}
                   </TableCell>
+                  <TableCell className="text-right">
+                    {row.member && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewDetails(row.member)}
+                        className="h-8"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -241,6 +433,7 @@ const TeamOverview = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
+      <MemberDetailDialog />
       <main className="container mx-auto px-4 py-8 pt-24">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Board & Team</h1>
