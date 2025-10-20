@@ -6,13 +6,61 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { TemplateSectionEditor, TemplateSection } from "@/components/TemplateSectionEditor";
+
+const defaultBoardPaperSections: TemplateSection[] = [
+  { id: "cover-sheet", title: "Cover Sheet", required: true, enabled: true, order: 0, level: 0 },
+  { id: "agenda-toc", title: "Agenda / Table of Contents", required: true, enabled: true, order: 1, level: 0 },
+  { id: "declarations", title: "Declarations of Interest (Conflicts of Interest)", required: true, enabled: true, order: 2, level: 0 },
+  { id: "apologies", title: "Apologies / Attendance", required: true, enabled: true, order: 3, level: 0 },
+  { id: "previous-minutes", title: "Minutes of Previous Meeting", required: false, enabled: true, order: 4, level: 0 },
+  { id: "matters-arising", title: "Matters Arising / Action Log", required: false, enabled: true, order: 5, level: 0 },
+  { id: "chair-report", title: "Chair's Report", required: false, enabled: true, order: 6, level: 0 },
+  { id: "ceo-summary", title: "CEO / Managing Director's Executive Summary", required: false, enabled: true, order: 7, level: 0 },
+  { id: "strategy-update", title: "Strategy Update / Strategic Projects", required: false, enabled: true, order: 8, level: 0 },
+  { id: "business-plan", title: "Business Plan / Objectives & Key Results (OKRs)", required: false, enabled: true, order: 9, level: 0 },
+  { id: "operational-kpis", title: "Operational Performance / KPIs", required: false, enabled: true, order: 10, level: 0 },
+  { id: "sales-marketing", title: "Sales, Marketing & Customer Metrics", required: false, enabled: true, order: 11, level: 0 },
+  { id: "product-dev", title: "Product / Service Development / R&D", required: false, enabled: true, order: 12, level: 0 },
+  { id: "major-projects", title: "Major Projects & Programme Status", required: false, enabled: true, order: 13, level: 0 },
+  { id: "hse-report", title: "Health, Safety & Environmental (HSE) Report", required: false, enabled: true, order: 14, level: 0 },
+  { id: "esg-sustainability", title: "ESG / Sustainability / Corporate Social Responsibility", required: false, enabled: true, order: 15, level: 0 },
+  { id: "people-culture", title: "People & Culture / HR Report", required: false, enabled: true, order: 16, level: 0 },
+  { id: "remuneration", title: "Remuneration Committee Report", required: false, enabled: true, order: 17, level: 0 },
+  { id: "audit-committee", title: "Audit Committee Report", required: false, enabled: true, order: 18, level: 0 },
+  { id: "risk-register", title: "Risk Register & Top Risks", required: false, enabled: true, order: 19, level: 0 },
+  { id: "compliance", title: "Compliance & Regulatory Update", required: false, enabled: true, order: 20, level: 0 },
+  { id: "legal-matters", title: "Legal Matters & Litigation", required: false, enabled: true, order: 21, level: 0 },
+  { id: "it-cybersecurity", title: "IT, Cybersecurity & Data Protection", required: false, enabled: true, order: 22, level: 0 },
+  { id: "privacy", title: "Privacy / Data Governance", required: false, enabled: true, order: 23, level: 0 },
+  { id: "financial-statements", title: "Financial Statements & Notes (Period)", required: false, enabled: true, order: 24, level: 0 },
+  { id: "liquidity-cashflow", title: "Liquidity & Cashflow Forecast", required: false, enabled: true, order: 25, level: 0 },
+  { id: "financial-commentary", title: "Financial Commentary & Variance Analysis", required: false, enabled: true, order: 26, level: 0 },
+  { id: "capex", title: "Capital Expenditure (CapEx) Proposals", required: false, enabled: true, order: 27, level: 0 },
+  { id: "contracts", title: "Major Contracts / Procurement & Supplier Issues", required: false, enabled: true, order: 28, level: 0 },
+  { id: "related-party", title: "Related Party Transactions", required: false, enabled: true, order: 29, level: 0 },
+  { id: "investment", title: "Investment / Financing / Fundraising Update", required: false, enabled: true, order: 30, level: 0 },
+  { id: "ma", title: "Mergers, Acquisitions & Divestments (M&A)", required: false, enabled: true, order: 31, level: 0 },
+  { id: "internal-audit", title: "Internal Audit / Assurance Reports", required: false, enabled: true, order: 32, level: 0 },
+  { id: "external-auditor", title: "External Auditor Communications", required: false, enabled: true, order: 33, level: 0 },
+  { id: "board-governance", title: "Board Governance & Board Committee Items", required: false, enabled: true, order: 34, level: 0 },
+  { id: "decisions", title: "Board Papers Seeking Decisions / Resolutions", required: false, enabled: true, order: 35, level: 0 },
+  { id: "summary-decisions", title: "Summary of Key Decisions & Actions", required: false, enabled: true, order: 36, level: 0 },
+  { id: "aob", title: "Any Other Business (AOB)", required: false, enabled: true, order: 37, level: 0 },
+  { id: "next-meeting", title: "Date, Time & Location of Next Meeting", required: false, enabled: true, order: 38, level: 0 },
+  { id: "appendices", title: "Appendices & Supporting Papers", required: false, enabled: true, order: 39, level: 0 },
+  { id: "glossary", title: "Glossary / Definitions / Abbreviations", required: false, enabled: true, order: 40, level: 0 },
+];
 
 const BoardPapers = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [boardPaperSections, setBoardPaperSections] = useState<TemplateSection[]>(defaultBoardPaperSections);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -104,7 +152,47 @@ const BoardPapers = () => {
                       Create and manage regular board papers using your template
                     </CardDescription>
                   </div>
-                  <Button variant="accent" size="lg" className="shadow-lg hover:shadow-xl">Add New Board Paper</Button>
+                  <div className="flex gap-3">
+                    <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="lg" className="shadow-lg hover:shadow-xl">
+                          Board Paper Template
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Board Paper Template</DialogTitle>
+                          <DialogDescription>
+                            Configure the sections for your board papers. Required sections cannot be removed or disabled.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                          <TemplateSectionEditor
+                            sections={boardPaperSections}
+                            onSectionsChange={setBoardPaperSections}
+                            isAdmin={false}
+                          />
+                        </div>
+                        <div className="flex justify-end gap-3 pt-4 border-t">
+                          <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button onClick={() => {
+                            toast({
+                              title: "Template Saved",
+                              description: "Your board paper template has been updated.",
+                            });
+                            setTemplateDialogOpen(false);
+                          }}>
+                            Save Template
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <Button variant="accent" size="lg" className="shadow-lg hover:shadow-xl">
+                      Add New Board Paper
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-6">
