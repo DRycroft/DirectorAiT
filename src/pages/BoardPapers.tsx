@@ -65,7 +65,7 @@ const BoardPapers = () => {
       <main className="flex-1 container mx-auto px-4 pt-20 pb-4 max-w-7xl">
         <div className="mb-4 flex items-center justify-between gap-4">
           <Tabs defaultValue="papers" className="w-full flex-1">
-            <TabsList className="grid w-full grid-cols-4 h-11">
+            <TabsList className="grid w-full grid-cols-4 h-10">
               <TabsTrigger value="papers" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Board Papers</TabsTrigger>
               <TabsTrigger value="exec" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Exec Reports</TabsTrigger>
               <TabsTrigger value="minutes" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Minutes</TabsTrigger>
@@ -220,7 +220,7 @@ const BoardPapers = () => {
           </Tabs>
           <Dialog open={createPaperDialogOpen} onOpenChange={setCreatePaperDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="accent" className="shadow-lg hover:shadow-xl whitespace-nowrap h-11">
+              <Button variant="accent" className="shadow-lg hover:shadow-xl whitespace-nowrap h-10">
                 Create New Board Paper
               </Button>
             </DialogTrigger>
