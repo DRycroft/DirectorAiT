@@ -114,7 +114,7 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
             onDragEnd={handleDragEnd}
             className={cn(
               "flex items-center gap-3 p-3 rounded-lg border bg-card cursor-move hover:border-primary/50 transition-colors",
-              section.level === 1 && "ml-12 border-l-4 border-l-primary/30"
+              section.level === 1 && "ml-16 border-l-4 border-l-primary bg-accent/20"
             )}
           >
             <Checkbox
