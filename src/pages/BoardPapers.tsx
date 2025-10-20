@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,11 +22,83 @@ const BoardPapers = () => {
   const { toast } = useToast();
   const [createPaperDialogOpen, setCreatePaperDialogOpen] = useState(false);
   const [boardPapers, setBoardPapers] = useState<BoardPaper[]>([]);
+  const [organization, setOrganization] = useState<any>(null);
   const [newPaperData, setNewPaperData] = useState({
     date: new Date().toISOString().split('T')[0],
     companyName: "",
     periodCovered: "",
   });
+
+  useEffect(() => {
+    fetchOrganizationData();
+  }, []);
+
+  const fetchOrganizationData = async () => {
+    try {
+      // Get the current user's profile to find their org_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('org_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.org_id) return;
+
+      // Fetch organization details
+      const { data: org, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', profile.org_id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching organization:', error);
+        return;
+      }
+
+      setOrganization(org);
+      
+      // Auto-populate company name
+      setNewPaperData(prev => ({
+        ...prev,
+        companyName: org.name || "",
+        periodCovered: getCurrentPeriod(org.reporting_frequency)
+      }));
+    } catch (error) {
+      console.error('Error in fetchOrganizationData:', error);
+    }
+  };
+
+  const getCurrentPeriod = (frequency: string | null) => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    
+    if (frequency === 'quarterly') {
+      const quarter = Math.floor(month / 3) + 1;
+      return `Q${quarter} ${year}`;
+    } else if (frequency === 'monthly') {
+      return now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    } else if (frequency === 'annually') {
+      return `FY ${year}`;
+    }
+    
+    return `Q${Math.floor(month / 3) + 1} ${year}`; // Default to quarterly
+  };
+
+  // Update dialog data when organization changes or dialog opens
+  useEffect(() => {
+    if (createPaperDialogOpen && organization) {
+      setNewPaperData(prev => ({
+        ...prev,
+        companyName: organization.name || "",
+        periodCovered: getCurrentPeriod(organization.reporting_frequency)
+      }));
+    }
+  }, [createPaperDialogOpen, organization]);
 
   const handleCreateBoardPaper = async () => {
     if (!newPaperData.companyName || !newPaperData.periodCovered) {
