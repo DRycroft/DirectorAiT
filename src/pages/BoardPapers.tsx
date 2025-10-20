@@ -163,41 +163,15 @@ const BoardPapers = () => {
               <div className="flex gap-3">
                 <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className="shadow-lg hover:shadow-xl">
+                    <Button variant="outline" size="sm" className="shadow-lg hover:shadow-xl h-8">
                       Board Paper Template
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Board Paper Template</DialogTitle>
-                      <DialogDescription>
-                        Configure the sections for your board papers. Required sections cannot be removed or disabled.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4">
-                      <TemplateSectionEditor
-                        sections={boardPaperSections}
-                        onSectionsChange={setBoardPaperSections}
-                        isAdmin={false}
-                      />
-                    </div>
-                    <div className="flex justify-end gap-3 pt-4 border-t">
-                      <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={() => {
-                        toast({
-                          title: "Template Saved",
-                          description: "Your board paper template has been updated.",
-                        });
-                        setTemplateDialogOpen(false);
-                      }}>
-                        Save Template
-                      </Button>
-                    </div>
+...
                   </DialogContent>
                 </Dialog>
-                <Button variant="accent" onClick={handleCreateBoardPaper} className="shadow-lg hover:shadow-xl">
+                <Button variant="accent" size="sm" onClick={handleCreateBoardPaper} className="shadow-lg hover:shadow-xl h-8">
                   Create New Board Paper
                 </Button>
               </div>
