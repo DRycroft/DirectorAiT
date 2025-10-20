@@ -146,18 +146,9 @@ const BoardPapers = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
-      <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
-        <div className="mb-6">
-          <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-            Board Papers
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Manage all aspects of your board documentation
-          </p>
-        </div>
-
+      <main className="flex-1 container mx-auto px-4 pt-20 max-w-7xl">
         <Tabs defaultValue="papers" className="w-full flex-1">
-          <TabsList className="grid w-full grid-cols-6 mb-6">
+          <TabsList className="grid w-full grid-cols-6 mb-4">
             <TabsTrigger value="papers" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Board Papers</TabsTrigger>
             <TabsTrigger value="minutes" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Minutes</TabsTrigger>
             <TabsTrigger value="special" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Special Papers</TabsTrigger>
@@ -167,7 +158,7 @@ const BoardPapers = () => {
           </TabsList>
 
           <TabsContent value="papers" className="space-y-4">
-            <div className="bg-card rounded-lg border p-4 flex items-center justify-between">
+            <div className="bg-card rounded-lg border px-4 py-2 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Board Papers</h2>
               <div className="flex gap-3">
                 <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
