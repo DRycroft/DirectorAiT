@@ -458,7 +458,7 @@ const Settings = () => {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="businessNumber">Business Number</Label>
+                          <Label htmlFor="businessNumber">GST/TAX Number</Label>
                           <Input 
                             id="businessNumber" 
                             value={companyData.business_number}
