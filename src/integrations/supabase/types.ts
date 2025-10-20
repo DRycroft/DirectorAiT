@@ -750,9 +750,11 @@ export type Database = {
           admin_role: string | null
           agm_date: string | null
           business_number: string | null
+          company_phone: string | null
           created_at: string
           domain: string | null
           financial_year_end: string | null
+          gst_period: string | null
           id: string
           logo_url: string | null
           name: string
@@ -770,9 +772,11 @@ export type Database = {
           admin_role?: string | null
           agm_date?: string | null
           business_number?: string | null
+          company_phone?: string | null
           created_at?: string
           domain?: string | null
           financial_year_end?: string | null
+          gst_period?: string | null
           id?: string
           logo_url?: string | null
           name: string
@@ -790,9 +794,11 @@ export type Database = {
           admin_role?: string | null
           agm_date?: string | null
           business_number?: string | null
+          company_phone?: string | null
           created_at?: string
           domain?: string | null
           financial_year_end?: string | null
+          gst_period?: string | null
           id?: string
           logo_url?: string | null
           name?: string

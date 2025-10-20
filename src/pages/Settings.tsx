@@ -231,6 +231,7 @@ const Settings = () => {
     domain: "",
     logo_url: "",
     business_number: "",
+    company_phone: "",
     primary_contact_name: "",
     primary_contact_role: "",
     primary_contact_email: "",
@@ -240,6 +241,7 @@ const Settings = () => {
     admin_email: "",
     admin_phone: "",
     reporting_frequency: "quarterly",
+    gst_period: "quarterly",
     financial_year_end: "",
     agm_date: "",
   });
@@ -272,6 +274,7 @@ const Settings = () => {
             domain: org.domain || "",
             logo_url: org.logo_url || "",
             business_number: org.business_number || "",
+            company_phone: org.company_phone || "",
             primary_contact_name: org.primary_contact_name || "",
             primary_contact_role: org.primary_contact_role || "",
             primary_contact_email: org.primary_contact_email || "",
@@ -281,6 +284,7 @@ const Settings = () => {
             admin_email: org.admin_email || "",
             admin_phone: org.admin_phone || "",
             reporting_frequency: org.reporting_frequency || "quarterly",
+            gst_period: org.gst_period || "quarterly",
             financial_year_end: org.financial_year_end || "",
             agm_date: org.agm_date || "",
           });
@@ -423,6 +427,15 @@ const Settings = () => {
                             onChange={(e) => setCompanyData({ ...companyData, domain: e.target.value })}
                           />
                         </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="companyPhone">Phone Number</Label>
+                          <Input 
+                            id="companyPhone"
+                            type="tel"
+                            value={companyData.company_phone}
+                            onChange={(e) => setCompanyData({ ...companyData, company_phone: e.target.value })}
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -506,6 +519,23 @@ const Settings = () => {
                             value={companyData.agm_date}
                             onChange={(e) => setCompanyData({ ...companyData, agm_date: e.target.value })}
                           />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="gstPeriod">GST Period</Label>
+                          <Select
+                            value={companyData.gst_period}
+                            onValueChange={(value) => setCompanyData({ ...companyData, gst_period: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="bi-monthly">Bi-Monthly</SelectItem>
+                              <SelectItem value="quarterly">Quarterly</SelectItem>
+                              <SelectItem value="six-months">Six Months</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     </div>
