@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BoardPaper {
   id: string;
@@ -27,7 +28,7 @@ const BoardPapers = () => {
     periodCovered: "",
   });
 
-  const handleCreateBoardPaper = () => {
+  const handleCreateBoardPaper = async () => {
     if (!newPaperData.companyName || !newPaperData.periodCovered) {
       toast({
         title: "Missing Information",
@@ -37,26 +38,49 @@ const BoardPapers = () => {
       return;
     }
 
-    const newPaper: BoardPaper = {
-      id: Date.now().toString(),
-      date: new Date(newPaperData.date).toLocaleDateString(),
-      companyName: newPaperData.companyName,
-      periodCovered: newPaperData.periodCovered,
-      createdBy: "Current User",
-    };
-    
-    setBoardPapers([...boardPapers, newPaper]);
-    setCreatePaperDialogOpen(false);
-    setNewPaperData({
-      date: new Date().toISOString().split('T')[0],
-      companyName: "",
-      periodCovered: "",
-    });
-    
-    toast({
-      title: "Board Paper Created",
-      description: `Board paper for ${newPaperData.companyName} (${newPaperData.periodCovered}) has been created using your template.`,
-    });
+    try {
+      // Fetch the saved Board Paper template
+      const { data: template, error: templateError } = await supabase
+        .from('templates')
+        .select('*')
+        .eq('name', 'Board Papers')
+        .eq('scope', 'personal')
+        .single();
+
+      if (templateError && templateError.code !== 'PGRST116') {
+        console.error('Error fetching template:', templateError);
+      }
+
+      const newPaper: BoardPaper = {
+        id: Date.now().toString(),
+        date: new Date(newPaperData.date).toLocaleDateString(),
+        companyName: newPaperData.companyName,
+        periodCovered: newPaperData.periodCovered,
+        createdBy: "Current User",
+      };
+      
+      setBoardPapers([...boardPapers, newPaper]);
+      setCreatePaperDialogOpen(false);
+      setNewPaperData({
+        date: new Date().toISOString().split('T')[0],
+        companyName: "",
+        periodCovered: "",
+      });
+      
+      toast({
+        title: "Board Paper Created",
+        description: template 
+          ? `Board paper created using your saved template with ${(template.sections as any[])?.length || 0} sections.`
+          : `Board paper created for ${newPaperData.companyName} (${newPaperData.periodCovered}).`,
+      });
+    } catch (error) {
+      console.error('Error creating board paper:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create board paper. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
   return (
@@ -73,47 +97,42 @@ const BoardPapers = () => {
             </TabsList>
 
           <TabsContent value="papers" className="space-y-4">
-
             {boardPapers.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Board Paper Documents</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {boardPapers.map((paper) => (
-                      <div 
-                        key={paper.id} 
-                        className="p-4 border rounded-lg hover:border-primary hover:bg-accent/5 transition-all cursor-pointer group"
-                      >
-                        <div className="grid grid-cols-5 gap-4 items-center">
-                          <div>
-                            <Label className="text-xs text-muted-foreground">Date</Label>
-                            <p className="text-sm font-medium mt-1">{paper.date}</p>
-                          </div>
-                          <div>
-                            <Label className="text-xs text-muted-foreground">Company Name</Label>
-                            <p className="text-sm font-medium mt-1">{paper.companyName}</p>
-                          </div>
-                          <div>
-                            <Label className="text-xs text-muted-foreground">Period Covered</Label>
-                            <p className="text-sm font-medium mt-1">{paper.periodCovered}</p>
-                          </div>
-                          <div>
-                            <Label className="text-xs text-muted-foreground">Created By</Label>
-                            <p className="text-sm font-medium mt-1">{paper.createdBy}</p>
-                          </div>
-                          <div className="flex justify-end">
-                            <Button size="sm" variant="outline" className="group-hover:bg-primary group-hover:text-white transition-colors">
-                              Open Document
-                            </Button>
-                          </div>
-                        </div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-5 gap-4 px-4 py-2 text-sm font-medium text-muted-foreground">
+                  <div>Date</div>
+                  <div>Company Name</div>
+                  <div>Period</div>
+                  <div>Created By</div>
+                  <div></div>
+                </div>
+                {boardPapers.map((paper) => (
+                  <div 
+                    key={paper.id} 
+                    className="p-4 border rounded-lg hover:border-primary hover:bg-accent/5 transition-all cursor-pointer group"
+                  >
+                    <div className="grid grid-cols-5 gap-4 items-center">
+                      <div>
+                        <p className="text-sm font-medium">{paper.date}</p>
                       </div>
-                    ))}
+                      <div>
+                        <p className="text-sm font-medium">{paper.companyName}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{paper.periodCovered}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{paper.createdBy}</p>
+                      </div>
+                      <div className="flex justify-end">
+                        <Button size="sm" variant="outline" className="group-hover:bg-primary group-hover:text-white transition-colors">
+                          Open Document
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                ))}
+              </div>
             )}
           </TabsContent>
 
