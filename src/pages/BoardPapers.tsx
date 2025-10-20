@@ -148,7 +148,7 @@ const BoardPapers = () => {
       <Navigation />
       <main className="flex-1 container mx-auto px-4 pt-16 pb-4 max-w-7xl">
         <Tabs defaultValue="papers" className="w-full flex-1">
-          <TabsList className="grid w-full grid-cols-6 mb-4 h-10">
+          <TabsList className="grid w-full grid-cols-6 mb-2 h-10">
             <TabsTrigger value="papers" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Board Papers</TabsTrigger>
             <TabsTrigger value="minutes" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Minutes</TabsTrigger>
             <TabsTrigger value="special" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Special Papers</TabsTrigger>
@@ -158,7 +158,7 @@ const BoardPapers = () => {
           </TabsList>
 
           <TabsContent value="papers" className="space-y-4">
-            <div className="bg-card rounded-lg border px-4 py-2 flex items-center justify-between">
+            <div className="bg-card rounded-lg border px-4 h-10 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Board Papers</h2>
               <div className="flex gap-3">
                 <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
