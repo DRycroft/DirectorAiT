@@ -384,48 +384,52 @@ const Settings = () => {
             <TabsTrigger value="templates">Document Templates</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="company" className="space-y-6">
+          <TabsContent value="company" className="space-y-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-4">
                 <CardTitle>Company Information</CardTitle>
                 <CardDescription>
                   Update your organization's details
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="companyName">Company Name</Label>
-                    <Input 
-                      id="companyName" 
-                      value={companyData.name}
-                      onChange={(e) => setCompanyData({ ...companyData, name: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="businessNumber">Business Number</Label>
-                    <Input 
-                      id="businessNumber" 
-                      value={companyData.business_number}
-                      onChange={(e) => setCompanyData({ ...companyData, business_number: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="domain">Domain</Label>
-                    <Input 
-                      id="domain" 
-                      value={companyData.domain}
-                      onChange={(e) => setCompanyData({ ...companyData, domain: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t">
-                  <div className="grid md:grid-cols-2 gap-8">
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Left Column */}
+                  <div className="space-y-4">
                     <div>
-                      <h3 className="text-lg font-semibold mb-4">Primary Contact (CEO/Chair)</h3>
-                      <div className="grid gap-4">
-                        <div className="space-y-2">
+                      <h3 className="text-base font-semibold mb-3">Company Details</h3>
+                      <div className="grid gap-3">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="companyName">Company Name</Label>
+                          <Input 
+                            id="companyName" 
+                            value={companyData.name}
+                            onChange={(e) => setCompanyData({ ...companyData, name: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="businessNumber">Business Number</Label>
+                          <Input 
+                            id="businessNumber" 
+                            value={companyData.business_number}
+                            onChange={(e) => setCompanyData({ ...companyData, business_number: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="domain">Domain</Label>
+                          <Input 
+                            id="domain" 
+                            value={companyData.domain}
+                            onChange={(e) => setCompanyData({ ...companyData, domain: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t">
+                      <h3 className="text-base font-semibold mb-3">Primary Contact (CEO/Chair)</h3>
+                      <div className="grid gap-3">
+                        <div className="space-y-1.5">
                           <Label htmlFor="primaryContactName">Name</Label>
                           <Input 
                             id="primaryContactName" 
@@ -433,7 +437,7 @@ const Settings = () => {
                             onChange={(e) => setCompanyData({ ...companyData, primary_contact_name: e.target.value })}
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <Label htmlFor="primaryContactRole">Role</Label>
                           <Input 
                             id="primaryContactRole" 
@@ -441,7 +445,7 @@ const Settings = () => {
                             onChange={(e) => setCompanyData({ ...companyData, primary_contact_role: e.target.value })}
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <Label htmlFor="primaryContactEmail">Email</Label>
                           <Input 
                             id="primaryContactEmail" 
@@ -450,7 +454,7 @@ const Settings = () => {
                             onChange={(e) => setCompanyData({ ...companyData, primary_contact_email: e.target.value })}
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <Label htmlFor="primaryContactPhone">Phone</Label>
                           <Input 
                             id="primaryContactPhone" 
@@ -461,11 +465,52 @@ const Settings = () => {
                         </div>
                       </div>
                     </div>
+                  </div>
 
+                  {/* Right Column */}
+                  <div className="space-y-4">
                     <div>
-                      <h3 className="text-lg font-semibold mb-4">Admin Person</h3>
-                      <div className="grid gap-4">
-                        <div className="space-y-2">
+                      <h3 className="text-base font-semibold mb-3">Board Reporting</h3>
+                      <div className="grid gap-3">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="reportingFrequency">Reporting Frequency</Label>
+                          <select
+                            id="reportingFrequency"
+                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            value={companyData.reporting_frequency}
+                            onChange={(e) => setCompanyData({ ...companyData, reporting_frequency: e.target.value })}
+                          >
+                            <option value="monthly">Monthly</option>
+                            <option value="bi-monthly">Bi-Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="biannually">Biannually</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="financialYearEnd">Financial Year End</Label>
+                          <Input 
+                            id="financialYearEnd" 
+                            type="date"
+                            value={companyData.financial_year_end}
+                            onChange={(e) => setCompanyData({ ...companyData, financial_year_end: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="agmDate">AGM Date</Label>
+                          <Input 
+                            id="agmDate" 
+                            type="date"
+                            value={companyData.agm_date}
+                            onChange={(e) => setCompanyData({ ...companyData, agm_date: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t">
+                      <h3 className="text-base font-semibold mb-3">Admin Person</h3>
+                      <div className="grid gap-3">
+                        <div className="space-y-1.5">
                           <Label htmlFor="adminName">Name</Label>
                           <Input 
                             id="adminName" 
@@ -473,7 +518,7 @@ const Settings = () => {
                             onChange={(e) => setCompanyData({ ...companyData, admin_name: e.target.value })}
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <Label htmlFor="adminRole">Role</Label>
                           <Input 
                             id="adminRole" 
@@ -481,7 +526,7 @@ const Settings = () => {
                             onChange={(e) => setCompanyData({ ...companyData, admin_role: e.target.value })}
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <Label htmlFor="adminEmail">Email</Label>
                           <Input 
                             id="adminEmail" 
@@ -490,7 +535,7 @@ const Settings = () => {
                             onChange={(e) => setCompanyData({ ...companyData, admin_email: e.target.value })}
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <Label htmlFor="adminPhone">Phone</Label>
                           <Input 
                             id="adminPhone" 
@@ -504,45 +549,7 @@ const Settings = () => {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t">
-                  <h3 className="text-lg font-semibold mb-4">Board Reporting</h3>
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="reportingFrequency">Reporting Frequency</Label>
-                      <select
-                        id="reportingFrequency"
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        value={companyData.reporting_frequency}
-                        onChange={(e) => setCompanyData({ ...companyData, reporting_frequency: e.target.value })}
-                      >
-                        <option value="monthly">Monthly</option>
-                        <option value="bi-monthly">Bi-Monthly</option>
-                        <option value="quarterly">Quarterly</option>
-                        <option value="biannually">Biannually</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="financialYearEnd">Financial Year End</Label>
-                      <Input 
-                        id="financialYearEnd" 
-                        type="date"
-                        value={companyData.financial_year_end}
-                        onChange={(e) => setCompanyData({ ...companyData, financial_year_end: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="agmDate">AGM Date</Label>
-                      <Input 
-                        id="agmDate" 
-                        type="date"
-                        value={companyData.agm_date}
-                        onChange={(e) => setCompanyData({ ...companyData, agm_date: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-4">
+                <div className="flex justify-end pt-4 mt-4 border-t">
                   <Button onClick={handleSaveCompany}>
                     <Save className="mr-2 h-4 w-4" />
                     Save Company Details
