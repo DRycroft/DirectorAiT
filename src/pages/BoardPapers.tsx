@@ -10,8 +10,7 @@ const BoardPapers = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
       <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
-        <div className="mb-8 relative">
-          <div className="absolute -inset-2 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 blur-3xl -z-10" />
+        <div className="mb-8">
           <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
             Board Papers
           </h1>
@@ -21,7 +20,7 @@ const BoardPapers = () => {
         </div>
 
         <Tabs defaultValue="papers" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8 bg-card/50 backdrop-blur-sm p-2 rounded-xl border border-primary/10 shadow-lg">
+          <TabsList className="grid w-full grid-cols-6 mb-8">
             <TabsTrigger value="papers" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Board Papers</TabsTrigger>
             <TabsTrigger value="minutes" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Minutes</TabsTrigger>
             <TabsTrigger value="special" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Special Papers</TabsTrigger>
@@ -31,11 +30,11 @@ const BoardPapers = () => {
           </TabsList>
 
           <TabsContent value="papers" className="space-y-4">
-            <Card className="border-primary/20 shadow-xl bg-gradient-to-br from-card via-card to-primary/5 hover:shadow-2xl transition-all">
-              <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10">
+            <Card>
+              <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-2xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Board Papers</CardTitle>
+                    <CardTitle className="text-2xl">Board Papers</CardTitle>
                     <CardDescription className="text-base mt-1">
                       Create and manage regular board papers using your template
                     </CardDescription>
@@ -100,11 +99,11 @@ const BoardPapers = () => {
           </TabsContent>
 
           <TabsContent value="exec" className="space-y-4">
-            <Card className="border-accent/20 shadow-xl bg-gradient-to-br from-card via-card to-accent/5 hover:shadow-2xl transition-all">
-              <CardHeader className="bg-gradient-to-r from-accent/10 to-primary/10">
+            <Card>
+              <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-2xl bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">Executive Reports</CardTitle>
+                    <CardTitle className="text-2xl">Executive Reports</CardTitle>
                     <CardDescription className="text-base mt-1">
                       Select report type to view or create reports
                     </CardDescription>
