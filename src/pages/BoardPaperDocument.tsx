@@ -69,6 +69,65 @@ const BoardPaperDocument = () => {
   });
 
   useEffect(() => {
+    const fetchOrganizationData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Fetch current user's profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name, org_id')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.org_id) {
+          // Fetch organization details
+          const { data: org } = await supabase
+            .from('organizations')
+            .select('name, reporting_frequency, logo_url')
+            .eq('id', profile.org_id)
+            .single();
+
+          // Fetch boards for this organization
+          const { data: boards } = await supabase
+            .from('boards')
+            .select('id')
+            .eq('org_id', profile.org_id);
+
+          // Fetch board members from all boards in the organization
+          let ceo = null;
+          let chair = null;
+          
+          if (boards && boards.length > 0) {
+            const { data: members } = await supabase
+              .from('board_members')
+              .select('full_name, position')
+              .in('board_id', boards.map(b => b.id));
+
+            ceo = members?.find(m => m.position === 'CEO');
+            chair = members?.find(m => m.position === 'Chair');
+          }
+
+          if (org) {
+            setPaperInfo({
+              companyName: org.name || "Company Name",
+              logoUrl: org.logo_url || "",
+              date: new Date().toLocaleDateString(),
+              periodCovered: org.reporting_frequency || "Period",
+              preparedBy: profile.name || "Company Secretary",
+              signedOffBy: ceo?.full_name || "Chief Executive Officer",
+              acceptedBy: chair?.full_name || "Board Chair"
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching organization data:', error);
+      }
+    };
+
+    fetchOrganizationData();
+
     const fetchTemplate = async () => {
       try {
         const { data: template, error } = await supabase
