@@ -12,6 +12,7 @@ interface ComplianceRequirement {
   authority: string;
   frequency: string;
   category: string;
+  sector: string;
   is_mandatory: boolean;
   reference_url?: string;
 }
@@ -67,108 +68,121 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const aiPrompt = `You are a compliance expert for New Zealand businesses. 
+    // Process each industry sector separately for better organization
+    const allRequirements: ComplianceRequirement[] = [];
+    
+    for (const sector of org.industry_sector) {
+      const relevantCategories = org.business_category.filter((cat: string) => 
+        cat.toLowerCase().includes(sector.toLowerCase().split(' ')[0]) || 
+        sector.toLowerCase().includes(cat.toLowerCase().split(' ')[0])
+      );
 
-Analyze the compliance and regulatory requirements for a business with the following characteristics:
-- Industry Sectors: ${org.industry_sector.join(', ')}
-- Business Categories: ${org.business_category.join(', ')}
-- Country: New Zealand
+      const aiPrompt = `You are an expert compliance consultant specializing in New Zealand regulations.
 
-This business operates across MULTIPLE sectors. Provide compliance requirements for ALL of these sectors and categories combined.
+SECTOR ANALYSIS: ${sector}
+BUSINESS ACTIVITIES: ${relevantCategories.length > 0 ? relevantCategories.join(', ') : org.business_category.join(', ')}
 
-Provide a comprehensive list of all regulatory compliance requirements this business must meet, including:
-1. Tax obligations (IRD requirements: GST, PAYE, Provisional Tax, etc.)
-2. Industry-specific regulations and licensing
-3. Health & Safety requirements (WorkSafe NZ)
-4. Employment law compliance
-5. Environmental regulations
-6. Data privacy requirements (Privacy Act)
-7. Local council requirements (building consents, permits, inspections)
-8. Insurance requirements
-9. Food safety (if applicable)
-10. Any other relevant compliance requirements
+Conduct a COMPREHENSIVE deep-dive analysis of ALL compliance and regulatory requirements for this specific sector in New Zealand. Consider:
+
+MANDATORY REQUIREMENTS (Government/Legal):
+1. Inland Revenue Department (IRD): GST, PAYE, provisional tax, FBT, resident withholding tax
+2. Companies Office: Annual returns, director duties, shareholder registers
+3. WorkSafe NZ: Health & safety plans, hazard management, accident reporting
+4. Ministry of Business Innovation & Employment (MBIE): Industry-specific licenses and permits
+5. Local Council: Building consents, resource consents, zoning compliance, inspections
+6. Environmental Protection Authority: Waste management, emissions, environmental standards
+7. Privacy Commissioner: Privacy Act compliance, data handling, breach reporting
+8. Employment NZ: Employment agreements, minimum wage, holiday pay, leave entitlements
+9. ACC: Levy payments, injury reporting and management
+10. Industry-specific regulators (e.g., Food Safety, Building Consent Authority, etc.)
+
+OPTIONAL/RECOMMENDED BEST PRACTICES:
+- Industry certifications and quality standards
+- Insurance coverage beyond minimums
+- Enhanced reporting or auditing
+- Voluntary environmental initiatives
+- Advanced health & safety measures
 
 For EACH requirement, provide:
-- Title (concise)
-- Description (detailed explanation)
-- Authority (which government agency/body)
-- Frequency: MUST be exactly one of these values: "daily", "weekly", "monthly", "quarterly", "semi_annual", "annual", "biennial", or "as_required"
-- Category (one of: Tax & Financial, Health & Safety, Environmental, Employment, Data & Privacy, Industry Specific, Corporate Governance, Insurance)
-- Is it mandatory? (true/false)
-- Reference URL (if available, prefer official NZ government sites)
+- Title: Clear, specific (e.g., "GST Return Filing - Monthly")
+- Description: Detailed explanation of what must be done and why
+- Authority: Exact NZ government agency or body
+- Frequency: MUST be ONE of: "daily", "weekly", "monthly", "quarterly", "semi_annual", "annual", "biennial", "as_required"
+- Category: ONE of: "Tax & Financial", "Health & Safety", "Environmental", "Employment", "Data & Privacy", "Industry Specific", "Corporate Governance", "Insurance"
+- Sector: "${sector}"
+- Is_mandatory: true for legal requirements, false for recommended practices
+- Reference_url: Official NZ government website link
 
-Return ONLY a valid JSON array of objects with this exact structure:
+Return ONLY valid JSON array:
 [
   {
     "title": "string",
-    "description": "string",
+    "description": "string", 
     "authority": "string",
-    "frequency": "quarterly",
-    "category": "string",
+    "frequency": "monthly",
+    "category": "Tax & Financial",
+    "sector": "${sector}",
     "is_mandatory": true,
     "reference_url": "string"
   }
 ]
 
-CRITICAL: The "frequency" field must be EXACTLY one of these strings: "daily", "weekly", "monthly", "quarterly", "semi_annual", "annual", "biennial", or "as_required". Do NOT use any other values or combine multiple values.
+Provide 15-25 requirements for this sector. Be thorough and specific to NZ regulations.`;
 
-Be thorough and specific to New Zealand regulations. Include at least 10-15 relevant requirements.`;
-
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'user',
-            content: aiPrompt
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 4000
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API Error:', aiResponse.status, errorText);
-      return new Response(JSON.stringify({ error: 'Failed to scan compliance requirements' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'openai/gpt-5-mini',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a compliance expert. Always return valid JSON arrays with properly formatted compliance requirements.'
+            },
+            {
+              role: 'user',
+              content: aiPrompt
+            }
+          ],
+          max_completion_tokens: 6000
+        }),
       });
+
+      if (!aiResponse.ok) {
+        console.error(`AI API Error for ${sector}:`, aiResponse.status);
+        continue;
+      }
+
+      const aiData = await aiResponse.json();
+      const content = aiData.choices?.[0]?.message?.content;
+
+      if (content) {
+        try {
+          const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || content.match(/\[[\s\S]*\]/);
+          const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
+          const sectorRequirements: ComplianceRequirement[] = JSON.parse(jsonStr);
+          allRequirements.push(...sectorRequirements);
+          console.log(`Found ${sectorRequirements.length} requirements for ${sector}`);
+        } catch (parseError) {
+          console.error(`Failed to parse AI response for ${sector}:`, parseError);
+        }
+      }
     }
 
-    const aiData = await aiResponse.json();
-    const content = aiData.choices?.[0]?.message?.content;
+    const requirements = allRequirements;
 
-    if (!content) {
-      console.error('No content in AI response');
+    if (requirements.length === 0) {
+      console.error('No compliance requirements generated');
       return new Response(JSON.stringify({ error: 'No compliance data generated' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Extract JSON from the response (handle markdown code blocks)
-    let requirements: ComplianceRequirement[];
-    try {
-      const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || content.match(/\[[\s\S]*\]/);
-      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
-      requirements = JSON.parse(jsonStr);
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      console.log('AI Response content:', content);
-      return new Response(JSON.stringify({ error: 'Failed to parse compliance data' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log(`Found ${requirements.length} compliance requirements`);
+    console.log(`Total compliance requirements found: ${requirements.length}`);
 
     // Get category IDs
     const { data: categories } = await supabase
@@ -177,7 +191,7 @@ Be thorough and specific to New Zealand regulations. Include at least 10-15 rele
 
     const categoryMap = new Map(categories?.map(c => [c.name, c.id]) || []);
 
-    // Insert compliance items
+    // Insert compliance items organized by sector
     // Mandatory items are set as active, optional items are inactive by default
     const complianceItems = requirements.map(req => ({
       org_id: org_id,
@@ -187,8 +201,8 @@ Be thorough and specific to New Zealand regulations. Include at least 10-15 rele
       frequency: req.frequency,
       category_id: categoryMap.get(req.category) || null,
       status: 'in_progress' as const,
-      industry_sector: org.industry_sector.join(', '), // Store all sectors
-      notes: req.is_mandatory ? 'Mandatory government requirement' : 'Optional/Recommended - Nice to have',
+      industry_sector: req.sector, // Store individual sector for grouping
+      notes: req.is_mandatory ? 'Mandatory government requirement' : 'Optional/Recommended best practice',
       reference_url: req.reference_url || null,
       is_active: req.is_mandatory // Mandatory items active by default, optional items inactive
     }));

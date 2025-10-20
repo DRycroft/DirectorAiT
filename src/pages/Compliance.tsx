@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Plus, AlertCircle, CheckCircle, Clock, Building2 } from "lucide-react";
+import { Plus, AlertCircle, CheckCircle, Clock, Building2, ChevronDown, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 
 interface ComplianceItem {
@@ -27,6 +29,9 @@ interface ComplianceItem {
   status: string;
   category_id: string;
   notes: string;
+  industry_sector: string;
+  is_active: boolean;
+  reference_url: string | null;
 }
 
 interface ComplianceCategory {
@@ -110,6 +115,26 @@ const Compliance = () => {
       toast.error("Failed to load compliance data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleActive = async (itemId: string, currentActive: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("compliance_items")
+        .update({ is_active: !currentActive })
+        .eq("id", itemId);
+
+      if (error) throw error;
+
+      setItems(items.map(item => 
+        item.id === itemId ? { ...item, is_active: !currentActive } : item
+      ));
+
+      toast.success(`Compliance item ${!currentActive ? "activated" : "deactivated"}`);
+    } catch (error) {
+      console.error("Error toggling item:", error);
+      toast.error("Failed to update item");
     }
   };
 
@@ -223,6 +248,88 @@ const Compliance = () => {
     };
     return <Badge className={variants[status] || ""}>{status.replace("_", " ")}</Badge>;
   };
+
+  // Group items by industry sector
+  const itemsBySector = items.reduce((acc, item) => {
+    const sector = item.industry_sector || "Other";
+    if (!acc[sector]) {
+      acc[sector] = [];
+    }
+    acc[sector].push(item);
+    return acc;
+  }, {} as Record<string, ComplianceItem[]>);
+
+  const renderComplianceItem = (item: ComplianceItem) => (
+    <Card key={item.id} className={!item.is_active ? "opacity-60" : ""}>
+      <CardHeader>
+        <div className="flex justify-between items-start gap-4">
+          <div className="space-y-1 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              {getStatusIcon(item.status)}
+              <CardTitle className="text-lg">{item.title}</CardTitle>
+              {getStatusBadge(item.status)}
+              {item.notes?.includes("Mandatory") && (
+                <Badge variant="destructive">Mandatory</Badge>
+              )}
+              {item.notes?.includes("Optional") && (
+                <Badge variant="outline">Optional</Badge>
+              )}
+            </div>
+            <CardDescription>{item.description}</CardDescription>
+          </div>
+          {item.notes?.includes("Optional") && (
+            <div className="flex items-center gap-2">
+              <Label htmlFor={`toggle-${item.id}`} className="text-sm">Track</Label>
+              <Switch
+                id={`toggle-${item.id}`}
+                checked={item.is_active}
+                onCheckedChange={() => handleToggleActive(item.id, item.is_active)}
+              />
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <p className="text-muted-foreground">Authority</p>
+            <p className="font-medium">{item.authority}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Frequency</p>
+            <p className="font-medium">{item.frequency.replace("_", " ")}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Next Due</p>
+            <p className="font-medium">
+              {item.next_due_date ? format(new Date(item.next_due_date), "dd MMM yyyy") : "Not set"}
+            </p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Responsible</p>
+            <p className="font-medium">{item.responsible_person || "Unassigned"}</p>
+          </div>
+        </div>
+        {item.reference_url && (
+          <div className="mt-4">
+            <a 
+              href={item.reference_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-sm text-primary hover:underline flex items-center gap-1"
+            >
+              View official guidance <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+        )}
+        {item.notes && (
+          <div className="mt-4 p-3 bg-muted rounded-lg">
+            <p className="text-sm">{item.notes}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 
   if (loading) {
     return (
@@ -417,58 +524,81 @@ const Compliance = () => {
           </TabsList>
 
           <TabsContent value="all" className="space-y-4">
-            {items.map((item) => (
-              <Card key={item.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(item.status)}
-                        <CardTitle>{item.title}</CardTitle>
-                        {getStatusBadge(item.status)}
-                      </div>
-                      <CardDescription>{item.description}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Authority</p>
-                      <p className="font-medium">{item.authority}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Frequency</p>
-                      <p className="font-medium">{item.frequency.replace("_", " ")}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Next Due</p>
-                      <p className="font-medium">
-                        {item.next_due_date ? format(new Date(item.next_due_date), "dd MMM yyyy") : "Not set"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Responsible</p>
-                      <p className="font-medium">{item.responsible_person || "Unassigned"}</p>
-                    </div>
-                  </div>
-                  {item.notes && (
-                    <div className="mt-4 p-3 bg-muted rounded-lg">
-                      <p className="text-sm">{item.notes}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-            {items.length === 0 && (
+            {Object.keys(itemsBySector).length > 0 ? (
+              <div className="space-y-6">
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardContent className="pt-6">
+                    <p className="text-sm">
+                      <strong>Based on your industry classification</strong>, here are your compliance obligations. 
+                      Mandatory items are automatically enabled. Toggle optional items that you want to track.
+                    </p>
+                  </CardContent>
+                </Card>
+                {Object.entries(itemsBySector).map(([sector, sectorItems]) => {
+                  const mandatory = sectorItems.filter(i => i.notes?.includes("Mandatory"));
+                  const optional = sectorItems.filter(i => i.notes?.includes("Optional"));
+                  
+                  return (
+                    <Collapsible key={sector} defaultOpen={true} className="space-y-2">
+                      <Card>
+                        <CollapsibleTrigger className="w-full">
+                          <CardHeader className="hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <Building2 className="h-5 w-5 text-primary" />
+                                <div className="text-left">
+                                  <CardTitle className="text-xl">{sector}</CardTitle>
+                                  <CardDescription>
+                                    {mandatory.length} mandatory • {optional.length} optional requirements
+                                  </CardDescription>
+                                </div>
+                              </div>
+                              <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform" />
+                            </div>
+                          </CardHeader>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <CardContent className="space-y-4 pt-4">
+                            {mandatory.length > 0 && (
+                              <div className="space-y-3">
+                                <h3 className="font-semibold text-sm text-red-600 uppercase tracking-wide">
+                                  Mandatory Requirements
+                                </h3>
+                                {mandatory.map(renderComplianceItem)}
+                              </div>
+                            )}
+                            {optional.length > 0 && (
+                              <div className="space-y-3">
+                                <h3 className="font-semibold text-sm text-blue-600 uppercase tracking-wide">
+                                  Optional / Best Practice
+                                </h3>
+                                {optional.map(renderComplianceItem)}
+                              </div>
+                            )}
+                          </CardContent>
+                        </CollapsibleContent>
+                      </Card>
+                    </Collapsible>
+                  );
+                })}
+              </div>
+            ) : (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium mb-2">No compliance items yet</p>
-                  <p className="text-muted-foreground mb-4">Get started by adding compliance requirements</p>
-                  <Button onClick={() => setOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add First Item
+                  <p className="text-lg font-medium mb-2">No compliance items found</p>
+                  <p className="text-muted-foreground mb-4 text-center">
+                    Click the button below to scan for requirements based on your industry classification
+                  </p>
+                  <Button onClick={handleAIScan} disabled={scanning}>
+                    {scanning ? (
+                      <>
+                        <Clock className="mr-2 h-4 w-4 animate-spin" />
+                        Scanning...
+                      </>
+                    ) : (
+                      "Scan Compliance Requirements"
+                    )}
                   </Button>
                 </CardContent>
               </Card>
