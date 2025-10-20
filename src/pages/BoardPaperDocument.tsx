@@ -58,8 +58,12 @@ const BoardPaperDocument = () => {
   const [loading, setLoading] = useState(true);
   const [paperInfo, setPaperInfo] = useState({
     companyName: "Company Name",
+    logoUrl: "",
     date: new Date().toLocaleDateString(),
-    periodCovered: "Period"
+    periodCovered: "Period",
+    preparedBy: "Company Secretary",
+    signedOffBy: "Chief Executive Officer",
+    acceptedBy: "Board Chair"
   });
 
   useEffect(() => {
@@ -85,7 +89,11 @@ const BoardPaperDocument = () => {
           ]);
         } else if (template && template.sections) {
           const templateSections = template.sections as unknown as TemplateSection[];
-          setSections(templateSections.filter(s => s.enabled).sort((a, b) => a.order - b.order));
+          // Filter out cover-sheet and agenda-toc from sections
+          const filteredSections = templateSections
+            .filter(s => s.enabled && s.id !== 'cover-sheet' && s.id !== 'agenda-toc')
+            .sort((a, b) => a.order - b.order);
+          setSections(filteredSections);
         }
       } catch (error) {
         console.error('Error:', error);
@@ -128,14 +136,49 @@ const BoardPaperDocument = () => {
         </div>
 
         <Card className="shadow-xl">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-primary to-accent p-8 text-white">
-            <h1 className="text-4xl font-bold mb-2">{paperInfo.companyName}</h1>
-            <h2 className="text-2xl font-light mb-1">Board Papers</h2>
-            <p className="text-sm opacity-90">
-              {paperInfo.date} | {paperInfo.periodCovered}
-            </p>
-          </div>
+          {/* Cover Page */}
+          <CardContent className="min-h-[600px] flex flex-col items-center justify-center p-12 border-b border-slate-200">
+            {paperInfo.logoUrl && (
+              <img src={paperInfo.logoUrl} alt="Company Logo" className="h-24 mb-8" />
+            )}
+            <h1 className="text-5xl font-bold text-foreground mb-4">{paperInfo.companyName}</h1>
+            <h2 className="text-3xl font-light text-muted-foreground mb-8">Board Papers</h2>
+            <div className="space-y-3 text-center text-foreground">
+              <p className="text-lg"><strong>Date:</strong> {paperInfo.date}</p>
+              <p className="text-lg"><strong>Period Covered:</strong> {paperInfo.periodCovered}</p>
+              <p className="text-lg"><strong>Prepared By:</strong> {paperInfo.preparedBy}</p>
+              <p className="text-lg"><strong>Signed Off By:</strong> {paperInfo.signedOffBy}</p>
+              <p className="text-lg"><strong>Accepted By:</strong> {paperInfo.acceptedBy}</p>
+            </div>
+          </CardContent>
+
+          {/* Disclaimer/Attestation Page */}
+          <CardContent className="min-h-[400px] flex flex-col justify-center p-12 border-b border-slate-200 bg-slate-50/30">
+            <h2 className="text-2xl font-bold mb-6 text-foreground">Declaration</h2>
+            <div className="space-y-4 text-foreground leading-relaxed">
+              <p>
+                These Board Papers were prepared by {paperInfo.preparedBy} on behalf of {paperInfo.companyName}.
+              </p>
+              <p>
+                To the best of our knowledge, the information contained herein is true, correct, and complete as of {paperInfo.date}.
+              </p>
+              <p>
+                The undersigned have reviewed and approved these Board Papers for presentation to the Board of Directors.
+              </p>
+              <div className="mt-8 space-y-6">
+                <div className="border-t border-slate-300 pt-4">
+                  <p className="font-semibold">{paperInfo.signedOffBy}</p>
+                  <p className="text-sm text-muted-foreground">Chief Executive Officer</p>
+                  <p className="text-sm text-muted-foreground mt-2">Date: {paperInfo.date}</p>
+                </div>
+                <div className="border-t border-slate-300 pt-4">
+                  <p className="font-semibold">{paperInfo.acceptedBy}</p>
+                  <p className="text-sm text-muted-foreground">Board Chair</p>
+                  <p className="text-sm text-muted-foreground mt-2">Date: {paperInfo.date}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
 
           {/* Table of Contents */}
           <CardContent className="p-12 border-b border-slate-200 bg-slate-50/50">
