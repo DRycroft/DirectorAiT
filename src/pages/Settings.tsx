@@ -245,6 +245,19 @@ const Settings = () => {
     financial_year_end: "",
     agm_date: "",
   });
+  const [countryCode, setCountryCode] = useState("+64");
+
+  const countryCodes = [
+    { code: "+64", country: "New Zealand" },
+    { code: "+61", country: "Australia" },
+    { code: "+1", country: "USA/Canada" },
+    { code: "+44", country: "United Kingdom" },
+    { code: "+91", country: "India" },
+    { code: "+86", country: "China" },
+    { code: "+81", country: "Japan" },
+    { code: "+49", country: "Germany" },
+    { code: "+33", country: "France" },
+  ];
 
   useEffect(() => {
     fetchCompanyData();
@@ -347,10 +360,18 @@ const Settings = () => {
         }
       }
 
+      // Format phone numbers with country code
+      const formattedData = {
+        ...companyData,
+        company_phone: companyData.company_phone ? `${countryCode} ${companyData.company_phone}` : "",
+        primary_contact_phone: companyData.primary_contact_phone ? `${countryCode} ${companyData.primary_contact_phone}` : "",
+        admin_phone: companyData.admin_phone ? `${countryCode} ${companyData.admin_phone}` : "",
+      };
+
       // Now update the organization with the provided data
       const { error } = await supabase
         .from("organizations")
-        .update(companyData)
+        .update(formattedData)
         .eq("id", orgId);
 
       if (error) {
@@ -474,14 +495,37 @@ const Settings = () => {
                           />
                         </div>
                         <div className="space-y-1.5">
+                          <Label htmlFor="countryCode">Country</Label>
+                          <Select value={countryCode} onValueChange={setCountryCode}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {countryCodes.map((item) => (
+                                <SelectItem key={item.code} value={item.code}>
+                                  {item.code} - {item.country}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
                           <Label htmlFor="companyPhone">Phone Number</Label>
-                          <Input 
-                            id="companyPhone"
-                            type="tel"
-                            placeholder="+64 21 123 4567"
-                            value={companyData.company_phone}
-                            onChange={(e) => setCompanyData({ ...companyData, company_phone: e.target.value })}
-                          />
+                          <div className="flex gap-2">
+                            <Input 
+                              value={countryCode}
+                              disabled
+                              className="w-20"
+                            />
+                            <Input 
+                              id="companyPhone"
+                              type="tel"
+                              placeholder="21 123 4567"
+                              value={companyData.company_phone}
+                              onChange={(e) => setCompanyData({ ...companyData, company_phone: e.target.value })}
+                              className="flex-1"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -516,13 +560,21 @@ const Settings = () => {
                         </div>
                         <div className="space-y-1.5">
                           <Label htmlFor="primaryContactPhone">Phone</Label>
-                          <Input 
-                            id="primaryContactPhone" 
-                            type="tel"
-                            placeholder="+64 21 123 4567"
-                            value={companyData.primary_contact_phone}
-                            onChange={(e) => setCompanyData({ ...companyData, primary_contact_phone: e.target.value })}
-                          />
+                          <div className="flex gap-2">
+                            <Input 
+                              value={countryCode}
+                              disabled
+                              className="w-20"
+                            />
+                            <Input 
+                              id="primaryContactPhone" 
+                              type="tel"
+                              placeholder="21 123 4567"
+                              value={companyData.primary_contact_phone}
+                              onChange={(e) => setCompanyData({ ...companyData, primary_contact_phone: e.target.value })}
+                              className="flex-1"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -618,13 +670,21 @@ const Settings = () => {
                         </div>
                         <div className="space-y-1.5">
                           <Label htmlFor="adminPhone">Phone</Label>
-                          <Input 
-                            id="adminPhone" 
-                            type="tel"
-                            placeholder="+64 21 123 4567"
-                            value={companyData.admin_phone}
-                            onChange={(e) => setCompanyData({ ...companyData, admin_phone: e.target.value })}
-                          />
+                          <div className="flex gap-2">
+                            <Input 
+                              value={countryCode}
+                              disabled
+                              className="w-20"
+                            />
+                            <Input 
+                              id="adminPhone" 
+                              type="tel"
+                              placeholder="21 123 4567"
+                              value={companyData.admin_phone}
+                              onChange={(e) => setCompanyData({ ...companyData, admin_phone: e.target.value })}
+                              className="flex-1"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
