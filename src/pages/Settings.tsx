@@ -317,8 +317,8 @@ const Settings = () => {
     gst_period: "quarterly",
     financial_year_end: "",
     agm_date: "",
-    industry_sector: "",
-    business_category: "",
+    industry_sector: [] as string[],
+    business_category: [] as string[],
     compliance_scan_completed: false,
   });
   const [countryCode, setCountryCode] = useState("+64");
@@ -449,8 +449,8 @@ const Settings = () => {
             gst_period: org.gst_period || "quarterly",
             financial_year_end: org.financial_year_end || "",
             agm_date: org.agm_date || "",
-            industry_sector: org.industry_sector || "",
-            business_category: org.business_category || "",
+            industry_sector: org.industry_sector || [],
+            business_category: org.business_category || [],
             compliance_scan_completed: org.compliance_scan_completed || false,
           });
         }
@@ -557,8 +557,8 @@ const Settings = () => {
       // Check if industry/business category changed - trigger compliance scan
       const previousIndustrySector = companyData.industry_sector;
       const previousBusinessCategory = companyData.business_category;
-      const industryChanged = previousIndustrySector !== formattedData.industry_sector || 
-                              previousBusinessCategory !== formattedData.business_category;
+      const industryChanged = JSON.stringify(previousIndustrySector) !== JSON.stringify(formattedData.industry_sector) || 
+                              JSON.stringify(previousBusinessCategory) !== JSON.stringify(formattedData.business_category);
       
       sonnerToast.success("Company details saved successfully!");
       
@@ -569,9 +569,10 @@ const Settings = () => {
       // Refresh the data
       await fetchCompanyData();
       
-      // If industry changed and both sector and category are set, trigger compliance scan
-      if (industryChanged && formattedData.industry_sector && formattedData.business_category) {
-        sonnerToast.info("Scanning compliance requirements for your industry...");
+      // If industry changed and we have at least one sector and category, trigger compliance scan
+      if (industryChanged && formattedData.industry_sector && formattedData.industry_sector.length > 0 && 
+          formattedData.business_category && formattedData.business_category.length > 0) {
+        sonnerToast.info("Scanning compliance requirements for your industries...");
         try {
           const { data: scanData, error: scanError } = await supabase.functions.invoke("scan-compliance", {
             body: { org_id: orgId }
@@ -579,7 +580,7 @@ const Settings = () => {
           
           if (scanError) throw scanError;
           
-          sonnerToast.success(`Found ${scanData.mandatory_count} mandatory and ${scanData.optional_count} optional compliance requirements!`);
+          sonnerToast.success(`Found ${scanData.mandatory_count} mandatory and ${scanData.optional_count} optional compliance requirements across your industries!`);
           fetchComplianceItems(); // Fetch the new items
         } catch (scanError: any) {
           console.error("Error scanning compliance:", scanError);
@@ -624,7 +625,7 @@ const Settings = () => {
   };
   
   useEffect(() => {
-    if (companyData.industry_sector && companyData.compliance_scan_completed) {
+    if (companyData.industry_sector.length > 0 && companyData.compliance_scan_completed) {
       fetchComplianceItems();
     }
   }, [companyData.industry_sector, companyData.compliance_scan_completed]);
@@ -669,8 +670,8 @@ const Settings = () => {
         // Auto-populate the fields with recommendations
         setCompanyData({
           ...companyData,
-          industry_sector: data.recommended_industry,
-          business_category: data.recommended_categories[0] || ""
+          industry_sector: [data.recommended_industry],
+          business_category: data.recommended_categories || []
         });
         toast({
           title: "Analysis complete!",
@@ -952,68 +953,114 @@ const Settings = () => {
                           </div>
                         )}
 
-                        {/* Step 3: Select Industry Sector */}
+                        {/* Step 3: Select Industry Sector(s) */}
                         <div className="space-y-1.5">
-                          <Label htmlFor="industrySector">Industry Sector</Label>
-                          <Combobox
-                            options={Object.keys(industryCategories).map(industry => ({
-                              value: industry,
-                              label: industry
-                            }))}
-                            value={companyData.industry_sector}
-                            onValueChange={(value) => {
-                              setCompanyData({ 
-                                ...companyData, 
-                                industry_sector: value,
-                                business_category: "" // Reset category when industry changes
-                              });
-                            }}
-                            placeholder="Type to search industries..."
-                            searchPlaceholder="Search industry sector..."
-                            emptyText="No industry found. Try different keywords."
-                          />
+                          <Label htmlFor="industrySector">Industry Sector(s)</Label>
+                          <div className="space-y-2">
+                            {/* Display selected industries as badges */}
+                            {companyData.industry_sector.length > 0 && (
+                              <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-muted/50">
+                                {companyData.industry_sector.map((industry) => (
+                                  <Badge key={industry} variant="secondary" className="cursor-pointer" onClick={() => {
+                                    setCompanyData({
+                                      ...companyData,
+                                      industry_sector: companyData.industry_sector.filter(i => i !== industry)
+                                    });
+                                  }}>
+                                    {industry} ×
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            <Combobox
+                              options={Object.keys(industryCategories).map(industry => ({
+                                value: industry,
+                                label: industry
+                              }))}
+                              value=""
+                              onValueChange={(value) => {
+                                if (value && !companyData.industry_sector.includes(value)) {
+                                  setCompanyData({ 
+                                    ...companyData, 
+                                    industry_sector: [...companyData.industry_sector, value]
+                                  });
+                                }
+                              }}
+                              placeholder="Type to search and add industries..."
+                              searchPlaceholder="Search industry sector..."
+                              emptyText="No industry found. Try different keywords."
+                            />
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             {aiSuggestions 
-                              ? "✓ AI recommended industry selected above" 
-                              : "Or type to search and select manually"
+                              ? "✓ AI recommended industries added above. Add more if your business crosses multiple sectors." 
+                              : "Select all industries your business operates in"
                             }
                           </p>
                         </div>
 
-                        {/* Step 4: Select Business Category */}
+                        {/* Step 4: Select Business Categories */}
                         <div className="space-y-1.5">
-                          <Label htmlFor="businessCategory">Government Business Category</Label>
-                          <Select
-                            value={companyData.business_category}
-                            onValueChange={(value) => setCompanyData({ ...companyData, business_category: value })}
-                            disabled={!companyData.industry_sector}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder={
-                                companyData.industry_sector 
-                                  ? "Select business category" 
-                                  : "Select industry sector first"
-                              } />
-                            </SelectTrigger>
-                            <SelectContent className="bg-background z-50">
-                              {companyData.industry_sector && 
-                                industryCategories[companyData.industry_sector]?.map((category) => {
-                                  const isRecommended = aiSuggestions?.recommended_categories.includes(category);
-                                  return (
-                                    <SelectItem key={category} value={category}>
-                                      {category} {isRecommended && "⭐"}
-                                    </SelectItem>
-                                  );
-                                })
-                              }
-                            </SelectContent>
-                          </Select>
+                          <Label htmlFor="businessCategory">Government Business Categories</Label>
+                          <div className="space-y-2">
+                            {/* Display selected categories as badges */}
+                            {companyData.business_category.length > 0 && (
+                              <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-muted/50">
+                                {companyData.business_category.map((category) => (
+                                  <Badge key={category} variant="secondary" className="cursor-pointer" onClick={() => {
+                                    setCompanyData({
+                                      ...companyData,
+                                      business_category: companyData.business_category.filter(c => c !== category)
+                                    });
+                                  }}>
+                                    {category} ×
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            <Select
+                              value=""
+                              onValueChange={(value) => {
+                                if (value && !companyData.business_category.includes(value)) {
+                                  setCompanyData({ 
+                                    ...companyData, 
+                                    business_category: [...companyData.business_category, value] 
+                                  });
+                                }
+                              }}
+                              disabled={companyData.industry_sector.length === 0}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder={
+                                  companyData.industry_sector.length > 0
+                                    ? "Select business categories" 
+                                    : "Select industry sectors first"
+                                } />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background z-50">
+                                {companyData.industry_sector.length > 0 && 
+                                  Array.from(new Set(
+                                    companyData.industry_sector.flatMap(industry => 
+                                      industryCategories[industry] || []
+                                    )
+                                  )).map((category) => {
+                                    const isRecommended = aiSuggestions?.recommended_categories.includes(category);
+                                    return (
+                                      <SelectItem key={category} value={category}>
+                                        {category} {isRecommended && "⭐"}
+                                      </SelectItem>
+                                    );
+                                  })
+                                }
+                              </SelectContent>
+                            </Select>
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             {aiSuggestions && aiSuggestions.recommended_categories.length > 0
-                              ? `⭐ = AI recommended categories`
-                              : companyData.industry_sector 
-                                ? "Government classification for regulatory requirements"
-                                : "Please select an industry sector first"
+                              ? `⭐ = AI recommended categories. Add all that apply.`
+                              : companyData.industry_sector.length > 0
+                                ? "Government classification for regulatory requirements - select all that apply"
+                                : "Please select industry sectors first"
                             }
                           </p>
                         </div>

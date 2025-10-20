@@ -51,14 +51,15 @@ serve(async (req) => {
       });
     }
 
-    if (!org.industry_sector || !org.business_category) {
-      return new Response(JSON.stringify({ error: 'Industry sector and business category must be set' }), {
+    if (!org.industry_sector || !org.business_category || 
+        org.industry_sector.length === 0 || org.business_category.length === 0) {
+      return new Response(JSON.stringify({ error: 'Industry sectors and business categories must be set' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log(`Scanning compliance for: ${org.industry_sector} - ${org.business_category}`);
+    console.log(`Scanning compliance for: ${org.industry_sector.join(', ')} - ${org.business_category.join(', ')}`);
 
     // Use Lovable AI to scan for compliance requirements
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -69,9 +70,11 @@ serve(async (req) => {
     const aiPrompt = `You are a compliance expert for New Zealand businesses. 
 
 Analyze the compliance and regulatory requirements for a business with the following characteristics:
-- Industry Sector: ${org.industry_sector}
-- Business Category: ${org.business_category}
+- Industry Sectors: ${org.industry_sector.join(', ')}
+- Business Categories: ${org.business_category.join(', ')}
 - Country: New Zealand
+
+This business operates across MULTIPLE sectors. Provide compliance requirements for ALL of these sectors and categories combined.
 
 Provide a comprehensive list of all regulatory compliance requirements this business must meet, including:
 1. Tax obligations (IRD requirements: GST, PAYE, Provisional Tax, etc.)
@@ -182,7 +185,7 @@ Be thorough and specific to New Zealand regulations. Include at least 10-15 rele
       frequency: req.frequency,
       category_id: categoryMap.get(req.category) || null,
       status: 'in_progress' as const,
-      industry_sector: org.industry_sector,
+      industry_sector: org.industry_sector.join(', '), // Store all sectors
       notes: req.is_mandatory ? 'Mandatory government requirement' : 'Optional/Recommended - Nice to have',
       reference_url: req.reference_url || null,
       is_active: req.is_mandatory // Mandatory items active by default, optional items inactive
