@@ -180,7 +180,12 @@ const BoardPapers = () => {
                         <p className="text-sm font-medium text-black">{paper.createdBy}</p>
                       </div>
                       <div className="flex justify-end">
-                        <Button size="sm" variant="outline" className="text-white bg-black border-black hover:bg-primary hover:text-white hover:border-primary transition-colors h-7 py-0.5">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-white bg-black border-black hover:bg-primary hover:text-white hover:border-primary transition-colors h-7 py-0.5"
+                          onClick={() => window.location.href = `/board-papers/${paper.id}`}
+                        >
                           Open Document
                         </Button>
                       </div>
