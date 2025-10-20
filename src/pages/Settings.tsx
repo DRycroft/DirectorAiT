@@ -261,6 +261,21 @@ const Settings = () => {
     { code: "+33", country: "France" },
   ];
 
+  // Helper function to strip country code from phone number
+  const stripCountryCode = (phoneNumber: string): string => {
+    if (!phoneNumber) return "";
+    // Remove any country code prefix (e.g., "+64 ", "+64")
+    const stripped = phoneNumber.replace(/^\+\d{1,4}\s*/, "").trim();
+    return stripped;
+  };
+
+  // Helper function to detect country code from phone number
+  const detectCountryCode = (phoneNumber: string): string => {
+    if (!phoneNumber) return "+64";
+    const match = phoneNumber.match(/^(\+\d{1,4})/);
+    return match ? match[1] : "+64";
+  };
+
   useEffect(() => {
     fetchCompanyData();
   }, []);
@@ -284,20 +299,24 @@ const Settings = () => {
           .single();
 
         if (org) {
+          // Detect country code from any phone number that has one
+          const detectedCode = detectCountryCode(org.company_phone || org.primary_contact_phone || org.admin_phone || "");
+          setCountryCode(detectedCode);
+
           setCompanyData({
             name: org.name || "",
             domain: org.domain || "",
             logo_url: org.logo_url || "",
             business_number: org.business_number || "",
-            company_phone: org.company_phone || "",
+            company_phone: stripCountryCode(org.company_phone || ""),
             primary_contact_name: org.primary_contact_name || "",
             primary_contact_role: org.primary_contact_role || "",
             primary_contact_email: org.primary_contact_email || "",
-            primary_contact_phone: org.primary_contact_phone || "",
+            primary_contact_phone: stripCountryCode(org.primary_contact_phone || ""),
             admin_name: org.admin_name || "",
             admin_role: org.admin_role || "",
             admin_email: org.admin_email || "",
-            admin_phone: org.admin_phone || "",
+            admin_phone: stripCountryCode(org.admin_phone || ""),
             reporting_frequency: org.reporting_frequency || "quarterly",
             gst_period: org.gst_period || "quarterly",
             financial_year_end: org.financial_year_end || "",
@@ -362,12 +381,12 @@ const Settings = () => {
         }
       }
 
-      // Format phone numbers with country code
+      // Format phone numbers with country code - only add if there's a number
       const formattedData = {
         ...companyData,
-        company_phone: companyData.company_phone ? `${countryCode} ${companyData.company_phone}` : "",
-        primary_contact_phone: companyData.primary_contact_phone ? `${countryCode} ${companyData.primary_contact_phone}` : "",
-        admin_phone: companyData.admin_phone ? `${countryCode} ${companyData.admin_phone}` : "",
+        company_phone: companyData.company_phone?.trim() ? `${countryCode} ${companyData.company_phone.trim()}` : "",
+        primary_contact_phone: companyData.primary_contact_phone?.trim() ? `${countryCode} ${companyData.primary_contact_phone.trim()}` : "",
+        admin_phone: companyData.admin_phone?.trim() ? `${countryCode} ${companyData.admin_phone.trim()}` : "",
       };
 
       // Now update the organization with the provided data
