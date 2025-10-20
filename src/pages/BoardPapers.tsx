@@ -95,7 +95,62 @@ const BoardPapers = () => {
               <TabsTrigger value="minutes" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Minutes</TabsTrigger>
               <TabsTrigger value="special" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Special Papers</TabsTrigger>
             </TabsList>
+          </Tabs>
+          <Dialog open={createPaperDialogOpen} onOpenChange={setCreatePaperDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="accent" className="shadow-lg hover:shadow-xl whitespace-nowrap h-10 -mt-2">
+                Create New Board Paper
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Board Paper</DialogTitle>
+                <DialogDescription>
+                  Enter the details for your new board paper. It will use your saved template structure.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date">Date</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={newPaperData.date}
+                    onChange={(e) => setNewPaperData({ ...newPaperData, date: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="companyName">Company Name</Label>
+                  <Input
+                    id="companyName"
+                    placeholder="Enter company name"
+                    value={newPaperData.companyName}
+                    onChange={(e) => setNewPaperData({ ...newPaperData, companyName: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="periodCovered">Period Covered</Label>
+                  <Input
+                    id="periodCovered"
+                    placeholder="e.g., Q1 2024, January 2024"
+                    value={newPaperData.periodCovered}
+                    onChange={(e) => setNewPaperData({ ...newPaperData, periodCovered: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setCreatePaperDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateBoardPaper}>
+                  Create Board Paper
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
 
+        <Tabs defaultValue="papers" className="w-full">
           <TabsContent value="papers" className="space-y-4">
             {boardPapers.length > 0 && (
               <div className="space-y-3">
@@ -235,61 +290,7 @@ const BoardPapers = () => {
               </CardContent>
             </Card>
           </TabsContent>
-
-          </Tabs>
-          <Dialog open={createPaperDialogOpen} onOpenChange={setCreatePaperDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="accent" className="shadow-lg hover:shadow-xl whitespace-nowrap h-10 -mt-2">
-                Create New Board Paper
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Board Paper</DialogTitle>
-                <DialogDescription>
-                  Enter the details for your new board paper. It will use your saved template structure.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={newPaperData.date}
-                    onChange={(e) => setNewPaperData({ ...newPaperData, date: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
-                  <Input
-                    id="companyName"
-                    placeholder="Enter company name"
-                    value={newPaperData.companyName}
-                    onChange={(e) => setNewPaperData({ ...newPaperData, companyName: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="periodCovered">Period Covered</Label>
-                  <Input
-                    id="periodCovered"
-                    placeholder="e.g., Q1 2024, January 2024"
-                    value={newPaperData.periodCovered}
-                    onChange={(e) => setNewPaperData({ ...newPaperData, periodCovered: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setCreatePaperDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleCreateBoardPaper}>
-                  Create Board Paper
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+        </Tabs>
       </main>
       <Footer />
     </div>
