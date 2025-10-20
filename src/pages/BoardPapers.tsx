@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 const BoardPapers = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
       <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
         <div className="mb-8 relative">
