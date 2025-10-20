@@ -744,24 +744,63 @@ export type Database = {
       }
       organizations: {
         Row: {
+          admin_email: string | null
+          admin_name: string | null
+          admin_phone: string | null
+          admin_role: string | null
+          agm_date: string | null
+          business_number: string | null
           created_at: string
           domain: string | null
+          financial_year_end: string | null
           id: string
+          logo_url: string | null
           name: string
+          primary_contact_email: string | null
+          primary_contact_name: string | null
+          primary_contact_phone: string | null
+          primary_contact_role: string | null
+          reporting_frequency: string | null
           updated_at: string
         }
         Insert: {
+          admin_email?: string | null
+          admin_name?: string | null
+          admin_phone?: string | null
+          admin_role?: string | null
+          agm_date?: string | null
+          business_number?: string | null
           created_at?: string
           domain?: string | null
+          financial_year_end?: string | null
           id?: string
+          logo_url?: string | null
           name: string
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          primary_contact_role?: string | null
+          reporting_frequency?: string | null
           updated_at?: string
         }
         Update: {
+          admin_email?: string | null
+          admin_name?: string | null
+          admin_phone?: string | null
+          admin_role?: string | null
+          agm_date?: string | null
+          business_number?: string | null
           created_at?: string
           domain?: string | null
+          financial_year_end?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          primary_contact_role?: string | null
+          reporting_frequency?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -774,6 +813,7 @@ export type Database = {
           mfa_enforced: boolean
           name: string
           org_id: string | null
+          phone: string | null
           updated_at: string
         }
         Insert: {
@@ -783,6 +823,7 @@ export type Database = {
           mfa_enforced?: boolean
           name: string
           org_id?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Update: {
@@ -792,6 +833,7 @@ export type Database = {
           mfa_enforced?: boolean
           name?: string
           org_id?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Relationships: [

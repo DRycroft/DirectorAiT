@@ -7,10 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TemplateSectionEditor, TemplateSection } from "@/components/TemplateSectionEditor";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
+import { toast as sonnerToast } from "sonner";
 
 const templateTypes = [
   "Board Papers",
@@ -227,11 +228,95 @@ const Settings = () => {
   const [activeTab, setActiveTab] = useState("company");
   const [companyData, setCompanyData] = useState({
     name: "",
-    address: "",
-    phone: "",
-    email: "",
-    registrationNumber: "",
+    domain: "",
+    logo_url: "",
+    business_number: "",
+    primary_contact_name: "",
+    primary_contact_role: "",
+    primary_contact_email: "",
+    primary_contact_phone: "",
+    admin_name: "",
+    admin_role: "",
+    admin_email: "",
+    admin_phone: "",
+    reporting_frequency: "quarterly",
+    financial_year_end: "",
+    agm_date: "",
   });
+
+  useEffect(() => {
+    fetchCompanyData();
+  }, []);
+
+  const fetchCompanyData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("org_id")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.org_id) {
+        const { data: org } = await supabase
+          .from("organizations")
+          .select("*")
+          .eq("id", profile.org_id)
+          .single();
+
+        if (org) {
+          setCompanyData({
+            name: org.name || "",
+            domain: org.domain || "",
+            logo_url: org.logo_url || "",
+            business_number: org.business_number || "",
+            primary_contact_name: org.primary_contact_name || "",
+            primary_contact_role: org.primary_contact_role || "",
+            primary_contact_email: org.primary_contact_email || "",
+            primary_contact_phone: org.primary_contact_phone || "",
+            admin_name: org.admin_name || "",
+            admin_role: org.admin_role || "",
+            admin_email: org.admin_email || "",
+            admin_phone: org.admin_phone || "",
+            reporting_frequency: org.reporting_frequency || "quarterly",
+            financial_year_end: org.financial_year_end || "",
+            agm_date: org.agm_date || "",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching company data:", error);
+      sonnerToast.error("Failed to load company details");
+    }
+  };
+
+  const handleSaveCompany = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("org_id")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.org_id) {
+        const { error } = await supabase
+          .from("organizations")
+          .update(companyData)
+          .eq("id", profile.org_id);
+
+        if (error) throw error;
+        sonnerToast.success("Company details updated successfully");
+      }
+    } catch (error) {
+      console.error("Error updating company data:", error);
+      sonnerToast.error("Failed to update company details");
+    }
+  };
 
   const handleTemplateTypeChange = (type: string) => {
     setSelectedType(type);
@@ -307,62 +392,154 @@ const Settings = () => {
                   Update your organization's details
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
-                  <Input
-                    id="companyName"
-                    value={companyData.name}
-                    onChange={(e) => setCompanyData({ ...companyData, name: e.target.value })}
-                    placeholder="Enter company name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    value={companyData.address}
-                    onChange={(e) => setCompanyData({ ...companyData, address: e.target.value })}
-                    placeholder="Enter company address"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+              <CardContent className="space-y-6">
+                <div className="grid gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      value={companyData.phone}
-                      onChange={(e) => setCompanyData({ ...companyData, phone: e.target.value })}
-                      placeholder="Enter phone number"
+                    <Label htmlFor="companyName">Company Name</Label>
+                    <Input 
+                      id="companyName" 
+                      value={companyData.name}
+                      onChange={(e) => setCompanyData({ ...companyData, name: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={companyData.email}
-                      onChange={(e) => setCompanyData({ ...companyData, email: e.target.value })}
-                      placeholder="Enter company email"
+                    <Label htmlFor="businessNumber">Business Number</Label>
+                    <Input 
+                      id="businessNumber" 
+                      value={companyData.business_number}
+                      onChange={(e) => setCompanyData({ ...companyData, business_number: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="domain">Domain</Label>
+                    <Input 
+                      id="domain" 
+                      value={companyData.domain}
+                      onChange={(e) => setCompanyData({ ...companyData, domain: e.target.value })}
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="regNumber">Registration Number</Label>
-                  <Input
-                    id="regNumber"
-                    value={companyData.registrationNumber}
-                    onChange={(e) => setCompanyData({ ...companyData, registrationNumber: e.target.value })}
-                    placeholder="Enter company registration number"
-                  />
+
+                <div className="pt-4 border-t">
+                  <h3 className="text-lg font-semibold mb-4">Primary Contact (CEO/Chair)</h3>
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="primaryContactName">Name</Label>
+                      <Input 
+                        id="primaryContactName" 
+                        value={companyData.primary_contact_name}
+                        onChange={(e) => setCompanyData({ ...companyData, primary_contact_name: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="primaryContactRole">Role</Label>
+                      <Input 
+                        id="primaryContactRole" 
+                        value={companyData.primary_contact_role}
+                        onChange={(e) => setCompanyData({ ...companyData, primary_contact_role: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="primaryContactEmail">Email</Label>
+                      <Input 
+                        id="primaryContactEmail" 
+                        type="email"
+                        value={companyData.primary_contact_email}
+                        onChange={(e) => setCompanyData({ ...companyData, primary_contact_email: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="primaryContactPhone">Phone</Label>
+                      <Input 
+                        id="primaryContactPhone" 
+                        type="tel"
+                        value={companyData.primary_contact_phone}
+                        onChange={(e) => setCompanyData({ ...companyData, primary_contact_phone: e.target.value })}
+                      />
+                    </div>
+                  </div>
                 </div>
+
+                <div className="pt-4 border-t">
+                  <h3 className="text-lg font-semibold mb-4">Admin Person</h3>
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="adminName">Name</Label>
+                      <Input 
+                        id="adminName" 
+                        value={companyData.admin_name}
+                        onChange={(e) => setCompanyData({ ...companyData, admin_name: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="adminRole">Role</Label>
+                      <Input 
+                        id="adminRole" 
+                        value={companyData.admin_role}
+                        onChange={(e) => setCompanyData({ ...companyData, admin_role: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="adminEmail">Email</Label>
+                      <Input 
+                        id="adminEmail" 
+                        type="email"
+                        value={companyData.admin_email}
+                        onChange={(e) => setCompanyData({ ...companyData, admin_email: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="adminPhone">Phone</Label>
+                      <Input 
+                        id="adminPhone" 
+                        type="tel"
+                        value={companyData.admin_phone}
+                        onChange={(e) => setCompanyData({ ...companyData, admin_phone: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <h3 className="text-lg font-semibold mb-4">Board Reporting</h3>
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="reportingFrequency">Reporting Frequency</Label>
+                      <select
+                        id="reportingFrequency"
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        value={companyData.reporting_frequency}
+                        onChange={(e) => setCompanyData({ ...companyData, reporting_frequency: e.target.value })}
+                      >
+                        <option value="monthly">Monthly</option>
+                        <option value="bi-monthly">Bi-Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="biannually">Biannually</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="financialYearEnd">Financial Year End</Label>
+                      <Input 
+                        id="financialYearEnd" 
+                        type="date"
+                        value={companyData.financial_year_end}
+                        onChange={(e) => setCompanyData({ ...companyData, financial_year_end: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="agmDate">AGM Date</Label>
+                      <Input 
+                        id="agmDate" 
+                        type="date"
+                        value={companyData.agm_date}
+                        onChange={(e) => setCompanyData({ ...companyData, agm_date: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex justify-end pt-4">
-                  <Button onClick={() => {
-                    toast({
-                      title: "Company details saved",
-                      description: "Your company information has been updated successfully.",
-                    });
-                  }}>
+                  <Button onClick={handleSaveCompany}>
                     <Save className="mr-2 h-4 w-4" />
                     Save Company Details
                   </Button>
