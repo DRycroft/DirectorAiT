@@ -130,7 +130,8 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
               onChange={(e) => handleUpdateSection(section.id, { title: e.target.value })}
               className={cn(
                 "flex-1",
-                section.level === 0 ? "font-semibold" : "font-normal"
+                section.level === 0 ? "font-semibold" : "font-normal",
+                section.title === "New Section" && "text-primary"
               )}
               disabled={section.required && !isAdmin}
               placeholder="Section title"
