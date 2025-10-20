@@ -183,7 +183,7 @@ const BoardPaperDocument = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
       <Navigation />
-      <main className="flex-1 container mx-auto px-4 pt-20 pb-8 max-w-4xl">
+      <main className="flex-1 container mx-auto px-4 pt-24 pb-8 max-w-4xl">
         <div className="mb-6 flex items-center gap-4">
           <Button
             variant="ghost"

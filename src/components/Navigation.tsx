@@ -46,9 +46,9 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-transparent">
-      <div className="container mx-auto px-4 bg-background/80 backdrop-blur-md">
-        <div className="flex items-center justify-between border-b border-border">
+    <nav className="fixed top-0 left-0 right-0 z-[100] bg-background/95 backdrop-blur-md border-b border-border shadow-sm">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 py-3">
             <div className="text-2xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
               BoardConnect
