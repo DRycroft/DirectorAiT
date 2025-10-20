@@ -498,13 +498,13 @@ const Settings = () => {
                           <Label htmlFor="companyPhone">Country / Phone Number</Label>
                           <div className="flex gap-2">
                             <Select value={countryCode} onValueChange={setCountryCode}>
-                              <SelectTrigger className="w-[140px]">
+                              <SelectTrigger className="w-[100px]">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
                                 {countryCodes.map((item) => (
                                   <SelectItem key={item.code} value={item.code}>
-                                    {item.code} - {item.country}
+                                    {item.code}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
