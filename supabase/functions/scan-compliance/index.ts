@@ -92,7 +92,7 @@ For EACH requirement, provide:
 - Title (concise)
 - Description (detailed explanation)
 - Authority (which government agency/body)
-- Frequency (daily/weekly/monthly/quarterly/annual/as_required)
+- Frequency: MUST be exactly one of these values: "daily", "weekly", "monthly", "quarterly", "semi_annual", "annual", "biennial", or "as_required"
 - Category (one of: Tax & Financial, Health & Safety, Environmental, Employment, Data & Privacy, Industry Specific, Corporate Governance, Insurance)
 - Is it mandatory? (true/false)
 - Reference URL (if available, prefer official NZ government sites)
@@ -103,12 +103,14 @@ Return ONLY a valid JSON array of objects with this exact structure:
     "title": "string",
     "description": "string",
     "authority": "string",
-    "frequency": "monthly|quarterly|annual|as_required",
+    "frequency": "quarterly",
     "category": "string",
-    "is_mandatory": boolean,
+    "is_mandatory": true,
     "reference_url": "string"
   }
 ]
+
+CRITICAL: The "frequency" field must be EXACTLY one of these strings: "daily", "weekly", "monthly", "quarterly", "semi_annual", "annual", "biennial", or "as_required". Do NOT use any other values or combine multiple values.
 
 Be thorough and specific to New Zealand regulations. Include at least 10-15 relevant requirements.`;
 
