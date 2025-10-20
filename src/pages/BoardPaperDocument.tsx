@@ -17,24 +17,37 @@ interface TemplateSection {
   level: number;
 }
 
-const reportSections = [
-  'CEO Report', 'CFO Report', 'Chair Report', 'Chair\'s Report',
-  'CEO / Managing Director\'s Executive Summary',
-  'Operational Performance / KPIs',
-  'Sales, Marketing & Customer Metrics',
-  'Product / Service Development / R&D',
-  'Major Projects & Programme Status',
-  'Health, Safety & Environmental (HSE) Report',
-  'ESG / Sustainability / Corporate Social Responsibility',
-  'People & Culture / HR Report',
-  'Remuneration Committee Report',
-  'Audit Committee Report',
-];
+// Report sections that require input from specific roles
+const reportSectionConfig: Record<string, string[]> = {
+  'chair': ['Executive Summary', 'Key Board Matters', 'Strategic Initiatives', 'Governance Updates'],
+  'ceo': ['Executive Summary', 'Operational Overview', 'Strategic Progress', 'Key Achievements', 'Challenges & Risks'],
+  'cfo': ['Financial Overview', 'Income Statement Highlights', 'Balance Sheet Summary', 'Cash Flow Analysis', 'Key Financial Ratios'],
+  'operational': ['Performance Metrics', 'Key Performance Indicators', 'Targets vs Actuals', 'Trend Analysis'],
+  'sales': ['Sales Performance', 'Customer Acquisition', 'Market Analysis', 'Pipeline & Forecast'],
+  'product': ['Product Development Update', 'R&D Initiatives', 'Innovation Pipeline', 'Technology Roadmap'],
+  'projects': ['Project Status Summary', 'Major Milestones', 'Budget & Resource Allocation', 'Risks & Issues'],
+  'hse': ['Health & Safety Metrics', 'Incident Reports', 'Compliance Status', 'Environmental Initiatives'],
+  'esg': ['ESG Goals & Progress', 'Sustainability Initiatives', 'Social Impact', 'Governance Framework'],
+  'hr': ['Workforce Overview', 'Recruitment & Retention', 'Training & Development', 'Culture Initiatives'],
+  'remuneration': ['Committee Activities', 'Remuneration Framework', 'Executive Compensation', 'Incentive Plans'],
+  'audit': ['Committee Activities', 'Internal Audit Findings', 'Risk Management', 'Compliance Review'],
+};
 
-const isReportSection = (title: string) => {
-  return reportSections.some(section => 
-    title.toLowerCase().includes(section.toLowerCase())
-  );
+const getReportType = (title: string): string | null => {
+  const lower = title.toLowerCase();
+  if (lower.includes('chair')) return 'chair';
+  if (lower.includes('ceo') || lower.includes('managing director')) return 'ceo';
+  if (lower.includes('cfo') || lower.includes('financial statement') || lower.includes('financial commentary')) return 'cfo';
+  if (lower.includes('operational') || lower.includes('kpi')) return 'operational';
+  if (lower.includes('sales') || lower.includes('marketing') || lower.includes('customer')) return 'sales';
+  if (lower.includes('product') || lower.includes('r&d') || lower.includes('development')) return 'product';
+  if (lower.includes('project') || lower.includes('programme')) return 'projects';
+  if (lower.includes('health') || lower.includes('safety') || lower.includes('hse') || lower.includes('environmental')) return 'hse';
+  if (lower.includes('esg') || lower.includes('sustainability') || lower.includes('social responsibility')) return 'esg';
+  if (lower.includes('people') || lower.includes('culture') || lower.includes('hr')) return 'hr';
+  if (lower.includes('remuneration')) return 'remuneration';
+  if (lower.includes('audit committee')) return 'audit';
+  return null;
 };
 
 const BoardPaperDocument = () => {
@@ -148,58 +161,63 @@ const BoardPaperDocument = () => {
 
           {/* Document Sections */}
           <div className="p-12 space-y-10">
-            {sections.map((section, index) => (
-              <div key={section.id} className="space-y-4">
-                <div 
-                  className="border-l-4 border-primary pl-4"
-                  style={{ marginLeft: `${section.level * 2}rem` }}
-                >
-                  <h3 
-                    className="font-bold text-foreground"
-                    style={{ 
-                      fontSize: section.level === 0 ? '1.5rem' : '1.25rem'
-                    }}
+            {sections.map((section, index) => {
+              const reportType = getReportType(section.title);
+              const subheadings = reportType ? reportSectionConfig[reportType] : null;
+              
+              return (
+                <div key={section.id} className="space-y-4">
+                  <div 
+                    className="border-l-4 border-primary pl-4"
+                    style={{ marginLeft: `${section.level * 2}rem` }}
                   >
-                    {section.level === 0 ? `${index + 1}. ` : ''}{section.title}
-                  </h3>
-                </div>
-                <div 
-                  className="min-h-[100px] p-6 bg-slate-50 rounded-lg border border-slate-200"
-                  style={{ marginLeft: `${section.level * 2}rem` }}
-                >
-                  {isReportSection(section.title) ? (
-                    <div className="space-y-4">
-                      <p className="text-foreground font-medium mb-3">Executive Summary</p>
-                      <p className="text-foreground leading-relaxed">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas vehicula nunc at magna tristique, id consequat turpis facilisis. Proin euismod lectus vel mauris dignissim, at varius leo tincidunt.
-                      </p>
-                      <p className="text-muted-foreground leading-relaxed">
-                        Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
-                      </p>
-                      <div className="mt-4 pt-4 border-t border-slate-300">
-                        <p className="text-sm text-muted-foreground italic">
-                          [ Detailed report to be provided by {section.title.split(' ')[0]} ]
-                        </p>
+                    <h3 
+                      className="font-bold text-foreground"
+                      style={{ 
+                        fontSize: section.level === 0 ? '1.5rem' : '1.25rem'
+                      }}
+                    >
+                      {section.level === 0 ? `${index + 1}. ` : ''}{section.title}
+                    </h3>
+                  </div>
+                  <div 
+                    className="min-h-[100px] p-6 bg-slate-50 rounded-lg border border-slate-200"
+                    style={{ marginLeft: `${section.level * 2}rem` }}
+                  >
+                    {reportType && subheadings ? (
+                      <div className="space-y-6">
+                        {subheadings.map((subheading, idx) => (
+                          <div key={idx} className="space-y-2">
+                            <h4 className="text-lg font-semibold text-foreground border-b border-slate-300 pb-2">
+                              {subheading}
+                            </h4>
+                            <div className="bg-white p-4 rounded border border-slate-200">
+                              <p className="text-sm text-muted-foreground italic">
+                                [ Awaiting input from {section.title.includes('Committee') ? 'Committee' : section.title.split(' ')[0]} ]
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <p className="text-foreground leading-relaxed">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                      </p>
-                      <p className="text-muted-foreground leading-relaxed">
-                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                      </p>
-                      {section.required && (
+                    ) : (
+                      <div className="space-y-4">
                         <p className="text-foreground leading-relaxed">
-                          Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
+                          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
                         </p>
-                      )}
-                    </div>
-                  )}
+                        <p className="text-muted-foreground leading-relaxed">
+                          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                        </p>
+                        {section.required && (
+                          <p className="text-foreground leading-relaxed">
+                            Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Footer */}
