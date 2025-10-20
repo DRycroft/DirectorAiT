@@ -1,21 +1,19 @@
 import { useState } from "react";
-import { GripVertical, X, Plus } from "lucide-react";
+import { X, Plus, ChevronRight, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export interface TemplateSection {
   id: string;
   title: string;
-  placeholder?: string;
-  label?: string;
   required: boolean;
   enabled: boolean;
   order: number;
-  page_break_after?: boolean;
+  level: number; // 0 = main heading, 1 = sub-heading
+  label?: string;
 }
 
 interface Props {
@@ -41,16 +39,31 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
     );
   };
 
+  const handleIndent = (id: string) => {
+    onSectionsChange(
+      sections.map((s) =>
+        s.id === id ? { ...s, level: Math.min(s.level + 1, 1) } : s
+      )
+    );
+  };
+
+  const handleOutdent = (id: string) => {
+    onSectionsChange(
+      sections.map((s) =>
+        s.id === id ? { ...s, level: Math.max(s.level - 1, 0) } : s
+      )
+    );
+  };
+
   const handleAddCustomSection = () => {
     const newSection: TemplateSection = {
       id: `custom-${Date.now()}`,
       title: "New Section",
-      placeholder: "Enter content here...",
-      label: "For Discussion",
       required: false,
       enabled: true,
       order: sections.length,
-      page_break_after: false,
+      level: 0,
+      label: "For Noting",
     };
     onSectionsChange([...sections, newSection]);
   };
@@ -99,86 +112,62 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
             onDragStart={() => handleDragStart(index)}
             onDragOver={(e) => handleDragOver(e, index)}
             onDragEnd={handleDragEnd}
-            className="border border-border rounded-lg p-4 bg-card hover:bg-accent/5 transition-colors"
+            className={cn(
+              "flex items-center gap-3 p-3 rounded-lg border bg-card cursor-move hover:border-primary/50 transition-colors",
+              section.level === 1 && "ml-8"
+            )}
           >
-            <div className="flex items-start gap-3">
-              <GripVertical className="h-5 w-5 text-muted-foreground cursor-move mt-1" />
-              
-              <div className="flex-1 space-y-3">
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    checked={section.enabled}
-                    onCheckedChange={() => handleToggleSection(section.id)}
-                    disabled={section.required && !isAdmin}
-                  />
-                  <Input
-                    value={section.title}
-                    onChange={(e) => handleUpdateSection(section.id, { title: e.target.value })}
-                    className="flex-1"
-                    placeholder="Section title"
-                  />
-                  {section.required && (
-                    <span className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded">
-                      Required
-                    </span>
-                  )}
-                  {!section.required && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveSection(section.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+            <Checkbox
+              checked={section.enabled}
+              onCheckedChange={() => handleToggleSection(section.id)}
+              disabled={section.required && !isAdmin}
+            />
+            
+            <Input
+              value={section.title}
+              onChange={(e) => handleUpdateSection(section.id, { title: e.target.value })}
+              className="flex-1 font-medium"
+              disabled={section.required && !isAdmin}
+              placeholder="Section title"
+            />
 
-                {section.enabled && (
-                  <>
-                    <Textarea
-                      value={section.placeholder || ""}
-                      onChange={(e) =>
-                        handleUpdateSection(section.id, { placeholder: e.target.value })
-                      }
-                      placeholder="Placeholder text"
-                      className="resize-none"
-                      rows={2}
-                    />
-                    
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <Label className="text-xs text-muted-foreground">Label</Label>
-                        <Select
-                          value={section.label || "For Discussion"}
-                          onValueChange={(value) =>
-                            handleUpdateSection(section.id, { label: value })
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="For Decision">For Decision</SelectItem>
-                            <SelectItem value="For Discussion">For Discussion</SelectItem>
-                            <SelectItem value="For Noting">For Noting</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={section.page_break_after || false}
-                          onCheckedChange={(checked) =>
-                            handleUpdateSection(section.id, { page_break_after: checked === true })
-                          }
-                        />
-                        <Label className="text-sm">Page break after</Label>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+            {section.required && (
+              <Badge variant="secondary" className="text-xs">Required</Badge>
+            )}
+
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleIndent(section.id)}
+                disabled={section.level >= 1}
+                title="Make sub-heading"
+                className="h-8 w-8"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleOutdent(section.id)}
+                disabled={section.level <= 0}
+                title="Make main heading"
+                className="h-8 w-8"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
             </div>
+
+            {!section.required && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleRemoveSection(section.id)}
+                className="text-destructive hover:text-destructive h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         ))}
       </div>

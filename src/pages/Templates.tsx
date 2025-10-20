@@ -26,16 +26,16 @@ const templateTypes = [
 ];
 
 const defaultSections: TemplateSection[] = [
-  { id: "exec-summary", title: "Executive Summary", required: false, enabled: true, order: 0, label: "For Noting" },
-  { id: "financial-overview", title: "Financial Overview", required: false, enabled: true, order: 1, label: "For Discussion" },
-  { id: "strategic-updates", title: "Strategic Updates", required: false, enabled: true, order: 2, label: "For Discussion" },
-  { id: "operational-metrics", title: "Operational Metrics", required: false, enabled: true, order: 3, label: "For Noting" },
-  { id: "risk-compliance", title: "Risk & Compliance", required: false, enabled: true, order: 4, label: "For Noting" },
-  { id: "governance-updates", title: "Governance Updates", required: false, enabled: true, order: 5, label: "For Noting" },
-  { id: "stakeholder-engagement", title: "Stakeholder Engagement", required: false, enabled: true, order: 6, label: "For Discussion" },
-  { id: "project-updates", title: "Project Updates", required: false, enabled: true, order: 7, label: "For Noting" },
-  { id: "budget-variance", title: "Budget Variance Analysis", required: false, enabled: true, order: 8, label: "For Discussion" },
-  { id: "recommendations", title: "Recommendations", required: false, enabled: true, order: 9, label: "For Decision" },
+  { id: "exec-summary", title: "Executive Summary", required: false, enabled: true, order: 0, level: 0, label: "For Noting" },
+  { id: "financial-overview", title: "Financial Overview", required: false, enabled: true, order: 1, level: 0, label: "For Discussion" },
+  { id: "strategic-updates", title: "Strategic Updates", required: false, enabled: true, order: 2, level: 0, label: "For Discussion" },
+  { id: "operational-metrics", title: "Operational Metrics", required: false, enabled: true, order: 3, level: 0, label: "For Noting" },
+  { id: "risk-compliance", title: "Risk & Compliance", required: false, enabled: true, order: 4, level: 0, label: "For Noting" },
+  { id: "governance-updates", title: "Governance Updates", required: false, enabled: true, order: 5, level: 0, label: "For Noting" },
+  { id: "stakeholder-engagement", title: "Stakeholder Engagement", required: false, enabled: true, order: 6, level: 0, label: "For Discussion" },
+  { id: "project-updates", title: "Project Updates", required: false, enabled: true, order: 7, level: 0, label: "For Noting" },
+  { id: "budget-variance", title: "Budget Variance Analysis", required: false, enabled: true, order: 8, level: 0, label: "For Discussion" },
+  { id: "recommendations", title: "Recommendations", required: false, enabled: true, order: 9, level: 0, label: "For Decision" },
 ];
 
 const Templates = () => {
@@ -94,24 +94,23 @@ const Templates = () => {
       <Navigation />
       <main className="flex-1 container mx-auto px-4 py-24 max-w-4xl">
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center justify-between gap-4 mb-6">
             <h1 className="text-3xl font-bold text-foreground">
               Document Templates - Create A New Document
             </h1>
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger className="w-full max-w-md">
+                <SelectValue placeholder="Choose a template type..." />
+              </SelectTrigger>
+              <SelectContent>
+                {templateTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          
-          <Select value={selectedType} onValueChange={setSelectedType}>
-            <SelectTrigger className="w-full max-w-md">
-              <SelectValue placeholder="Choose a template type..." />
-            </SelectTrigger>
-            <SelectContent>
-              {templateTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         {selectedType && (
