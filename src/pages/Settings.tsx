@@ -276,6 +276,60 @@ const Settings = () => {
     return match ? match[1] : "+64";
   };
 
+  // Phone validation based on country code
+  const validatePhoneNumber = (phoneNumber: string, countryCode: string): { valid: boolean; message: string } => {
+    if (!phoneNumber || !phoneNumber.trim()) {
+      return { valid: true, message: "" }; // Empty is valid (optional field)
+    }
+
+    const cleanNumber = phoneNumber.replace(/[\s\-()]/g, "");
+    
+    // Validation rules by country code
+    const validationRules: Record<string, { pattern: RegExp; message: string }> = {
+      "+64": { // New Zealand
+        pattern: /^[2-9]\d{6,7}$/,
+        message: "NZ numbers should be 7-8 digits (mobile: typically starts with 2, 7)"
+      },
+      "+61": { // Australia
+        pattern: /^[2-9]\d{8}$/,
+        message: "AU numbers should be 9 digits"
+      },
+      "+1": { // US/Canada
+        pattern: /^[2-9]\d{9}$/,
+        message: "US/CA numbers should be 10 digits"
+      },
+      "+44": { // UK
+        pattern: /^[1-9]\d{9}$/,
+        message: "UK numbers should be 10 digits"
+      },
+      "+33": { // France
+        pattern: /^[1-9]\d{8}$/,
+        message: "FR numbers should be 9 digits"
+      },
+    };
+
+    const rule = validationRules[countryCode];
+    if (!rule) {
+      // For unknown country codes, just check it's numeric and reasonable length
+      if (!/^\d{7,15}$/.test(cleanNumber)) {
+        return { valid: false, message: "Phone number should be 7-15 digits" };
+      }
+      return { valid: true, message: "" };
+    }
+
+    if (!rule.pattern.test(cleanNumber)) {
+      return { valid: false, message: rule.message };
+    }
+
+    return { valid: true, message: "" };
+  };
+
+  const [phoneErrors, setPhoneErrors] = useState({
+    company_phone: "",
+    primary_contact_phone: "",
+    admin_phone: "",
+  });
+
   useEffect(() => {
     fetchCompanyData();
   }, []);
@@ -379,6 +433,29 @@ const Settings = () => {
           sonnerToast.error("Failed to link organization to your profile");
           return;
         }
+      }
+
+      // Validate phone numbers before saving
+      const companyPhoneValidation = validatePhoneNumber(companyData.company_phone || "", countryCode);
+      const primaryPhoneValidation = validatePhoneNumber(companyData.primary_contact_phone || "", countryCode);
+      const adminPhoneValidation = validatePhoneNumber(companyData.admin_phone || "", countryCode);
+
+      const newPhoneErrors = {
+        company_phone: companyPhoneValidation.message,
+        primary_contact_phone: primaryPhoneValidation.message,
+        admin_phone: adminPhoneValidation.message,
+      };
+
+      setPhoneErrors(newPhoneErrors);
+
+      // Don't save if there are validation errors
+      if (!companyPhoneValidation.valid || !primaryPhoneValidation.valid || !adminPhoneValidation.valid) {
+        toast({
+          title: "Validation Error",
+          description: "Please fix phone number formatting errors before saving",
+          variant: "destructive",
+        });
+        return;
       }
 
       // Format phone numbers with country code - only add if there's a number
@@ -529,27 +606,36 @@ const Settings = () => {
                         </div>
                         <div className="space-y-1.5">
                           <Label htmlFor="companyPhone">Country / Phone Number</Label>
-                          <div className="flex gap-2">
-                            <Select value={countryCode} onValueChange={setCountryCode}>
-                              <SelectTrigger className="w-[100px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {countryCodes.map((item) => (
-                                  <SelectItem key={item.code} value={item.code}>
-                                    {item.code}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Input 
-                              id="companyPhone"
-                              type="tel"
-                              placeholder="21 123 4567"
-                              value={companyData.company_phone}
-                              onChange={(e) => setCompanyData({ ...companyData, company_phone: e.target.value })}
-                              className="flex-1"
-                            />
+                          <div className="space-y-1">
+                            <div className="flex gap-2">
+                              <Select value={countryCode} onValueChange={setCountryCode}>
+                                <SelectTrigger className="w-[100px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {countryCodes.map((item) => (
+                                    <SelectItem key={item.code} value={item.code}>
+                                      {item.code}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Input 
+                                id="companyPhone"
+                                type="tel"
+                                placeholder="21 123 4567"
+                                value={companyData.company_phone}
+                                onChange={(e) => {
+                                  setCompanyData({ ...companyData, company_phone: e.target.value });
+                                  const validation = validatePhoneNumber(e.target.value, countryCode);
+                                  setPhoneErrors({ ...phoneErrors, company_phone: validation.message });
+                                }}
+                                className={`flex-1 ${phoneErrors.company_phone ? "border-destructive" : ""}`}
+                              />
+                            </div>
+                            {phoneErrors.company_phone && (
+                              <p className="text-xs text-destructive">{phoneErrors.company_phone}</p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -585,20 +671,29 @@ const Settings = () => {
                         </div>
                         <div className="space-y-1.5">
                           <Label htmlFor="primaryContactPhone">Phone</Label>
-                          <div className="flex gap-2">
-                            <Input 
-                              value={countryCode}
-                              disabled
-                              className="w-20"
-                            />
-                            <Input 
-                              id="primaryContactPhone" 
-                              type="tel"
-                              placeholder="21 123 4567"
-                              value={companyData.primary_contact_phone}
-                              onChange={(e) => setCompanyData({ ...companyData, primary_contact_phone: e.target.value })}
-                              className="flex-1"
-                            />
+                          <div className="space-y-1">
+                            <div className="flex gap-2">
+                              <Input 
+                                value={countryCode}
+                                disabled
+                                className="w-20"
+                              />
+                              <Input 
+                                id="primaryContactPhone" 
+                                type="tel"
+                                placeholder="21 123 4567"
+                                value={companyData.primary_contact_phone}
+                                onChange={(e) => {
+                                  setCompanyData({ ...companyData, primary_contact_phone: e.target.value });
+                                  const validation = validatePhoneNumber(e.target.value, countryCode);
+                                  setPhoneErrors({ ...phoneErrors, primary_contact_phone: validation.message });
+                                }}
+                                className={`flex-1 ${phoneErrors.primary_contact_phone ? "border-destructive" : ""}`}
+                              />
+                            </div>
+                            {phoneErrors.primary_contact_phone && (
+                              <p className="text-xs text-destructive">{phoneErrors.primary_contact_phone}</p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -695,20 +790,29 @@ const Settings = () => {
                         </div>
                         <div className="space-y-1.5">
                           <Label htmlFor="adminPhone">Phone</Label>
-                          <div className="flex gap-2">
-                            <Input 
-                              value={countryCode}
-                              disabled
-                              className="w-20"
-                            />
-                            <Input 
-                              id="adminPhone" 
-                              type="tel"
-                              placeholder="21 123 4567"
-                              value={companyData.admin_phone}
-                              onChange={(e) => setCompanyData({ ...companyData, admin_phone: e.target.value })}
-                              className="flex-1"
-                            />
+                          <div className="space-y-1">
+                            <div className="flex gap-2">
+                              <Input 
+                                value={countryCode}
+                                disabled
+                                className="w-20"
+                              />
+                              <Input 
+                                id="adminPhone" 
+                                type="tel"
+                                placeholder="21 123 4567"
+                                value={companyData.admin_phone}
+                                onChange={(e) => {
+                                  setCompanyData({ ...companyData, admin_phone: e.target.value });
+                                  const validation = validatePhoneNumber(e.target.value, countryCode);
+                                  setPhoneErrors({ ...phoneErrors, admin_phone: validation.message });
+                                }}
+                                className={`flex-1 ${phoneErrors.admin_phone ? "border-destructive" : ""}`}
+                              />
+                            </div>
+                            {phoneErrors.admin_phone && (
+                              <p className="text-xs text-destructive">{phoneErrors.admin_phone}</p>
+                            )}
                           </div>
                         </div>
                       </div>
