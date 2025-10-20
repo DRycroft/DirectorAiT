@@ -168,7 +168,35 @@ const BoardPapers = () => {
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-...
+                    <DialogHeader>
+                      <DialogTitle>Board Paper Template Editor</DialogTitle>
+                      <DialogDescription>
+                        Customize the sections and order for your board paper template
+                      </DialogDescription>
+                    </DialogHeader>
+                    <TemplateSectionEditor
+                      sections={boardPaperSections}
+                      onSectionsChange={setBoardPaperSections}
+                    />
+                    <div className="flex justify-end gap-2 pt-4 border-t">
+                      <Button
+                        variant="outline"
+                        onClick={() => setTemplateDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          toast({
+                            title: "Template Saved",
+                            description: "Your board paper template has been updated.",
+                          });
+                          setTemplateDialogOpen(false);
+                        }}
+                      >
+                        Save Template
+                      </Button>
+                    </div>
                   </DialogContent>
                 </Dialog>
                 <Button variant="accent" size="sm" onClick={handleCreateBoardPaper} className="shadow-lg hover:shadow-xl h-8">
