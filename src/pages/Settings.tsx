@@ -223,6 +223,66 @@ const defaultSectionsMap: Record<string, TemplateSection[]> = {
   ],
 };
 
+// Industry to business category mapping
+const industryCategories: Record<string, string[]> = {
+  "Food & Beverage": [
+    "Restaurant", "Cafe", "Bar/Pub", "Fast Food", "Catering Service", "Food Truck",
+    "Bakery", "Food Manufacturing", "Brewery/Winery", "Food Retail"
+  ],
+  "Retail": [
+    "General Retail", "Supermarket/Grocery", "Specialty Store", "Online Retail",
+    "Wholesale", "Fashion Retail", "Electronics Retail", "Furniture Retail"
+  ],
+  "Healthcare": [
+    "Medical Practice", "Dental Practice", "Pharmacy", "Hospital/Clinic",
+    "Aged Care Facility", "Medical Laboratory", "Allied Health Services", "Mental Health Services"
+  ],
+  "Technology": [
+    "Software Development", "IT Services", "Telecommunications", "Data Services",
+    "Cybersecurity", "Cloud Services", "Hardware/Electronics", "Tech Consulting"
+  ],
+  "Professional Services": [
+    "Accounting/Bookkeeping", "Legal Services", "Consulting", "Marketing/Advertising",
+    "Architecture", "Engineering", "Real Estate", "Financial Services"
+  ],
+  "Construction & Trades": [
+    "Building Construction", "Civil Construction", "Electrical Services", "Plumbing",
+    "Carpentry", "Painting", "Landscaping", "Renovation/Maintenance"
+  ],
+  "Manufacturing": [
+    "Light Manufacturing", "Heavy Manufacturing", "Food Processing", "Textiles/Clothing",
+    "Metal Fabrication", "Chemical Manufacturing", "Pharmaceutical Manufacturing"
+  ],
+  "Education & Training": [
+    "Primary/Secondary School", "Tertiary Education", "Early Childhood Education",
+    "Training Provider", "Private Tutoring", "Online Education"
+  ],
+  "Transportation & Logistics": [
+    "Freight/Courier", "Passenger Transport", "Warehousing", "Logistics Services",
+    "Moving Services", "Vehicle Rental"
+  ],
+  "Hospitality & Tourism": [
+    "Hotel/Motel", "Holiday Park", "Tourist Attraction", "Travel Agency",
+    "Event Management", "Tour Operator"
+  ],
+  "Agriculture & Primary Industries": [
+    "Dairy Farming", "Sheep/Beef Farming", "Horticulture", "Viticulture",
+    "Forestry", "Fishing/Aquaculture", "Agricultural Services"
+  ],
+  "Personal Services": [
+    "Hair/Beauty Salon", "Fitness/Gym", "Spa/Wellness", "Cleaning Services",
+    "Childcare", "Pet Services", "Funeral Services"
+  ],
+  "Creative & Media": [
+    "Graphic Design", "Photography", "Video Production", "Printing",
+    "Publishing", "Advertising Agency", "Arts & Entertainment"
+  ],
+  "Other": [
+    "Charitable Organization", "Community Services", "Religious Organization",
+    "Sports Club", "Other Services", "Other Manufacturing", "Other Retail"
+  ]
+};
+
 const Settings = () => {
   const { toast } = useToast();
   const [selectedType, setSelectedType] = useState<string>("");
@@ -709,23 +769,59 @@ const Settings = () => {
                       <div className="grid gap-3">
                         <div className="space-y-1.5">
                           <Label htmlFor="industrySector">Industry Sector</Label>
-                          <Input 
-                            id="industrySector" 
-                            placeholder="e.g., Restaurant/Bar, Technology, Healthcare"
+                          <Select
                             value={companyData.industry_sector}
-                            onChange={(e) => setCompanyData({ ...companyData, industry_sector: e.target.value })}
-                          />
-                          <p className="text-xs text-muted-foreground">Specify your primary industry sector for compliance scanning</p>
+                            onValueChange={(value) => {
+                              setCompanyData({ 
+                                ...companyData, 
+                                industry_sector: value,
+                                business_category: "" // Reset category when industry changes
+                              });
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select industry sector" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.keys(industryCategories).map((industry) => (
+                                <SelectItem key={industry} value={industry}>
+                                  {industry}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground">Select your primary industry sector</p>
                         </div>
                         <div className="space-y-1.5">
                           <Label htmlFor="businessCategory">Government Business Category</Label>
-                          <Input 
-                            id="businessCategory" 
-                            placeholder="e.g., Small Business, Food Service, Professional Services"
+                          <Select
                             value={companyData.business_category}
-                            onChange={(e) => setCompanyData({ ...companyData, business_category: e.target.value })}
-                          />
-                          <p className="text-xs text-muted-foreground">Government classification for regulatory requirements</p>
+                            onValueChange={(value) => setCompanyData({ ...companyData, business_category: value })}
+                            disabled={!companyData.industry_sector}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={
+                                companyData.industry_sector 
+                                  ? "Select business category" 
+                                  : "Select industry sector first"
+                              } />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {companyData.industry_sector && 
+                                industryCategories[companyData.industry_sector]?.map((category) => (
+                                  <SelectItem key={category} value={category}>
+                                    {category}
+                                  </SelectItem>
+                                ))
+                              }
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground">
+                            {companyData.industry_sector 
+                              ? "Government classification for regulatory requirements"
+                              : "Please select an industry sector first"
+                            }
+                          </p>
                         </div>
                         {companyData.compliance_scan_completed && (
                           <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
