@@ -10,7 +10,7 @@ import { TemplateSectionEditor, TemplateSection } from "@/components/TemplateSec
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Users, Briefcase, UserCog } from "lucide-react";
+import { Save, Users, Briefcase, UserCog, Building2, Clock } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import BoardManagement from "@/components/settings/BoardManagement";
 import { BOARD_POSITIONS, EXECUTIVE_POSITIONS, KEY_STAFF_POSITIONS } from "@/config/positions";
@@ -289,6 +289,15 @@ const Settings = () => {
   const [selectedType, setSelectedType] = useState<string>("");
   const [sections, setSections] = useState<TemplateSection[]>([]);
   const [activeTab, setActiveTab] = useState("company");
+  const [businessDescription, setBusinessDescription] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<{
+    recommended_industry: string;
+    recommended_categories: string[];
+    all_categories: string[];
+    alternative_industries: string[];
+    reasoning: string;
+  } | null>(null);
   const [companyData, setCompanyData] = useState({
     name: "",
     domain: "",
@@ -546,11 +555,58 @@ const Settings = () => {
       
       sonnerToast.success("Company details saved successfully!");
       
+      // Clear AI suggestions after save
+      setAiSuggestions(null);
+      setBusinessDescription("");
+      
       // Refresh the data
       await fetchCompanyData();
     } catch (error) {
       console.error("Error updating company data:", error);
       sonnerToast.error("Failed to save company details. Please try again.");
+    }
+  };
+
+  const handleAnalyzeBusiness = async () => {
+    if (!businessDescription.trim()) {
+      toast({
+        title: "Description required",
+        description: "Please describe what your business does",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setAnalyzing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-business", {
+        body: { description: businessDescription }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setAiSuggestions(data);
+        // Auto-populate the fields with recommendations
+        setCompanyData({
+          ...companyData,
+          industry_sector: data.recommended_industry,
+          business_category: data.recommended_categories[0] || ""
+        });
+        toast({
+          title: "Analysis complete!",
+          description: data.reasoning,
+        });
+      }
+    } catch (error: any) {
+      console.error("Error analyzing business:", error);
+      toast({
+        title: "Analysis failed",
+        description: error.message || "Failed to analyze business description",
+        variant: "destructive",
+      });
+    } finally {
+      setAnalyzing(false);
     }
   };
 
@@ -767,7 +823,57 @@ const Settings = () => {
                     </div>
                     <div className="pt-6 mt-4 border-t">
                       <h3 className="text-base font-semibold mb-3">Industry & Compliance</h3>
-                      <div className="grid gap-3">
+                      <div className="grid gap-4">
+                        {/* Step 1: Describe your business */}
+                        <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+                          <Label htmlFor="businessDescription" className="text-base">What does your business do?</Label>
+                          <p className="text-xs text-muted-foreground mb-2">
+                            Describe your business in plain language (e.g., "I build custom fences", "We run a coffee shop")
+                          </p>
+                          <div className="flex gap-2">
+                            <Input
+                              id="businessDescription"
+                              placeholder="e.g., I build fences, run a restaurant, develop software..."
+                              value={businessDescription}
+                              onChange={(e) => setBusinessDescription(e.target.value)}
+                              className="flex-1"
+                            />
+                            <Button 
+                              onClick={handleAnalyzeBusiness}
+                              disabled={analyzing || !businessDescription.trim()}
+                              variant="secondary"
+                            >
+                              {analyzing ? (
+                                <>
+                                  <Clock className="mr-2 h-4 w-4 animate-spin" />
+                                  Analyzing...
+                                </>
+                              ) : (
+                                "Analyze"
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Step 2: AI Suggestions */}
+                        {aiSuggestions && (
+                          <div className="space-y-3 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <Building2 className="h-5 w-5 text-primary mt-0.5" />
+                              <div className="flex-1">
+                                <p className="font-medium text-sm">AI Recommendation</p>
+                                <p className="text-xs text-muted-foreground mt-1">{aiSuggestions.reasoning}</p>
+                              </div>
+                            </div>
+                            {aiSuggestions.alternative_industries.length > 0 && (
+                              <div className="text-xs text-muted-foreground">
+                                <span className="font-medium">Alternatives:</span> {aiSuggestions.alternative_industries.join(", ")}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Step 3: Select Industry Sector */}
                         <div className="space-y-1.5">
                           <Label htmlFor="industrySector">Industry Sector</Label>
                           <Combobox
@@ -787,8 +893,15 @@ const Settings = () => {
                             searchPlaceholder="Search industry sector..."
                             emptyText="No industry found. Try different keywords."
                           />
-                          <p className="text-xs text-muted-foreground">Type to search and select your industry sector</p>
+                          <p className="text-xs text-muted-foreground">
+                            {aiSuggestions 
+                              ? "✓ AI recommended industry selected above" 
+                              : "Or type to search and select manually"
+                            }
+                          </p>
                         </div>
+
+                        {/* Step 4: Select Business Category */}
                         <div className="space-y-1.5">
                           <Label htmlFor="businessCategory">Government Business Category</Label>
                           <Select
@@ -805,21 +918,28 @@ const Settings = () => {
                             </SelectTrigger>
                             <SelectContent className="bg-background z-50">
                               {companyData.industry_sector && 
-                                industryCategories[companyData.industry_sector]?.map((category) => (
-                                  <SelectItem key={category} value={category}>
-                                    {category}
-                                  </SelectItem>
-                                ))
+                                industryCategories[companyData.industry_sector]?.map((category) => {
+                                  const isRecommended = aiSuggestions?.recommended_categories.includes(category);
+                                  return (
+                                    <SelectItem key={category} value={category}>
+                                      {category} {isRecommended && "⭐"}
+                                    </SelectItem>
+                                  );
+                                })
                               }
                             </SelectContent>
                           </Select>
                           <p className="text-xs text-muted-foreground">
-                            {companyData.industry_sector 
-                              ? "Government classification for regulatory requirements"
-                              : "Please select an industry sector first"
+                            {aiSuggestions && aiSuggestions.recommended_categories.length > 0
+                              ? `⭐ = AI recommended categories`
+                              : companyData.industry_sector 
+                                ? "Government classification for regulatory requirements"
+                                : "Please select an industry sector first"
                             }
                           </p>
                         </div>
+
+                        {/* Compliance Scan Status */}
                         {companyData.compliance_scan_completed && (
                           <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                             <Save className="h-4 w-4 text-green-600" />
