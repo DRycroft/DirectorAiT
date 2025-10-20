@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import { BoardPaperTemplateBuilder } from "@/components/BoardPaperTemplateBuilder";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const BoardPapers = () => {
   return (
@@ -95,13 +96,60 @@ const BoardPapers = () => {
               <CardHeader>
                 <CardTitle>Executive Reports</CardTitle>
                 <CardDescription>
-                  CEO and executive team reports
+                  Select report type to view or create reports
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Executive reports list will appear here.
-                </p>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <Button variant="outline" className="justify-start h-auto py-4">
+                    <div className="text-left">
+                      <div className="font-semibold">Chair Report</div>
+                      <div className="text-xs text-muted-foreground">Board Chair updates</div>
+                    </div>
+                  </Button>
+                  <Button variant="outline" className="justify-start h-auto py-4">
+                    <div className="text-left">
+                      <div className="font-semibold">CEO Report</div>
+                      <div className="text-xs text-muted-foreground">Chief Executive updates</div>
+                    </div>
+                  </Button>
+                  <Button variant="outline" className="justify-start h-auto py-4">
+                    <div className="text-left">
+                      <div className="font-semibold">CFO Report</div>
+                      <div className="text-xs text-muted-foreground">Chief Financial Officer</div>
+                    </div>
+                  </Button>
+                  <Button variant="outline" className="justify-start h-auto py-4">
+                    <div className="text-left">
+                      <div className="font-semibold">OSH Report</div>
+                      <div className="text-xs text-muted-foreground">Occupational Safety & Health</div>
+                    </div>
+                  </Button>
+                  <Button variant="outline" className="justify-start h-auto py-4">
+                    <div className="text-left">
+                      <div className="font-semibold">Finance Report</div>
+                      <div className="text-xs text-muted-foreground">Financial performance</div>
+                    </div>
+                  </Button>
+                  <Button variant="outline" className="justify-start h-auto py-4">
+                    <div className="text-left">
+                      <div className="font-semibold">S&M Report</div>
+                      <div className="text-xs text-muted-foreground">Sales & Marketing</div>
+                    </div>
+                  </Button>
+                  <Button variant="outline" className="justify-start h-auto py-4">
+                    <div className="text-left">
+                      <div className="font-semibold">HR Report</div>
+                      <div className="text-xs text-muted-foreground">Human Resources</div>
+                    </div>
+                  </Button>
+                  <Button variant="outline" className="justify-start h-auto py-4">
+                    <div className="text-left">
+                      <div className="font-semibold">KPIs Report</div>
+                      <div className="text-xs text-muted-foreground">Key Performance Indicators</div>
+                    </div>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
