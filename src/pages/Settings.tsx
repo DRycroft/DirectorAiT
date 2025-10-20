@@ -530,7 +530,7 @@ const Settings = () => {
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t">
+                    <div className="pt-6 mt-4 border-t">
                       <h3 className="text-base font-semibold mb-3">Primary Contact (CEO/Chair)</h3>
                       <div className="grid gap-3">
                         <div className="space-y-1.5">
@@ -640,7 +640,7 @@ const Settings = () => {
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t">
+                    <div className="pt-6 mt-4 border-t">
                       <h3 className="text-base font-semibold mb-3">Admin Person</h3>
                       <div className="grid gap-3">
                         <div className="space-y-1.5">
