@@ -31,6 +31,7 @@ const reportSectionConfig: Record<string, string[]> = {
   'hr': ['Workforce Overview', 'Recruitment & Retention', 'Training & Development', 'Culture Initiatives'],
   'remuneration': ['Committee Activities', 'Remuneration Framework', 'Executive Compensation', 'Incentive Plans'],
   'audit': ['Committee Activities', 'Internal Audit Findings', 'Risk Management', 'Compliance Review'],
+  'compliance': ['Regulatory Compliance Status', 'Recent Audits and Inspections', 'Outstanding Compliance Items', 'Upcoming Compliance Requirements', 'Compliance Training Updates', 'Risk and Remediation Actions']
 };
 
 const getReportType = (title: string): string | null => {
@@ -47,6 +48,7 @@ const getReportType = (title: string): string | null => {
   if (lower.includes('people') || lower.includes('culture') || lower.includes('hr')) return 'hr';
   if (lower.includes('remuneration')) return 'remuneration';
   if (lower.includes('audit committee')) return 'audit';
+  if (lower.includes('compliance')) return 'compliance';
   return null;
 };
 

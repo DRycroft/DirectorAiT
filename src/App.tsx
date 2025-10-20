@@ -19,6 +19,7 @@ import MemberInvite from "./pages/MemberInvite";
 import MemberApproval from "./pages/MemberApproval";
 import ExportTeam from "./pages/ExportTeam";
 import Settings from "./pages/Settings";
+import Compliance from "./pages/Compliance";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/boards/:boardId/team" element={<BoardAndTeam />} />
           <Route path="/board-papers" element={<BoardPapers />} />
           <Route path="/board-papers/:id" element={<BoardPaperDocument />} />
+          <Route path="/compliance" element={<Compliance />} />
           <Route path="/library" element={<BoardLibrary />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/member-intake" element={<MemberIntake />} />

@@ -644,6 +644,226 @@ export type Database = {
           },
         ]
       }
+      compliance_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      compliance_items: {
+        Row: {
+          authority: string | null
+          board_id: string | null
+          category_id: string | null
+          created_at: string
+          description: string | null
+          frequency: Database["public"]["Enums"]["compliance_frequency"]
+          id: string
+          industry_sector: string | null
+          is_active: boolean
+          last_completed_date: string | null
+          next_due_date: string | null
+          notes: string | null
+          org_id: string
+          reference_url: string | null
+          reminder_days_before: number | null
+          responsible_person: string | null
+          status: Database["public"]["Enums"]["compliance_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          authority?: string | null
+          board_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          frequency?: Database["public"]["Enums"]["compliance_frequency"]
+          id?: string
+          industry_sector?: string | null
+          is_active?: boolean
+          last_completed_date?: string | null
+          next_due_date?: string | null
+          notes?: string | null
+          org_id: string
+          reference_url?: string | null
+          reminder_days_before?: number | null
+          responsible_person?: string | null
+          status?: Database["public"]["Enums"]["compliance_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          authority?: string | null
+          board_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          frequency?: Database["public"]["Enums"]["compliance_frequency"]
+          id?: string
+          industry_sector?: string | null
+          is_active?: boolean
+          last_completed_date?: string | null
+          next_due_date?: string | null
+          notes?: string | null
+          org_id?: string
+          reference_url?: string | null
+          reminder_days_before?: number | null
+          responsible_person?: string | null
+          status?: Database["public"]["Enums"]["compliance_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_items_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_items_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_reviews: {
+        Row: {
+          attachments: Json | null
+          compliance_item_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          review_date: string
+          reviewed_by: string
+          signed_off_at: string | null
+          signed_off_by: string | null
+          status: Database["public"]["Enums"]["compliance_status"]
+        }
+        Insert: {
+          attachments?: Json | null
+          compliance_item_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          review_date: string
+          reviewed_by: string
+          signed_off_at?: string | null
+          signed_off_by?: string | null
+          status: Database["public"]["Enums"]["compliance_status"]
+        }
+        Update: {
+          attachments?: Json | null
+          compliance_item_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          review_date?: string
+          reviewed_by?: string
+          signed_off_at?: string | null
+          signed_off_by?: string | null
+          status?: Database["public"]["Enums"]["compliance_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_reviews_compliance_item_id_fkey"
+            columns: ["compliance_item_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_reviews_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_reviews_signed_off_by_fkey"
+            columns: ["signed_off_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_templates: {
+        Row: {
+          authority: string | null
+          category_id: string | null
+          created_at: string
+          description: string | null
+          frequency: Database["public"]["Enums"]["compliance_frequency"]
+          id: string
+          industry_sector: string
+          is_mandatory: boolean
+          reference_url: string | null
+          title: string
+        }
+        Insert: {
+          authority?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          frequency: Database["public"]["Enums"]["compliance_frequency"]
+          id?: string
+          industry_sector: string
+          is_mandatory?: boolean
+          reference_url?: string | null
+          title: string
+        }
+        Update: {
+          authority?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          frequency?: Database["public"]["Enums"]["compliance_frequency"]
+          id?: string
+          industry_sector?: string
+          is_mandatory?: boolean
+          reference_url?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_templates_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_drafts: {
         Row: {
           board_id: string | null
@@ -1263,6 +1483,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_next_due_date: {
+        Args: {
+          freq: Database["public"]["Enums"]["compliance_frequency"]
+          last_date: string
+        }
+        Returns: string
+      }
       generate_member_invite_token: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1293,6 +1520,21 @@ export type Database = {
         | "staff"
         | "observer"
         | "external_guest"
+      compliance_frequency:
+        | "daily"
+        | "weekly"
+        | "monthly"
+        | "quarterly"
+        | "semi_annual"
+        | "annual"
+        | "biennial"
+        | "as_required"
+      compliance_status:
+        | "compliant"
+        | "due_soon"
+        | "overdue"
+        | "not_applicable"
+        | "in_progress"
       draft_status: "in_progress" | "awaiting_review" | "approved" | "archived"
       template_scope: "personal" | "team" | "organization"
     }
@@ -1431,6 +1673,23 @@ export const Constants = {
         "staff",
         "observer",
         "external_guest",
+      ],
+      compliance_frequency: [
+        "daily",
+        "weekly",
+        "monthly",
+        "quarterly",
+        "semi_annual",
+        "annual",
+        "biennial",
+        "as_required",
+      ],
+      compliance_status: [
+        "compliant",
+        "due_soon",
+        "overdue",
+        "not_applicable",
+        "in_progress",
       ],
       draft_status: ["in_progress", "awaiting_review", "approved", "archived"],
       template_scope: ["personal", "team", "organization"],

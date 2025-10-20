@@ -15,6 +15,7 @@ const Navigation = () => {
     if (path === '/team') return location.pathname === '/team';
     if (path === '/dashboard') return location.pathname === '/dashboard';
     if (path === '/board-papers') return location.pathname.startsWith('/board-papers');
+    if (path === '/compliance') return location.pathname === '/compliance';
     if (path === '/library') return location.pathname === '/library';
     if (path === '/settings') return location.pathname === '/settings';
     return false;
@@ -90,6 +91,18 @@ const Navigation = () => {
               style={isActive('/board-papers') ? { marginBottom: '-1px' } : {}}
             >
               Board Papers
+            </Link>
+            <Link 
+              to="/compliance" 
+              className={cn(
+                "relative px-5 pt-3 pb-4 text-sm font-medium transition-all rounded-t-xl",
+                isActive('/compliance')
+                  ? "text-foreground bg-background border-t-2 border-x-2 border-primary shadow-[0_-2px_8px_rgba(0,0,0,0.1)]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30 mb-0.5"
+              )}
+              style={isActive('/compliance') ? { marginBottom: '-1px' } : {}}
+            >
+              Compliance
             </Link>
             <Link 
               to="/library" 
