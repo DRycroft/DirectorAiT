@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, Users, Briefcase, UserCog } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import BoardManagement from "@/components/settings/BoardManagement";
+import { BOARD_POSITIONS, EXECUTIVE_POSITIONS, KEY_STAFF_POSITIONS } from "@/config/positions";
 
 const templateTypes = [
   "Board Papers",
@@ -711,14 +712,7 @@ const Settings = () => {
               memberType="board"
               title="Board Members"
               description="Manage board directors, chair, and deputy chair"
-              positions={[
-                "Chair",
-                "Deputy Chair",
-                "Director",
-                "Independent Director",
-                "Non-Executive Director",
-                "Executive Director",
-              ]}
+              positions={BOARD_POSITIONS}
             />
           </TabsContent>
 
@@ -727,16 +721,7 @@ const Settings = () => {
               memberType="executive"
               title="Executive Team"
               description="Manage CEO, CFO, and other executive leadership"
-              positions={[
-                "CEO",
-                "CFO",
-                "COO",
-                "CTO",
-                "CMO",
-                "CHRO",
-                "General Counsel",
-                "Managing Director",
-              ]}
+              positions={EXECUTIVE_POSITIONS}
             />
           </TabsContent>
 
@@ -745,16 +730,7 @@ const Settings = () => {
               memberType="key_staff"
               title="Key Staff"
               description="Manage key operational staff and department heads"
-              positions={[
-                "Head of Finance",
-                "Head of Operations",
-                "Head of Sales",
-                "Head of Marketing",
-                "Head of HR",
-                "Head of IT",
-                "Head of Legal",
-                "Company Secretary",
-              ]}
+              positions={KEY_STAFF_POSITIONS}
             />
           </TabsContent>
 

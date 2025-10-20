@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Users, Briefcase, UserCog, Eye, FileText, GitBranch, Clock, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { getPositionsByType } from "@/config/positions";
 
 const TeamOverview = () => {
   const navigate = useNavigate();
@@ -260,39 +261,11 @@ const TeamOverview = () => {
     );
   };
 
-  // Define default positions for each member type
+  // Get default positions from the shared config (source of truth from Settings)
   const getDefaultPositions = (memberType: 'board' | 'executive' | 'staff') => {
-    if (memberType === 'board') {
-      return [
-        'Chair',
-        'Deputy Chair',
-        'Secretary',
-        'Board Member',
-        'Board Member',
-        'Board Member',
-        'Board Member',
-        'Board Member',
-        'Board Member'
-      ];
-    } else if (memberType === 'executive') {
-      return [
-        'Chief Executive Officer',
-        'Chief Financial Officer',
-        'Chief Operating Officer',
-        'Chief Technology Officer',
-        'Chief Marketing Officer',
-        'Chief People Officer'
-      ];
-    } else {
-      return [
-        'Manager',
-        'Manager',
-        'Coordinator',
-        'Coordinator',
-        'Specialist',
-        'Specialist'
-      ];
-    }
+    // Map 'staff' to 'key_staff' for the config
+    const configType = memberType === 'staff' ? 'key_staff' : memberType;
+    return getPositionsByType(configType);
   };
 
   const MemberTable = ({ 
