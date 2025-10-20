@@ -428,6 +428,73 @@ export type Database = {
           },
         ]
       }
+      document_drafts: {
+        Row: {
+          board_id: string | null
+          content: Json
+          created_at: string | null
+          created_by: string
+          id: string
+          last_saved: string | null
+          org_id: string | null
+          section_key: string
+          status: Database["public"]["Enums"]["draft_status"] | null
+          template_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          board_id?: string | null
+          content?: Json
+          created_at?: string | null
+          created_by: string
+          id?: string
+          last_saved?: string | null
+          org_id?: string | null
+          section_key: string
+          status?: Database["public"]["Enums"]["draft_status"] | null
+          template_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          board_id?: string | null
+          content?: Json
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          last_saved?: string | null
+          org_id?: string | null
+          section_key?: string
+          status?: Database["public"]["Enums"]["draft_status"] | null
+          template_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_drafts_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_drafts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_drafts_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_embeddings: {
         Row: {
           chunk_index: number
@@ -761,6 +828,119 @@ export type Database = {
         }
         Relationships: []
       }
+      template_approvals: {
+        Row: {
+          comments: string | null
+          created_at: string | null
+          id: string
+          requested_by: string
+          requested_scope: Database["public"]["Enums"]["template_scope"]
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          template_id: string
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string | null
+          id?: string
+          requested_by: string
+          requested_scope: Database["public"]["Enums"]["template_scope"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          template_id: string
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string | null
+          id?: string
+          requested_by?: string
+          requested_scope?: Database["public"]["Enums"]["template_scope"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_approvals_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      templates: {
+        Row: {
+          author_id: string
+          board_id: string | null
+          created_at: string | null
+          default_for_sections: string[]
+          id: string
+          is_default: boolean | null
+          name: string
+          org_id: string | null
+          permissions: Json | null
+          published: boolean | null
+          scope: Database["public"]["Enums"]["template_scope"]
+          sections: Json
+          tags: string[]
+          updated_at: string | null
+          version: number | null
+        }
+        Insert: {
+          author_id: string
+          board_id?: string | null
+          created_at?: string | null
+          default_for_sections?: string[]
+          id?: string
+          is_default?: boolean | null
+          name: string
+          org_id?: string | null
+          permissions?: Json | null
+          published?: boolean | null
+          scope?: Database["public"]["Enums"]["template_scope"]
+          sections?: Json
+          tags?: string[]
+          updated_at?: string | null
+          version?: number | null
+        }
+        Update: {
+          author_id?: string
+          board_id?: string | null
+          created_at?: string | null
+          default_for_sections?: string[]
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          org_id?: string | null
+          permissions?: Json | null
+          published?: boolean | null
+          scope?: Database["public"]["Enums"]["template_scope"]
+          sections?: Json
+          tags?: string[]
+          updated_at?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "templates_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -781,6 +961,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_template_preferences: {
+        Row: {
+          created_at: string | null
+          id: string
+          preferred_template_id: string | null
+          section_key: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          preferred_template_id?: string | null
+          section_key: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          preferred_template_id?: string | null
+          section_key?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_template_preferences_preferred_template_id_fkey"
+            columns: ["preferred_template_id"]
+            isOneToOne: false
+            referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -805,6 +1020,8 @@ export type Database = {
         | "staff"
         | "observer"
         | "external_guest"
+      draft_status: "in_progress" | "awaiting_review" | "approved" | "archived"
+      template_scope: "personal" | "team" | "organization"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -942,6 +1159,8 @@ export const Constants = {
         "observer",
         "external_guest",
       ],
+      draft_status: ["in_progress", "awaiting_review", "approved", "archived"],
+      template_scope: ["personal", "team", "organization"],
     },
   },
 } as const
