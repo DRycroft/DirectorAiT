@@ -27,8 +27,8 @@ const BoardPapers = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
-        <div className="mb-8">
+      <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
+        <div className="mb-6">
           <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
             Board Papers
           </h1>
@@ -37,8 +37,8 @@ const BoardPapers = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="papers" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8">
+        <Tabs defaultValue="papers" className="w-full flex-1">
+          <TabsList className="grid w-full grid-cols-6 mb-6">
             <TabsTrigger value="papers" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Board Papers</TabsTrigger>
             <TabsTrigger value="minutes" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Minutes</TabsTrigger>
             <TabsTrigger value="special" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white data-[state=active]:shadow-md">Special Papers</TabsTrigger>
@@ -214,16 +214,20 @@ const BoardPapers = () => {
                 </div>
                 
                 {selectedTemplate ? (
-                  <div className="border border-border rounded-lg p-6 bg-muted/30">
-                    <h3 className="text-lg font-semibold mb-2">
+                  <div className="border border-border rounded-lg p-8 bg-muted/30 min-h-[600px]">
+                    <h3 className="text-xl font-semibold mb-4">
                       {templateOptions.find(t => t.value === selectedTemplate)?.label} Template
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Template builder will appear here. This section will allow you to configure headers and structure for this document type.
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Configure the structure and headers for this document template. This will serve as the base for all documents of this type.
                     </p>
+                    {/* Template builder will go here */}
+                    <div className="bg-background rounded-lg p-6 border border-border min-h-[400px]">
+                      <p className="text-sm text-muted-foreground">Template editor area - document customization interface will appear here</p>
+                    </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground py-8">
                     Please select a template type to begin configuring its structure.
                   </p>
                 )}
