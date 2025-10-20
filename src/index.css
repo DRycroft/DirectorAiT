@@ -19,15 +19,15 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 15%;
     
-    /* Brand colors - Modern indigo */
-    --primary: 231 48% 48%;
+    /* Brand colors - Bold purple */
+    --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 231 48% 42%;
+    --primary-hover: 262 83% 50%;
     
-    /* Accent - Vibrant cyan for CTAs */
-    --accent: 199 89% 48%;
+    /* Accent - Electric pink for CTAs */
+    --accent: 328 86% 58%;
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 199 89% 42%;
+    --accent-hover: 328 86% 50%;
     
     /* Secondary - Soft purple-grey */
     --secondary: 240 12% 95%;
@@ -56,29 +56,29 @@ All colors MUST be HSL.
     
     --radius: 0.75rem;
     
-    /* Gradients - Modern and vibrant */
-    --gradient-primary: linear-gradient(135deg, hsl(231 48% 48%) 0%, hsl(231 48% 58%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(199 89% 48%) 0%, hsl(199 89% 58%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(231 48% 48%) 0%, hsl(199 89% 48%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(240 12% 98%) 100%);
+    /* Gradients - Bold and vibrant */
+    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(262 83% 68%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(328 86% 58%) 0%, hsl(328 86% 68%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(328 86% 58%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(262 20% 98%) 100%);
     
-    /* Shadows - Soft and modern */
-    --shadow-sm: 0 1px 3px 0 hsl(240 5% 65% / 0.12);
-    --shadow-md: 0 4px 12px -2px hsl(240 5% 65% / 0.15);
-    --shadow-lg: 0 12px 24px -4px hsl(240 5% 65% / 0.18);
-    --shadow-accent: 0 8px 24px -4px hsl(199 89% 48% / 0.25);
+    /* Shadows - Vibrant and modern */
+    --shadow-sm: 0 1px 3px 0 hsl(262 40% 65% / 0.12);
+    --shadow-md: 0 4px 12px -2px hsl(262 40% 65% / 0.15);
+    --shadow-lg: 0 12px 24px -4px hsl(262 40% 65% / 0.18);
+    --shadow-accent: 0 8px 24px -4px hsl(328 86% 58% / 0.35);
     
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 240 12% 97%;
     --sidebar-foreground: 222 47% 15%;
-    --sidebar-primary: 231 48% 48%;
+    --sidebar-primary: 262 83% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 12% 95%;
     --sidebar-accent-foreground: 222 47% 15%;
     --sidebar-border: 240 12% 88%;
-    --sidebar-ring: 231 48% 48%;
+    --sidebar-ring: 262 83% 58%;
   }
 
   .dark {
@@ -91,13 +91,13 @@ All colors MUST be HSL.
     --popover: 222 47% 14%;
     --popover-foreground: 210 40% 98%;
     
-    --primary: 231 48% 58%;
+    --primary: 262 83% 65%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 231 48% 65%;
+    --primary-hover: 262 83% 72%;
     
-    --accent: 199 89% 58%;
+    --accent: 328 86% 65%;
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 199 89% 65%;
+    --accent-hover: 328 86% 72%;
     
     --secondary: 220 14% 20%;
     --secondary-foreground: 210 40% 98%;
@@ -116,16 +116,16 @@ All colors MUST be HSL.
     
     --border: 220 13% 20%;
     --input: 220 13% 20%;
-    --ring: 231 48% 58%;
+    --ring: 262 83% 65%;
     
     --sidebar-background: 222 47% 13%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 231 48% 58%;
+    --sidebar-primary: 262 83% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 14% 20%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 220 13% 20%;
-    --sidebar-ring: 231 48% 58%;
+    --sidebar-ring: 262 83% 65%;
   }
 }
 
