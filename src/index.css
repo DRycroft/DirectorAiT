@@ -8,15 +8,15 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Base colors - Medium grey palette with white text */
-    --background: 220 15% 24%;
+    /* Base colors - Dark grey palette with white text */
+    --background: 220 15% 12%;
     --foreground: 0 0% 98%;
     
     /* Surface colors */
-    --card: 220 15% 32%;
+    --card: 220 15% 16%;
     --card-foreground: 0 0% 98%;
     
-    --popover: 220 15% 32%;
+    --popover: 220 15% 16%;
     --popover-foreground: 0 0% 98%;
     
     /* Brand colors - Bold purple */
@@ -29,13 +29,13 @@ All colors MUST be HSL.
     --accent-foreground: 0 0% 100%;
     --accent-hover: 328 86% 50%;
     
-    /* Secondary - Medium grey */
-    --secondary: 220 15% 40%;
+    /* Secondary - Dark grey */
+    --secondary: 220 15% 20%;
     --secondary-foreground: 0 0% 98%;
     
     /* Muted - Subtle backgrounds and text */
-    --muted: 220 15% 48%;
-    --muted-foreground: 220 10% 75%;
+    --muted: 220 15% 24%;
+    --muted-foreground: 220 10% 65%;
     
     /* Destructive - Warm red */
     --destructive: 0 72% 51%;
@@ -50,8 +50,8 @@ All colors MUST be HSL.
     --warning-foreground: 0 0% 100%;
     
     /* Borders and inputs */
-    --border: 220 15% 45%;
-    --input: 220 15% 36%;
+    --border: 220 15% 25%;
+    --input: 220 15% 20%;
     --ring: 262 83% 58%;
     
     --radius: 0.75rem;
@@ -71,13 +71,13 @@ All colors MUST be HSL.
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    --sidebar-background: 220 15% 20%;
+    --sidebar-background: 220 15% 10%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 262 83% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 36%;
+    --sidebar-accent: 220 15% 18%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 220 15% 42%;
+    --sidebar-border: 220 15% 22%;
     --sidebar-ring: 262 83% 58%;
   }
 
