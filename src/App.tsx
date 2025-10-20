@@ -10,6 +10,7 @@ import BoardLibrary from "./pages/BoardLibrary";
 import Dashboard from "./pages/Dashboard";
 import Boards from "./pages/Boards";
 import BoardDetail from "./pages/BoardDetail";
+import BoardAndTeam from "./pages/BoardAndTeam";
 import BoardPapers from "./pages/BoardPapers";
 import BoardPaperDocument from "./pages/BoardPaperDocument";
 import MemberIntake from "./pages/MemberIntake";
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/boards" element={<Boards />} />
           <Route path="/boards/:boardId" element={<BoardDetail />} />
+          <Route path="/boards/:boardId/team" element={<BoardAndTeam />} />
           <Route path="/board-papers" element={<BoardPapers />} />
           <Route path="/board-papers/:id" element={<BoardPaperDocument />} />
           <Route path="/library" element={<BoardLibrary />} />

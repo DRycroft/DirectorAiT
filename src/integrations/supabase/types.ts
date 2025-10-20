@@ -373,9 +373,11 @@ export type Database = {
           invite_sent_at: string | null
           invite_token: string | null
           legal_name: string | null
+          member_type: string | null
           national_id: string | null
           personal_email: string | null
           personal_mobile: string | null
+          position: string | null
           preferred_title: string | null
           professional_qualifications: string | null
           profile_completed_at: string | null
@@ -410,9 +412,11 @@ export type Database = {
           invite_sent_at?: string | null
           invite_token?: string | null
           legal_name?: string | null
+          member_type?: string | null
           national_id?: string | null
           personal_email?: string | null
           personal_mobile?: string | null
+          position?: string | null
           preferred_title?: string | null
           professional_qualifications?: string | null
           profile_completed_at?: string | null
@@ -447,9 +451,11 @@ export type Database = {
           invite_sent_at?: string | null
           invite_token?: string | null
           legal_name?: string | null
+          member_type?: string | null
           national_id?: string | null
           personal_email?: string | null
           personal_mobile?: string | null
+          position?: string | null
           preferred_title?: string | null
           professional_qualifications?: string | null
           profile_completed_at?: string | null

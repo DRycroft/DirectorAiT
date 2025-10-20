@@ -202,10 +202,16 @@ const BoardDetail = () => {
             <h1 className="text-4xl font-bold mb-2">{board.title}</h1>
             <p className="text-muted-foreground">{board.description}</p>
           </div>
-          <Button>
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate(`/boards/${boardId}/team`)}>
+              <Users className="mr-2 h-4 w-4" />
+              View Board & Team
+            </Button>
+            <Button>
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="team" className="w-full">

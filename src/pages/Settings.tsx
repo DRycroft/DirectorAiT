@@ -10,8 +10,9 @@ import { TemplateSectionEditor, TemplateSection } from "@/components/TemplateSec
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Save } from "lucide-react";
+import { Save, Users, Briefcase, UserCog } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
+import BoardManagement from "@/components/settings/BoardManagement";
 
 const templateTypes = [
   "Board Papers",
@@ -450,8 +451,20 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="company">Company Details</TabsTrigger>
+            <TabsTrigger value="board">
+              <Users className="mr-2 h-4 w-4" />
+              Board Members
+            </TabsTrigger>
+            <TabsTrigger value="executive">
+              <Briefcase className="mr-2 h-4 w-4" />
+              Executive Team
+            </TabsTrigger>
+            <TabsTrigger value="key-staff">
+              <UserCog className="mr-2 h-4 w-4" />
+              Key Staff
+            </TabsTrigger>
             <TabsTrigger value="templates">Document Templates</TabsTrigger>
           </TabsList>
 
@@ -691,6 +704,58 @@ const Settings = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="board" className="space-y-6">
+            <BoardManagement
+              memberType="board"
+              title="Board Members"
+              description="Manage board directors, chair, and deputy chair"
+              positions={[
+                "Chair",
+                "Deputy Chair",
+                "Director",
+                "Independent Director",
+                "Non-Executive Director",
+                "Executive Director",
+              ]}
+            />
+          </TabsContent>
+
+          <TabsContent value="executive" className="space-y-6">
+            <BoardManagement
+              memberType="executive"
+              title="Executive Team"
+              description="Manage CEO, CFO, and other executive leadership"
+              positions={[
+                "CEO",
+                "CFO",
+                "COO",
+                "CTO",
+                "CMO",
+                "CHRO",
+                "General Counsel",
+                "Managing Director",
+              ]}
+            />
+          </TabsContent>
+
+          <TabsContent value="key-staff" className="space-y-6">
+            <BoardManagement
+              memberType="key_staff"
+              title="Key Staff"
+              description="Manage key operational staff and department heads"
+              positions={[
+                "Head of Finance",
+                "Head of Operations",
+                "Head of Sales",
+                "Head of Marketing",
+                "Head of HR",
+                "Head of IT",
+                "Head of Legal",
+                "Company Secretary",
+              ]}
+            />
           </TabsContent>
 
           <TabsContent value="templates" className="space-y-6">
