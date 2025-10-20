@@ -1,8 +1,11 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { TemplateSectionEditor, TemplateSection } from "@/components/TemplateSectionEditor";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -217,10 +220,18 @@ const defaultSectionsMap: Record<string, TemplateSection[]> = {
   ],
 };
 
-const Templates = () => {
+const Settings = () => {
   const { toast } = useToast();
   const [selectedType, setSelectedType] = useState<string>("");
   const [sections, setSections] = useState<TemplateSection[]>([]);
+  const [activeTab, setActiveTab] = useState("company");
+  const [companyData, setCompanyData] = useState({
+    name: "",
+    address: "",
+    phone: "",
+    email: "",
+    registrationNumber: "",
+  });
 
   const handleTemplateTypeChange = (type: string) => {
     setSelectedType(type);
@@ -276,53 +287,140 @@ const Templates = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
-      <main className="flex-1 container mx-auto px-4 py-24 max-w-4xl">
+      <main className="flex-1 container mx-auto px-4 py-24 max-w-6xl">
         <div className="mb-8">
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <h1 className="text-3xl font-bold text-foreground">
-              Document Templates - Create A New Document
-            </h1>
-            <Select value={selectedType} onValueChange={handleTemplateTypeChange}>
-              <SelectTrigger className="w-full max-w-md">
-                <SelectValue placeholder="Choose a template type..." />
-              </SelectTrigger>
-              <SelectContent>
-                {templateTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+          <p className="text-muted-foreground">Manage your company details and document templates</p>
         </div>
 
-        {selectedType && (
-          <Card>
-            <CardHeader className="border-b">
-              <CardTitle className="text-2xl">{selectedType.toUpperCase()}</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="space-y-6">
-                <TemplateSectionEditor
-                  sections={sections}
-                  onSectionsChange={setSections}
-                />
-                
-                <div className="flex justify-end pt-4 border-t">
-                  <Button onClick={handleSaveTemplate} size="lg">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Template
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="company">Company Details</TabsTrigger>
+            <TabsTrigger value="templates">Document Templates</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="company" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Company Information</CardTitle>
+                <CardDescription>
+                  Update your organization's details
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="companyName">Company Name</Label>
+                  <Input
+                    id="companyName"
+                    value={companyData.name}
+                    onChange={(e) => setCompanyData({ ...companyData, name: e.target.value })}
+                    placeholder="Enter company name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    value={companyData.address}
+                    onChange={(e) => setCompanyData({ ...companyData, address: e.target.value })}
+                    placeholder="Enter company address"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={companyData.phone}
+                      onChange={(e) => setCompanyData({ ...companyData, phone: e.target.value })}
+                      placeholder="Enter phone number"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={companyData.email}
+                      onChange={(e) => setCompanyData({ ...companyData, email: e.target.value })}
+                      placeholder="Enter company email"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="regNumber">Registration Number</Label>
+                  <Input
+                    id="regNumber"
+                    value={companyData.registrationNumber}
+                    onChange={(e) => setCompanyData({ ...companyData, registrationNumber: e.target.value })}
+                    placeholder="Enter company registration number"
+                  />
+                </div>
+                <div className="flex justify-end pt-4">
+                  <Button onClick={() => {
+                    toast({
+                      title: "Company details saved",
+                      description: "Your company information has been updated successfully.",
+                    });
+                  }}>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Company Details
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="templates" className="space-y-6">
+            <div className="flex items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground mb-1">
+                  Document Templates
+                </h2>
+                <p className="text-muted-foreground">Create and customize document templates for your organization</p>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <Select value={selectedType} onValueChange={handleTemplateTypeChange}>
+                <SelectTrigger className="w-full max-w-md">
+                  <SelectValue placeholder="Choose a template type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {templateTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedType && (
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="text-2xl">{selectedType.toUpperCase()}</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-6">
+                    <TemplateSectionEditor
+                      sections={sections}
+                      onSectionsChange={setSections}
+                    />
+                    
+                    <div className="flex justify-end pt-4 border-t">
+                      <Button onClick={handleSaveTemplate} size="lg">
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Template
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
       <Footer />
     </div>
   );
 };
 
-export default Templates;
+export default Settings;
