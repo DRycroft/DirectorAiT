@@ -16,6 +16,7 @@ import TwoPersonApproval from "@/components/TwoPersonApproval";
 import COIManagement from "@/components/COIManagement";
 import AuditHistory from "@/components/AuditHistory";
 import AdminManagement from "@/components/settings/AdminManagement";
+import BoardsManagement from "@/components/settings/BoardsManagement";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -1002,42 +1003,50 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10 mb-8">
-            <TabsTrigger value="company">Company Details</TabsTrigger>
-            <TabsTrigger value="board">
-              <Users className="mr-2 h-4 w-4" />
-              Board Members
-            </TabsTrigger>
-            <TabsTrigger value="executive">
-              <Briefcase className="mr-2 h-4 w-4" />
-              Executive Team
-            </TabsTrigger>
-            <TabsTrigger value="key-staff">
-              <UserCog className="mr-2 h-4 w-4" />
-              Key Staff
-            </TabsTrigger>
-            <TabsTrigger value="templates">Document Templates</TabsTrigger>
-            <TabsTrigger value="roles">
-              <Shield className="mr-2 h-4 w-4" />
-              Roles
-            </TabsTrigger>
-            <TabsTrigger value="admins">
-              <Shield className="mr-2 h-4 w-4" />
-              Admins
-            </TabsTrigger>
-            <TabsTrigger value="approvals">
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Approvals
-            </TabsTrigger>
-            <TabsTrigger value="coi">
-              <AlertCircle className="mr-2 h-4 w-4" />
-              COI
-            </TabsTrigger>
-            <TabsTrigger value="audit">
-              <Clock className="mr-2 h-4 w-4" />
-              Audit
-            </TabsTrigger>
-          </TabsList>
+          <div className="space-y-2 mb-8">
+            <TabsList className="grid w-full grid-cols-6 h-auto">
+              <TabsTrigger value="company">Company Details</TabsTrigger>
+              <TabsTrigger value="boards">
+                <Building2 className="mr-2 h-4 w-4" />
+                Boards & Committees
+              </TabsTrigger>
+              <TabsTrigger value="board">
+                <Users className="mr-2 h-4 w-4" />
+                Board Members
+              </TabsTrigger>
+              <TabsTrigger value="executive">
+                <Briefcase className="mr-2 h-4 w-4" />
+                Executive Team
+              </TabsTrigger>
+              <TabsTrigger value="key-staff">
+                <UserCog className="mr-2 h-4 w-4" />
+                Key Staff
+              </TabsTrigger>
+              <TabsTrigger value="templates">Document Templates</TabsTrigger>
+            </TabsList>
+            <TabsList className="grid w-full grid-cols-5 h-auto">
+              <TabsTrigger value="roles">
+                <Shield className="mr-2 h-4 w-4" />
+                Roles
+              </TabsTrigger>
+              <TabsTrigger value="admins">
+                <Shield className="mr-2 h-4 w-4" />
+                Admins
+              </TabsTrigger>
+              <TabsTrigger value="approvals">
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Approvals
+              </TabsTrigger>
+              <TabsTrigger value="coi">
+                <AlertCircle className="mr-2 h-4 w-4" />
+                COI Management
+              </TabsTrigger>
+              <TabsTrigger value="audit">
+                <Clock className="mr-2 h-4 w-4" />
+                Audit History
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="company" className="space-y-4">
             <Card>
@@ -1599,6 +1608,11 @@ const Settings = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Boards & Committees Management Tab */}
+          <TabsContent value="boards">
+            <BoardsManagement />
           </TabsContent>
 
           <TabsContent value="board" className="space-y-6">

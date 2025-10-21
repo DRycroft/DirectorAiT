@@ -758,28 +758,43 @@ export type Database = {
       }
       boards: {
         Row: {
+          archived_at: string | null
+          board_type: string | null
+          committee_purpose: string | null
           created_at: string
           description: string | null
           id: string
           org_id: string
+          parent_board_id: string | null
+          status: string | null
           timezone: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
+          board_type?: string | null
+          committee_purpose?: string | null
           created_at?: string
           description?: string | null
           id?: string
           org_id: string
+          parent_board_id?: string | null
+          status?: string | null
           timezone?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
+          board_type?: string | null
+          committee_purpose?: string | null
           created_at?: string
           description?: string | null
           id?: string
           org_id?: string
+          parent_board_id?: string | null
+          status?: string | null
           timezone?: string | null
           title?: string
           updated_at?: string
@@ -790,6 +805,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boards_parent_board_id_fkey"
+            columns: ["parent_board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
             referencedColumns: ["id"]
           },
         ]
