@@ -1752,8 +1752,14 @@ const Settings = () => {
                         onFieldsChange={handleFieldsChange}
                         formType={selectedStaffFormType}
                       />
-                      <div className="flex justify-end pt-6 mt-6 border-t">
-                        <Button onClick={handleSaveStaffFormTemplate} size="lg">
+                      <div className="flex justify-between items-center pt-6 mt-6 border-t">
+                        {hasUnsavedChanges && (
+                          <div className="flex items-center gap-2 text-amber-600">
+                            <AlertCircle className="h-4 w-4" />
+                            <span className="text-sm font-medium">You have unsaved changes</span>
+                          </div>
+                        )}
+                        <Button onClick={handleSaveStaffFormTemplate} size="lg" className="ml-auto">
                           <Save className="h-4 w-4 mr-2" />
                           Save Form Template
                         </Button>

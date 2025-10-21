@@ -153,20 +153,35 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
 
         if (!profile?.org_id) return;
 
+        // Map member_type to form_type
+        const formTypeMap: Record<string, string> = {
+          "board": "board_members",
+          "executive": "executive_team",
+          "key_staff": "key_staff"
+        };
+
         // Fetch template for this member type
-        const { data: template } = await supabase
+        const { data: template, error: templateError } = await supabase
           .from("staff_form_templates")
           .select("fields")
           .eq("org_id", profile.org_id)
-          .eq("form_type", memberType === "board" ? "board_members" : memberType === "executive" ? "executive_team" : "key_staff")
+          .eq("form_type", formTypeMap[memberType] || "board_members")
           .single();
+
+        if (templateError) {
+          console.error("Error fetching template:", templateError);
+        }
 
         if (template?.fields) {
           const fields = template.fields as any[];
+          console.log("Loaded template fields:", fields.map(f => ({ id: f.id, label: f.label, order: f.order, enabled: f.enabled })));
+          
           // Sort by order and filter enabled fields
           const sortedFields = fields
             .filter(f => f.enabled)
             .sort((a, b) => a.order - b.order);
+          
+          console.log("Filtered and sorted fields:", sortedFields.length);
           setFormTemplate(sortedFields);
           
           // Update form schema based on template
