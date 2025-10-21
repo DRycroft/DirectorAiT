@@ -44,6 +44,8 @@ const formSchema = z.object({
   full_name: z.string().min(2, "Name must be at least 2 characters"),
   preferred_title: z.string().optional(),
   position: z.string().min(1, "Position is required"),
+  starting_date: z.date({ required_error: "Starting date is required" }),
+  finishing_date: z.date().optional(),
   home_address: z.string().optional(),
   date_of_birth: z.date().optional(),
   personal_email: z.string().email("Invalid email address").min(1, "Email is required"),
@@ -179,6 +181,8 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess }: AddPer
         full_name: values.full_name,
         preferred_title: values.preferred_title || null,
         position: values.position,
+        appointment_date: values.starting_date ? values.starting_date.toISOString().split('T')[0] : null,
+        term_expiry: values.finishing_date ? values.finishing_date.toISOString().split('T')[0] : null,
         home_address: values.home_address || null,
         date_of_birth: values.date_of_birth ? values.date_of_birth.toISOString().split('T')[0] : null,
         personal_email: values.personal_email,
@@ -328,6 +332,80 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess }: AddPer
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="starting_date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Starting Date *</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="finishing_date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Finishing Date (Optional)</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField

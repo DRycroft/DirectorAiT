@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { TemplateSectionEditor, TemplateSection } from "@/components/TemplateSectionEditor";
 import { StaffFormTemplateEditor, FormField } from "@/components/StaffFormTemplateEditor";
+import { MembersList } from "@/components/settings/MembersList";
+import { AddPersonDialog } from "@/components/AddPersonDialog";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCircle } from "lucide-react";
+import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCircle, Plus } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import BoardManagement from "@/components/settings/BoardManagement";
 import { BOARD_POSITIONS, EXECUTIVE_POSITIONS, KEY_STAFF_POSITIONS } from "@/config/positions";
@@ -294,6 +296,10 @@ const Settings = () => {
   const [selectedStaffFormType, setSelectedStaffFormType] = useState<string>("");
   const [staffFormFields, setStaffFormFields] = useState<any[]>([]);
   const [loadingStaffForm, setLoadingStaffForm] = useState(false);
+  const [selectedBoard, setSelectedBoard] = useState<string>("");
+  const [boards, setBoards] = useState<any[]>([]);
+  const [refreshMembers, setRefreshMembers] = useState(0);
+  const [organizationName, setOrganizationName] = useState("");
   const [activeTab, setActiveTab] = useState("company");
   const [businessDescription, setBusinessDescription] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
@@ -411,7 +417,44 @@ const Settings = () => {
 
   useEffect(() => {
     fetchCompanyData();
+    fetchBoards();
   }, []);
+
+  const fetchBoards = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("org_id")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile?.org_id) return;
+
+      const { data: org } = await supabase
+        .from("organizations")
+        .select("name")
+        .eq("id", profile.org_id)
+        .single();
+
+      setOrganizationName(org?.name || "");
+
+      const { data: boardsData } = await supabase
+        .from("boards")
+        .select("*")
+        .eq("org_id", profile.org_id)
+        .order("title");
+
+      setBoards(boardsData || []);
+      if (boardsData && boardsData.length > 0) {
+        setSelectedBoard(boardsData[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching boards:", error);
+    }
+  };
 
   const fetchCompanyData = async () => {
     try {
@@ -1563,15 +1606,46 @@ const Settings = () => {
             )}
 
             {/* Staff Form Workspace Area */}
+            {selectedStaffFormType && selectedBoard && (
+              <Card className="mt-6">
+                <CardHeader className="border-b">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle>
+                        {selectedStaffFormType === "board_members" ? "Board Members" : 
+                         selectedStaffFormType === "executive_team" ? "Executive Team" : "Key Staff"}
+                      </CardTitle>
+                      <CardDescription>
+                        Manage members and customize form fields
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <AddPersonDialog 
+                        boardId={selectedBoard}
+                        organizationName={organizationName}
+                        onSuccess={() => setRefreshMembers(prev => prev + 1)}
+                      />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <MembersList
+                    boardId={selectedBoard}
+                    memberType={selectedStaffFormType === "board_members" ? "board" : 
+                               selectedStaffFormType === "executive_team" ? "executive" : "key_staff"}
+                    key={refreshMembers}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Form Template Editor */}
             {selectedStaffFormType && (
               <Card className="mt-6">
                 <CardHeader className="border-b">
-                  <CardTitle>
-                    Editing: {selectedStaffFormType === "board_members" ? "Board Members" : 
-                             selectedStaffFormType === "executive_team" ? "Executive Team" : "Key Staff"} Form
-                  </CardTitle>
+                  <CardTitle>Form Template</CardTitle>
                   <CardDescription>
-                    Customize the induction form fields for this team type
+                    Customize the induction form fields
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6">
