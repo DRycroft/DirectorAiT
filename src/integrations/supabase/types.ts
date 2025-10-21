@@ -1343,6 +1343,33 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_form_templates: {
+        Row: {
+          created_at: string
+          fields: Json
+          form_type: string
+          id: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fields?: Json
+          form_type: string
+          id?: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fields?: Json
+          form_type?: string
+          id?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       template_approvals: {
         Row: {
           comments: string | null
@@ -1523,6 +1550,10 @@ export type Database = {
           last_date: string
         }
         Returns: string
+      }
+      create_default_staff_form_templates: {
+        Args: { p_org_id: string }
+        Returns: undefined
       }
       generate_member_invite_token: {
         Args: Record<PropertyKey, never>

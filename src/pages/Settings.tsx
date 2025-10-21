@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { TemplateSectionEditor, TemplateSection } from "@/components/TemplateSectionEditor";
+import { StaffFormTemplateEditor, FormField } from "@/components/StaffFormTemplateEditor";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -291,6 +292,8 @@ const Settings = () => {
   const [selectedType, setSelectedType] = useState<string>("");
   const [sections, setSections] = useState<TemplateSection[]>([]);
   const [selectedStaffFormType, setSelectedStaffFormType] = useState<string>("");
+  const [staffFormFields, setStaffFormFields] = useState<any[]>([]);
+  const [loadingStaffForm, setLoadingStaffForm] = useState(false);
   const [activeTab, setActiveTab] = useState("company");
   const [businessDescription, setBusinessDescription] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
@@ -746,6 +749,101 @@ const Settings = () => {
     // Reset form
     setSelectedType("");
     setSections([]);
+  };
+
+  const handleStaffFormTypeChange = async (type: string) => {
+    setSelectedStaffFormType(type);
+    setLoadingStaffForm(true);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("org_id")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile?.org_id) return;
+
+      // Try to fetch existing template
+      const { data: existingTemplate } = await supabase
+        .from("staff_form_templates")
+        .select("*")
+        .eq("org_id", profile.org_id)
+        .eq("form_type", type)
+        .single();
+
+      if (existingTemplate) {
+        setStaffFormFields(existingTemplate.fields as unknown as FormField[]);
+      } else {
+        // Create default template if it doesn't exist
+        const { data, error } = await supabase.rpc("create_default_staff_form_templates", {
+          p_org_id: profile.org_id
+        });
+
+        if (error) {
+          console.error("Error creating default templates:", error);
+          sonnerToast.error("Failed to load form template");
+          return;
+        }
+
+        // Fetch the newly created template
+        const { data: newTemplate } = await supabase
+          .from("staff_form_templates")
+          .select("*")
+          .eq("org_id", profile.org_id)
+          .eq("form_type", type)
+          .single();
+
+        if (newTemplate) {
+          setStaffFormFields(newTemplate.fields as unknown as FormField[]);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading staff form template:", error);
+      sonnerToast.error("Failed to load form template");
+    } finally {
+      setLoadingStaffForm(false);
+    }
+  };
+
+  const handleSaveStaffFormTemplate = async () => {
+    if (!selectedStaffFormType) {
+      toast({
+        title: "Form type required",
+        description: "Please select a form type",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("org_id")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile?.org_id) return;
+
+      const { error } = await supabase
+        .from("staff_form_templates")
+        .update({ fields: staffFormFields })
+        .eq("org_id", profile.org_id)
+        .eq("form_type", selectedStaffFormType);
+
+      if (error) throw error;
+
+      sonnerToast.success("Form template saved successfully!");
+    } catch (error) {
+      console.error("Error saving staff form template:", error);
+      sonnerToast.error("Failed to save form template");
+    }
   };
 
   return (
@@ -1415,7 +1513,7 @@ const Settings = () => {
                 <CardContent className="pt-6">
                   <div>
                     <Label htmlFor="staff-form-type">Select Form Type</Label>
-                    <Select value={selectedStaffFormType} onValueChange={setSelectedStaffFormType}>
+                    <Select value={selectedStaffFormType} onValueChange={handleStaffFormTypeChange}>
                       <SelectTrigger id="staff-form-type" className="w-full mt-2 bg-background z-50">
                         <SelectValue placeholder="Choose a form type..." />
                       </SelectTrigger>
@@ -1477,15 +1575,33 @@ const Settings = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                    <p className="text-muted-foreground mb-4">
-                      Form template customization coming soon
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      This will allow you to customize fields like: Name, Title, Address, Email, Phone, LinkedIn, Position, Reports, Qualifications, Conflicts of Interest, Personal Interests, and Health Notes
-                    </p>
-                  </div>
+                  {loadingStaffForm ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Clock className="h-6 w-6 animate-spin text-muted-foreground mr-2" />
+                      <span>Loading form template...</span>
+                    </div>
+                  ) : staffFormFields.length > 0 ? (
+                    <>
+                      <StaffFormTemplateEditor
+                        fields={staffFormFields}
+                        onFieldsChange={setStaffFormFields}
+                        formType={selectedStaffFormType}
+                      />
+                      <div className="flex justify-end pt-6 mt-6 border-t">
+                        <Button onClick={handleSaveStaffFormTemplate} size="lg">
+                          <Save className="h-4 w-4 mr-2" />
+                          Save Form Template
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                      <p className="text-muted-foreground">
+                        No form template found. Please try refreshing the page.
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
