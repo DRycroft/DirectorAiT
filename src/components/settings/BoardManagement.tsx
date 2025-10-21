@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Mail } from "lucide-react";
-import { MembersList } from "./MembersList";
 import { AddPersonDialog } from "../AddPersonDialog";
 
 interface BoardManagementProps {
@@ -25,7 +24,6 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedBoard, setSelectedBoard] = useState<string>("");
   const [organizationName, setOrganizationName] = useState<string>("");
-  const [refreshMembers, setRefreshMembers] = useState(0);
   const [formData, setFormData] = useState({
     board_id: "",
     full_name: "",
@@ -133,7 +131,6 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
         position: "",
       });
       setDialogOpen(false);
-      setRefreshMembers(prev => prev + 1);
     } catch (error: any) {
       console.error("Error inviting member:", error);
       toast({
@@ -156,7 +153,7 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
             <AddPersonDialog 
               boardId={selectedBoard}
               organizationName={organizationName}
-              onSuccess={() => setRefreshMembers(prev => prev + 1)}
+              onSuccess={() => {}}
               defaultMemberType={memberType}
               trigger={
                 <Button variant="default">
@@ -257,21 +254,6 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        {loading ? (
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        ) : selectedBoard ? (
-          <MembersList
-            boardId={selectedBoard}
-            memberType={memberType}
-            key={refreshMembers}
-          />
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground">Please select a board first</p>
-          </div>
-        )}
-      </CardContent>
     </Card>
   );
 };
