@@ -40,7 +40,40 @@ import { Combobox } from "@/components/ui/combobox";
 import { Card } from "@/components/ui/card";
 import { PhoneInput } from "@/components/ui/phone-input";
 
-const formSchema = z.object({
+// Create dynamic schema based on template
+const createFormSchema = (template: any[]) => {
+  const schemaFields: any = {
+    member_type: z.enum(["board", "executive", "key_staff"]),
+  };
+  
+  template.forEach((field: any) => {
+    if (!field.enabled) return;
+    
+    const fieldId = field.id || field.label?.toLowerCase().replace(/\s+/g, '_');
+    
+    if (field.type === 'email') {
+      schemaFields[fieldId] = field.required 
+        ? z.string().email("Invalid email address").min(1, `${field.label} is required`)
+        : z.string().email("Invalid email address").optional().or(z.literal(''));
+    } else if (field.type === 'date') {
+      schemaFields[fieldId] = field.required 
+        ? z.date({ required_error: `${field.label} is required` })
+        : z.date().optional();
+    } else if (field.type === 'tel') {
+      schemaFields[fieldId] = field.required
+        ? z.string().min(1, `${field.label} is required`)
+        : z.string().optional();
+    } else {
+      schemaFields[fieldId] = field.required
+        ? z.string().min(1, `${field.label} is required`)
+        : z.string().optional();
+    }
+  });
+  
+  return z.object(schemaFields);
+};
+
+const baseFormSchema = z.object({
   member_type: z.enum(["board", "executive", "key_staff"]),
   full_name: z.string().min(2, "Name must be at least 2 characters"),
   preferred_title: z.string().optional(),
@@ -61,7 +94,7 @@ const formSchema = z.object({
   emergency_contact_phone: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof baseFormSchema> & Record<string, any>;
 
 interface AddPersonDialogProps {
   boardId: string;
@@ -79,6 +112,8 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
   const [loadingTemplate, setLoadingTemplate] = useState(false);
   const { toast } = useToast();
 
+  const [formSchema, setFormSchema] = useState(baseFormSchema);
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -133,6 +168,18 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
             .filter(f => f.enabled)
             .sort((a, b) => a.order - b.order);
           setFormTemplate(sortedFields);
+          
+          // Update form schema based on template
+          const dynamicSchema = createFormSchema(sortedFields);
+          setFormSchema(dynamicSchema);
+          
+          // Reset form with new schema
+          const defaultValues: any = { member_type: memberType };
+          sortedFields.forEach(field => {
+            const fieldId = field.id || field.label?.toLowerCase().replace(/\s+/g, '_');
+            defaultValues[fieldId] = '';
+          });
+          form.reset(defaultValues);
         }
       } catch (error) {
         console.error("Error loading form template:", error);
@@ -163,6 +210,15 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
     try {
       setLoading(true);
 
+      // Standard field mapping
+      const standardFields = new Set([
+        'full_name', 'preferred_title', 'position', 'starting_date', 'finishing_date',
+        'home_address', 'date_of_birth', 'personal_email', 'personal_mobile',
+        'public_social_links', 'reports_responsible_for', 'reports_to',
+        'professional_qualifications', 'personal_interests', 'health_notes',
+        'emergency_contact_name', 'emergency_contact_phone', 'member_type'
+      ]);
+
       // Parse LinkedIn URL if provided
       let socialLinks = {};
       if (values.public_social_links) {
@@ -177,6 +233,14 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
           .map(r => r.trim())
           .filter(r => r);
       }
+
+      // Separate custom fields from standard fields
+      const customFields: Record<string, any> = {};
+      Object.keys(values).forEach(key => {
+        if (!standardFields.has(key)) {
+          customFields[key] = values[key];
+        }
+      });
 
       const insertData: any = {
         board_id: boardId,
@@ -198,6 +262,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
         health_notes: values.health_notes || null,
         emergency_contact_name: values.emergency_contact_name || null,
         emergency_contact_phone: values.emergency_contact_phone || null,
+        custom_fields: Object.keys(customFields).length > 0 ? customFields : null,
         status: "active",
       };
 
@@ -236,6 +301,216 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
       default:
         return "Team Member";
     }
+  };
+
+  // Map field IDs to standard database columns
+  const standardFieldMap: Record<string, string> = {
+    'full_name': 'full_name',
+    'preferred_title': 'preferred_title',
+    'position': 'position',
+    'starting_date': 'starting_date',
+    'appointment_date': 'starting_date',
+    'finishing_date': 'finishing_date',
+    'term_expiry': 'finishing_date',
+    'home_address': 'home_address',
+    'date_of_birth': 'date_of_birth',
+    'personal_email': 'personal_email',
+    'email': 'personal_email',
+    'personal_mobile': 'personal_mobile',
+    'phone': 'personal_mobile',
+    'linkedin_profile': 'public_social_links',
+    'public_social_links': 'public_social_links',
+    'reports_to': 'reports_to',
+    'reports_responsible_for': 'reports_responsible_for',
+    'professional_qualifications': 'professional_qualifications',
+    'qualifications': 'professional_qualifications',
+    'personal_interests': 'personal_interests',
+    'health_notes': 'health_notes',
+    'emergency_contact_name': 'emergency_contact_name',
+    'emergency_contact_phone': 'emergency_contact_phone',
+  };
+
+  const renderField = (field: any) => {
+    const fieldId = standardFieldMap[field.id] || field.id || field.label?.toLowerCase().replace(/\s+/g, '_');
+    const fieldLabel = field.label || field.id?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+
+    // Special handling for certain fields
+    if (fieldId === 'position') {
+      return (
+        <FormField
+          key={fieldId}
+          control={form.control}
+          name={fieldId}
+          render={({ field: formField }) => (
+            <FormItem>
+              <FormLabel>{fieldLabel}{field.required && ' *'}</FormLabel>
+              <FormControl>
+                <Combobox
+                  options={positions.map(p => ({ label: p, value: p }))}
+                  value={formField.value}
+                  onValueChange={formField.onChange}
+                  placeholder="Select or type a position"
+                  searchPlaceholder="Search positions..."
+                  emptyText="No position found. Start typing to create custom."
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      );
+    }
+
+    if (fieldId === 'starting_date' || fieldId === 'finishing_date' || fieldId === 'date_of_birth') {
+      return (
+        <FormField
+          key={fieldId}
+          control={form.control}
+          name={fieldId}
+          render={({ field: formField }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>{fieldLabel}{field.required && ' *'}</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !formField.value && "text-muted-foreground"
+                      )}
+                    >
+                      {formField.value ? format(formField.value, "PPP") : <span>Pick a date</span>}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formField.value}
+                    onSelect={formField.onChange}
+                    disabled={fieldId === 'date_of_birth' ? (date) => date > new Date() || date < new Date("1900-01-01") : undefined}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      );
+    }
+
+    if (fieldId === 'reports_to') {
+      return (
+        <FormField
+          key={fieldId}
+          control={form.control}
+          name={fieldId}
+          render={({ field: formField }) => (
+            <FormItem>
+              <FormLabel>{fieldLabel}{field.required && ' *'}</FormLabel>
+              <Select onValueChange={formField.onChange} value={formField.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select reporting manager" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {existingMembers.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.full_name} - {member.position}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>Who does this person report to?</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      );
+    }
+
+    if (fieldId === 'personal_mobile' || fieldId === 'emergency_contact_phone') {
+      return (
+        <FormField
+          key={fieldId}
+          control={form.control}
+          name={fieldId}
+          render={({ field: formField }) => (
+            <FormItem>
+              <FormLabel>{fieldLabel}{field.required && ' *'}</FormLabel>
+              <FormControl>
+                <PhoneInput 
+                  placeholder="21 123 4567" 
+                  value={formField.value}
+                  onChange={formField.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      );
+    }
+
+    if (field.type === 'textarea' || ['professional_qualifications', 'personal_interests', 'health_notes', 'home_address', 'reports_responsible_for'].includes(fieldId)) {
+      return (
+        <FormField
+          key={fieldId}
+          control={form.control}
+          name={fieldId}
+          render={({ field: formField }) => (
+            <FormItem>
+              <FormLabel>{fieldLabel}{field.required && ' *'}</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder={`Enter ${fieldLabel.toLowerCase()}...`}
+                  {...formField}
+                  rows={fieldId === 'home_address' ? 2 : 3}
+                />
+              </FormControl>
+              {fieldId === 'health_notes' && (
+                <FormDescription>
+                  This information is stored securely and treated as confidential
+                </FormDescription>
+              )}
+              {fieldId === 'reports_responsible_for' && (
+                <FormDescription>
+                  Enter report names separated by commas
+                </FormDescription>
+              )}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      );
+    }
+
+    // Default: text input
+    return (
+      <FormField
+        key={fieldId}
+        control={form.control}
+        name={fieldId}
+        render={({ field: formField }) => (
+          <FormItem>
+            <FormLabel>{fieldLabel}{field.required && ' *'}</FormLabel>
+            <FormControl>
+              <Input 
+                type={field.type === 'email' ? 'email' : 'text'}
+                placeholder={`Enter ${fieldLabel.toLowerCase()}...`}
+                {...formField}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    );
   };
 
   const positions = getPositionsByType(memberType);
@@ -289,375 +564,6 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
               </Card>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="full_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Smith" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="preferred_title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Preferred Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Mr., Dr., Prof., etc." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="position"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Position Held *</FormLabel>
-                  <FormControl>
-                    <Combobox
-                      options={positions.map(p => ({ label: p, value: p }))}
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      placeholder="Select or type a position"
-                      searchPlaceholder="Search positions..."
-                      emptyText="No position found. Start typing to create custom."
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="starting_date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Starting Date *</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="finishing_date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Finishing Date (Optional)</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="personal_email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email Address *</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="john@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="personal_mobile"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <PhoneInput 
-                        placeholder="21 123 4567" 
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="home_address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Home Address (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="123 Main Street, City, Country" 
-                      {...field} 
-                      rows={2}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="date_of_birth"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Date of Birth (Optional)</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="public_social_links"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>LinkedIn Profile</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://linkedin.com/in/..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="reports_to"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reports To</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select reporting manager" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {existingMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.full_name} - {member.position}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Who does this person report to?
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="reports_responsible_for"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reports Responsible For (Board Papers)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g., Financial Report, Compliance Report (comma-separated)" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Enter report names separated by commas
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="professional_qualifications"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Qualifications</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Degrees, certifications, professional memberships..." 
-                      {...field} 
-                      rows={3}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="personal_interests"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Personal Interests / Hobbies</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Interests outside of work..." 
-                      {...field} 
-                      rows={2}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="health_notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Health Information (Optional & Confidential)</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Any health information you wish to share with the company..." 
-                      {...field} 
-                      rows={2}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    This information is stored securely and treated as confidential
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="emergency_contact_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Emergency Contact Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Jane Smith" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="emergency_contact_phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Emergency Contact Phone</FormLabel>
-                    <FormControl>
-                      <PhoneInput 
-                        placeholder="21 123 4567" 
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
             {loadingTemplate && (
               <div className="text-sm text-muted-foreground text-center p-2 bg-muted/50 rounded">
                 Loading form template...
@@ -665,8 +571,47 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
             )}
 
             {!loadingTemplate && formTemplate.length > 0 && (
-              <div className="text-sm text-muted-foreground text-center p-2 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded">
-                Form fields are displayed in the order configured in Settings → Document Templates
+              <>
+                <div className="text-sm text-muted-foreground text-center p-2 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded">
+                  Form fields are displayed based on your template configuration in Settings → Document Templates
+                </div>
+                
+                <div className="space-y-4">
+                  {formTemplate.map((field, index) => {
+                    // Check if this field should be in a grid with the next field
+                    const nextField = formTemplate[index + 1];
+                    const shouldPairWithNext = nextField && 
+                      ['preferred_title', 'personal_mobile', 'emergency_contact_phone', 'finishing_date'].includes(
+                        standardFieldMap[nextField.id] || nextField.id
+                      );
+                    
+                    // Skip if this field was paired with previous
+                    const prevField = formTemplate[index - 1];
+                    const isPairedWithPrev = prevField &&
+                      ['preferred_title', 'personal_mobile', 'emergency_contact_phone', 'finishing_date'].includes(
+                        standardFieldMap[field.id] || field.id
+                      );
+                    
+                    if (isPairedWithPrev) return null;
+
+                    if (shouldPairWithNext) {
+                      return (
+                        <div key={field.id} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {renderField(field)}
+                          {renderField(nextField)}
+                        </div>
+                      );
+                    }
+
+                    return renderField(field);
+                  })}
+                </div>
+              </>
+            )}
+
+            {!loadingTemplate && formTemplate.length === 0 && (
+              <div className="text-sm text-center p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                No template fields configured. Please configure the form template in Settings → Document Templates → Staff Forms.
               </div>
             )}
 
@@ -679,7 +624,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading || formTemplate.length === 0}>
                 {loading ? "Adding..." : "Add Team Member"}
               </Button>
             </div>

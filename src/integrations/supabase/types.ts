@@ -363,6 +363,7 @@ export type Database = {
           consent_signature: string | null
           consent_signed_at: string | null
           created_at: string | null
+          custom_fields: Json | null
           cv_file_url: string | null
           date_of_birth: string | null
           detailed_work_history: string | null
@@ -407,6 +408,7 @@ export type Database = {
           consent_signature?: string | null
           consent_signed_at?: string | null
           created_at?: string | null
+          custom_fields?: Json | null
           cv_file_url?: string | null
           date_of_birth?: string | null
           detailed_work_history?: string | null
@@ -451,6 +453,7 @@ export type Database = {
           consent_signature?: string | null
           consent_signed_at?: string | null
           created_at?: string | null
+          custom_fields?: Json | null
           cv_file_url?: string | null
           date_of_birth?: string | null
           detailed_work_history?: string | null
