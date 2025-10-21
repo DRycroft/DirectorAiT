@@ -1368,23 +1368,24 @@ const Settings = () => {
               <p className="text-muted-foreground">Create and customize templates for your organization</p>
             </div>
 
-            {/* Board Paper and Report Templates Section */}
-            <Card>
-              <CardHeader className="border-b">
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Board Paper and Report Templates
-                </CardTitle>
-                <CardDescription>
-                  Customize the structure and sections for board papers and executive reports
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="space-y-6">
+            {/* Side-by-side menu cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Board Paper and Report Templates Menu */}
+              <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    Board Paper and Report Templates
+                  </CardTitle>
+                  <CardDescription>
+                    Customize board papers and executive reports
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
                   <div>
                     <Label htmlFor="template-type">Select Template Type</Label>
                     <Select value={selectedType} onValueChange={handleTemplateTypeChange}>
-                      <SelectTrigger id="template-type" className="w-full max-w-md mt-2">
+                      <SelectTrigger id="template-type" className="w-full mt-2">
                         <SelectValue placeholder="Choose a template type..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -1396,56 +1397,64 @@ const Settings = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                </CardContent>
+              </Card>
 
-                  {selectedType && (
-                    <>
-                      <div className="p-4 bg-muted/50 rounded-lg">
-                        <h3 className="font-semibold text-lg mb-2">{selectedType}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Customize the sections and structure for this template type
-                        </p>
-                      </div>
-                      
-                      <TemplateSectionEditor
-                        sections={sections}
-                        onSectionsChange={setSections}
-                      />
-                      
-                      <div className="flex justify-end pt-4 border-t">
-                        <Button onClick={handleSaveTemplate} size="lg">
-                          <Save className="h-4 w-4 mr-2" />
-                          Save Template
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+              {/* Board and Staff Templates Menu */}
+              <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Board and Staff Templates
+                  </CardTitle>
+                  <CardDescription>
+                    Customize induction forms for team members
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="text-center py-4">
+                    <Users className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Coming soon: Customizable forms for Board Members, Executive Team, and Key Staff
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-            {/* Board Members, Exec and Staff Forms Section */}
-            <Card>
-              <CardHeader className="border-b">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Board Members, Exec and Staff Forms
-                </CardTitle>
-                <CardDescription>
-                  Create and customize induction forms for board members, executives, and staff
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground mb-4">
-                    Induction form templates will be configured here
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Coming soon: Customizable forms for Board Members, Executive Team, and Key Staff
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Workspace Area - Shows selected template content */}
+            {selectedType && (
+              <Card className="mt-6">
+                <CardHeader className="border-b">
+                  <CardTitle>Editing: {selectedType}</CardTitle>
+                  <CardDescription>
+                    Customize the sections and structure for this template type
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-6">
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <h3 className="font-semibold text-lg mb-2">{selectedType}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Customize the sections and structure for this template type
+                      </p>
+                    </div>
+                    
+                    <TemplateSectionEditor
+                      sections={sections}
+                      onSectionsChange={setSections}
+                    />
+                    
+                    <div className="flex justify-end pt-4 border-t">
+                      <Button onClick={handleSaveTemplate} size="lg">
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Template
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </main>
