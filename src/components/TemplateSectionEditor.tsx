@@ -171,7 +171,8 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
               <Badge variant="outline" className="text-xs">Sub-heading</Badge>
             )}
 
-            <div className="flex items-center gap-1">
+            <div className="grid grid-cols-3 gap-0.5">
+              <div></div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -185,32 +186,8 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
               >
                 <ChevronUp className="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleMoveDown(index);
-                }}
-                disabled={index === sections.length - 1}
-                title="Move down"
-                className="h-8 w-8"
-              >
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleIndent(section.id);
-                }}
-                disabled={section.level >= 1}
-                title="Make sub-heading (indent)"
-                className="h-8 w-8"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <div></div>
+              
               <Button
                 variant="ghost"
                 size="icon"
@@ -224,6 +201,36 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
+              <div></div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleIndent(section.id);
+                }}
+                disabled={section.level >= 1}
+                title="Make sub-heading (indent)"
+                className="h-8 w-8"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              
+              <div></div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleMoveDown(index);
+                }}
+                disabled={index === sections.length - 1}
+                title="Move down"
+                className="h-8 w-8"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+              <div></div>
             </div>
 
             {!section.required && (
