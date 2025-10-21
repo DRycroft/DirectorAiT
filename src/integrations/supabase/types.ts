@@ -1091,6 +1091,69 @@ export type Database = {
           },
         ]
       }
+      executive_reports: {
+        Row: {
+          board_id: string | null
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          org_id: string
+          period_covered: string
+          report_type: string
+          status: string
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string
+          uploaded_by_name: string
+        }
+        Insert: {
+          board_id?: string | null
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          org_id: string
+          period_covered: string
+          report_type: string
+          status?: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by: string
+          uploaded_by_name: string
+        }
+        Update: {
+          board_id?: string | null
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          org_id?: string
+          period_covered?: string
+          report_type?: string
+          status?: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string
+          uploaded_by_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "executive_reports_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "executive_reports_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       extracted_decisions: {
         Row: {
           confidence_score: number | null

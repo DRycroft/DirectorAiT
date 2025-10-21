@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Download, Upload, Filter } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface BoardPaper {
   id: string;
@@ -18,12 +20,31 @@ interface BoardPaper {
   createdBy: string;
 }
 
+interface ExecutiveReport {
+  id: string;
+  report_type: string;
+  file_name: string;
+  file_path: string;
+  uploaded_by: string;
+  uploaded_by_name: string;
+  uploaded_at: string;
+  period_covered: string;
+  status: string;
+}
+
 const BoardPapers = () => {
   const { toast } = useToast();
   const [createPaperDialogOpen, setCreatePaperDialogOpen] = useState(false);
   const [boardPapers, setBoardPapers] = useState<BoardPaper[]>([]);
   const [organization, setOrganization] = useState<any>(null);
   const [selectedReportType, setSelectedReportType] = useState<string | null>(null);
+  const [executiveReports, setExecutiveReports] = useState<ExecutiveReport[]>([]);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadPeriod, setUploadPeriod] = useState("");
+  const [filterPeriod, setFilterPeriod] = useState<string>("all");
+  const [filterPerson, setFilterPerson] = useState<string>("all");
+  const [isUploading, setIsUploading] = useState(false);
   const [newPaperData, setNewPaperData] = useState({
     date: new Date().toISOString().split('T')[0],
     companyName: "",
@@ -33,6 +54,12 @@ const BoardPapers = () => {
   useEffect(() => {
     fetchOrganizationData();
   }, []);
+
+  useEffect(() => {
+    if (selectedReportType) {
+      fetchExecutiveReports();
+    }
+  }, [selectedReportType]);
 
   const fetchOrganizationData = async () => {
     try {
@@ -155,6 +182,152 @@ const BoardPapers = () => {
       });
     }
   };
+
+  const fetchExecutiveReports = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('org_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.org_id) return;
+
+      const { data, error } = await supabase
+        .from('executive_reports')
+        .select('*')
+        .eq('org_id', profile.org_id)
+        .eq('report_type', selectedReportType)
+        .order('uploaded_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching reports:', error);
+        return;
+      }
+
+      setExecutiveReports(data || []);
+    } catch (error) {
+      console.error('Error in fetchExecutiveReports:', error);
+    }
+  };
+
+  const handleUploadReport = async () => {
+    if (!uploadFile || !uploadPeriod || !selectedReportType) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a file and enter the period covered.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('org_id, name')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.org_id) throw new Error("No organization found");
+
+      // Upload file to storage
+      const fileExt = uploadFile.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const filePath = fileName;
+
+      const { error: uploadError } = await supabase.storage
+        .from('executive-reports')
+        .upload(filePath, uploadFile);
+
+      if (uploadError) throw uploadError;
+
+      // Save metadata to database
+      const { error: dbError } = await supabase
+        .from('executive_reports')
+        .insert({
+          report_type: selectedReportType,
+          file_name: uploadFile.name,
+          file_path: filePath,
+          uploaded_by: user.id,
+          uploaded_by_name: profile.name,
+          period_covered: uploadPeriod,
+          org_id: profile.org_id,
+          status: 'pending'
+        });
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "Report Uploaded",
+        description: `${selectedReportType} has been uploaded successfully.`,
+      });
+
+      setUploadDialogOpen(false);
+      setUploadFile(null);
+      setUploadPeriod("");
+      fetchExecutiveReports();
+    } catch (error) {
+      console.error('Error uploading report:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload report. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDownloadReport = async (report: ExecutiveReport) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('executive-reports')
+        .download(report.file_path);
+
+      if (error) throw error;
+
+      // Create a download link
+      const url = window.URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = report.file_name;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download Started",
+        description: `Downloading ${report.file_name}`,
+      });
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download report. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Get unique periods and people for filters
+  const uniquePeriods = Array.from(new Set(executiveReports.map(r => r.period_covered)));
+  const uniquePeople = Array.from(new Set(executiveReports.map(r => r.uploaded_by_name)));
+
+  // Filter reports based on selected filters
+  const filteredReports = executiveReports.filter(report => {
+    const periodMatch = filterPeriod === "all" || report.period_covered === filterPeriod;
+    const personMatch = filterPerson === "all" || report.uploaded_by_name === filterPerson;
+    return periodMatch && personMatch;
+  });
   
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -408,46 +581,143 @@ const BoardPapers = () => {
                         Repository of uploaded {selectedReportType.toLowerCase()}s
                       </CardDescription>
                     </div>
-                    <div className="flex gap-2">
+                     <div className="flex gap-2">
                       <Button variant="outline" onClick={() => setSelectedReportType(null)}>
                         Back to Reports
                       </Button>
-                      <Button variant="accent" size="lg" className="shadow-lg hover:shadow-xl">
-                        Upload New Report
-                      </Button>
+                      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="accent" size="lg" className="shadow-lg hover:shadow-xl">
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload New Report
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Upload {selectedReportType}</DialogTitle>
+                            <DialogDescription>
+                              Select a file and enter the period covered for this report.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="file">Report File</Label>
+                              <Input
+                                id="file"
+                                type="file"
+                                accept=".pdf,.doc,.docx,.xls,.xlsx"
+                                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="period">Period Covered</Label>
+                              <Input
+                                id="period"
+                                placeholder="e.g., Q1 2024, March 2024"
+                                value={uploadPeriod}
+                                onChange={(e) => setUploadPeriod(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button onClick={handleUploadReport} disabled={isUploading}>
+                              {isUploading ? "Uploading..." : "Upload Report"}
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-4 gap-4 px-4 text-sm font-medium text-muted-foreground">
-                      <div>Date Uploaded</div>
-                      <div>Uploaded By</div>
-                      <div>Period Covered</div>
-                      <div></div>
-                    </div>
-                    {/* Sample data - will be replaced with actual data from database */}
-                    <div className="px-4 py-1 border rounded-lg hover:border-primary transition-all cursor-pointer group bg-slate-50">
-                      <div className="grid grid-cols-4 gap-4 items-center">
-                        <div>
-                          <p className="text-sm font-medium text-black">01/03/2024</p>
+                  <div className="space-y-4">
+                    {/* Filters */}
+                    <div className="flex gap-4 items-center p-4 bg-slate-50 rounded-lg border">
+                      <Filter className="w-4 h-4 text-muted-foreground" />
+                      <div className="flex-1 grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Filter by Period</Label>
+                          <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+                            <SelectTrigger className="h-9">
+                              <SelectValue placeholder="All periods" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All periods</SelectItem>
+                              {uniquePeriods.map(period => (
+                                <SelectItem key={period} value={period}>{period}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-black">CEO Name</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-black">Q1 2024</p>
-                        </div>
-                        <div className="flex justify-end">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="text-white bg-black border-black hover:bg-primary hover:text-white hover:border-primary transition-colors h-7 py-0.5"
-                          >
-                            View Report
-                          </Button>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Filter by Person</Label>
+                          <Select value={filterPerson} onValueChange={setFilterPerson}>
+                            <SelectTrigger className="h-9">
+                              <SelectValue placeholder="All people" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All people</SelectItem>
+                              {uniquePeople.map(person => (
+                                <SelectItem key={person} value={person}>{person}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Reports list */}
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-5 gap-4 px-4 text-sm font-medium text-muted-foreground">
+                        <div>Date Uploaded</div>
+                        <div>Uploaded By</div>
+                        <div>Period Covered</div>
+                        <div>File Name</div>
+                        <div></div>
+                      </div>
+                      {filteredReports.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          No reports found. Upload your first report to get started.
+                        </div>
+                      ) : (
+                        filteredReports.map((report) => (
+                          <div 
+                            key={report.id}
+                            className="px-4 py-2 border rounded-lg hover:border-primary transition-all group bg-slate-50"
+                          >
+                            <div className="grid grid-cols-5 gap-4 items-center">
+                              <div>
+                                <p className="text-sm font-medium text-black">
+                                  {new Date(report.uploaded_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-black">{report.uploaded_by_name}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-black">{report.period_covered}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-black truncate">{report.file_name}</p>
+                              </div>
+                              <div className="flex justify-end gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="h-7 py-0.5"
+                                  onClick={() => handleDownloadReport(report)}
+                                >
+                                  <Download className="w-3 h-3 mr-1" />
+                                  Download
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 </CardContent>
