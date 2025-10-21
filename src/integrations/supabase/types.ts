@@ -364,10 +364,12 @@ export type Database = {
           consent_signed_at: string | null
           created_at: string | null
           cv_file_url: string | null
+          date_of_birth: string | null
           detailed_work_history: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           full_name: string
+          health_notes: string | null
           home_address: string | null
           id: string
           invite_sent_at: string | null
@@ -376,6 +378,7 @@ export type Database = {
           member_type: string | null
           national_id: string | null
           personal_email: string | null
+          personal_interests: string | null
           personal_mobile: string | null
           position: string | null
           preferred_title: string | null
@@ -388,6 +391,8 @@ export type Database = {
           public_social_links: Json | null
           publish_preferences: Json | null
           reappointment_history: Json | null
+          reports_responsible_for: Json | null
+          reports_to: string | null
           sensitive_notes: string | null
           short_bio: string | null
           skills_competencies: Json | null
@@ -403,10 +408,12 @@ export type Database = {
           consent_signed_at?: string | null
           created_at?: string | null
           cv_file_url?: string | null
+          date_of_birth?: string | null
           detailed_work_history?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           full_name: string
+          health_notes?: string | null
           home_address?: string | null
           id?: string
           invite_sent_at?: string | null
@@ -415,6 +422,7 @@ export type Database = {
           member_type?: string | null
           national_id?: string | null
           personal_email?: string | null
+          personal_interests?: string | null
           personal_mobile?: string | null
           position?: string | null
           preferred_title?: string | null
@@ -427,6 +435,8 @@ export type Database = {
           public_social_links?: Json | null
           publish_preferences?: Json | null
           reappointment_history?: Json | null
+          reports_responsible_for?: Json | null
+          reports_to?: string | null
           sensitive_notes?: string | null
           short_bio?: string | null
           skills_competencies?: Json | null
@@ -442,10 +452,12 @@ export type Database = {
           consent_signed_at?: string | null
           created_at?: string | null
           cv_file_url?: string | null
+          date_of_birth?: string | null
           detailed_work_history?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           full_name?: string
+          health_notes?: string | null
           home_address?: string | null
           id?: string
           invite_sent_at?: string | null
@@ -454,6 +466,7 @@ export type Database = {
           member_type?: string | null
           national_id?: string | null
           personal_email?: string | null
+          personal_interests?: string | null
           personal_mobile?: string | null
           position?: string | null
           preferred_title?: string | null
@@ -466,6 +479,8 @@ export type Database = {
           public_social_links?: Json | null
           publish_preferences?: Json | null
           reappointment_history?: Json | null
+          reports_responsible_for?: Json | null
+          reports_to?: string | null
           sensitive_notes?: string | null
           short_bio?: string | null
           skills_competencies?: Json | null
@@ -480,6 +495,13 @@ export type Database = {
             columns: ["board_id"]
             isOneToOne: false
             referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_members_reports_to_fkey"
+            columns: ["reports_to"]
+            isOneToOne: false
+            referencedRelation: "board_members"
             referencedColumns: ["id"]
           },
         ]

@@ -13,6 +13,7 @@ import { Users, Briefcase, UserCog, Eye, FileText, GitBranch, Clock, ChevronRigh
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { getPositionsByType } from "@/config/positions";
+import { AddPersonDialog } from "@/components/AddPersonDialog";
 
 const TeamOverview = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const TeamOverview = () => {
   const [allKeyStaff, setAllKeyStaff] = useState<any[]>([]);
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [organizationName, setOrganizationName] = useState<string>("");
 
   useEffect(() => {
     checkAuth();
@@ -56,6 +58,11 @@ const TeamOverview = () => {
 
       if (boardsError) throw boardsError;
       setBoards(boardsData || []);
+      
+      // Set organization name from first board
+      if (boardsData && boardsData.length > 0 && boardsData[0].organizations) {
+        setOrganizationName(boardsData[0].organizations.name);
+      }
 
       // Fetch all team members from all boards user has access to
       const boardIds = boardsData?.map(b => b.id) || [];
@@ -419,8 +426,9 @@ const TeamOverview = () => {
         </div>
 
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="mb-8">
-            <TabsTrigger value="all">All Groups</TabsTrigger>
+          <div className="flex items-center justify-between mb-8">
+            <TabsList>
+              <TabsTrigger value="all">All Groups</TabsTrigger>
             <TabsTrigger value="board">
               <Users className="mr-2 h-4 w-4" />
               Board Members
@@ -429,11 +437,19 @@ const TeamOverview = () => {
               <Briefcase className="mr-2 h-4 w-4" />
               Executive Team
             </TabsTrigger>
-            <TabsTrigger value="staff">
-              <UserCog className="mr-2 h-4 w-4" />
-              Key Staff
-            </TabsTrigger>
-          </TabsList>
+              <TabsTrigger value="staff">
+                <UserCog className="mr-2 h-4 w-4" />
+                Key Staff
+              </TabsTrigger>
+            </TabsList>
+            {boards.length > 0 && (
+              <AddPersonDialog 
+                boardId={boards[0].id} 
+                organizationName={organizationName}
+                onSuccess={fetchAllTeamData}
+              />
+            )}
+          </div>
 
           <TabsContent value="all" className="space-y-8">
             <MemberTable 
