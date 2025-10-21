@@ -1783,11 +1783,6 @@ const Settings = () => {
           <TabsContent value="roles">
             <RoleManagement />
           </TabsContent>
-
-          {/* Role Management Tab */}
-          <TabsContent value="roles">
-            <RoleManagement />
-          </TabsContent>
         </Tabs>
       </main>
       <Footer />

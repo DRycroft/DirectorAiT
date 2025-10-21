@@ -11,19 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, UserPlus, Trash2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-interface UserRole {
-  id: string;
-  user_id: string;
-  role: string;
-  org_id: string | null;
-  board_id: string | null;
-  granted_at: string;
-  profiles?: {
-    name: string;
-    email: string;
-  } | null;
-}
-
 const AVAILABLE_ROLES = [
   { value: "super_admin", label: "Super Admin", description: "Full system access" },
   { value: "org_admin", label: "Organization Admin", description: "Manage organization settings and users" },
@@ -35,12 +22,13 @@ const AVAILABLE_ROLES = [
 
 export const RoleManagement = () => {
   const { toast } = useToast();
-  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
+  const [userRoles, setUserRoles] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
+  const [currentOrgId, setCurrentOrgId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -57,51 +45,49 @@ export const RoleManagement = () => {
         .from("profiles")
         .select("org_id")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (!profile?.org_id) return;
-
-      // Fetch all user roles in the organization
-      const { data: rolesData, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("id, user_id, role, org_id, board_id, granted_at")
-        .eq("org_id", profile.org_id)
-        .order("granted_at", { ascending: false });
-
-      if (rolesError) throw rolesError;
-
-      // Fetch profile data for each user
-      const enrichedRoles: UserRole[] = [];
-      if (rolesData) {
-        for (const role of rolesData) {
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("name, email")
-            .eq("id", role.user_id)
-            .single();
-          
-          enrichedRoles.push({
-            id: role.id,
-            user_id: role.user_id,
-            role: role.role,
-            org_id: role.org_id || null,
-            board_id: role.board_id || null,
-            granted_at: role.granted_at,
-            profiles: profileData || null
-          });
-        }
+      if (!profile?.org_id) {
+        setLoading(false);
+        return;
       }
-      setUserRoles(enrichedRoles);
 
-      // Fetch all profiles in the organization for the dropdown
-      const { data: profilesData, error: profilesError } = await supabase
+      setCurrentOrgId(profile.org_id);
+
+      // Fetch user roles with manual profile enrichment
+      const { data: rolesData } = await supabase
+        .from("user_roles")
+        .select("*");
+
+      if (rolesData) {
+        // Enrich with profile data
+        const enrichedRoles = await Promise.all(
+          rolesData.map(async (role: any) => {
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("name, email")
+              .eq("id", role.user_id)
+              .maybeSingle();
+            
+            return {
+              ...role,
+              profile: profileData
+            };
+          })
+        );
+        setUserRoles(enrichedRoles);
+      }
+
+      // Fetch profiles
+      const { data: profilesData } = await supabase
         .from("profiles")
         .select("*")
         .eq("org_id", profile.org_id)
         .order("name");
 
-      if (profilesError) throw profilesError;
-      setProfiles(profilesData || []);
+      if (profilesData) {
+        setProfiles(profilesData);
+      }
 
     } catch (error: any) {
       console.error("Error fetching data:", error);
@@ -125,24 +111,25 @@ export const RoleManagement = () => {
       return;
     }
 
+    if (!currentOrgId) {
+      toast({
+        title: "Error",
+        description: "Organization not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("org_id")
-        .eq("id", user.id)
-        .single();
-
-      if (!profile?.org_id) throw new Error("No organization found");
 
       const { error } = await supabase
         .from("user_roles")
         .insert([{
           user_id: selectedUserId,
           role: selectedRole as any,
-          org_id: profile.org_id,
+          org_id: currentOrgId,
           granted_by: user.id,
         }]);
 
@@ -290,7 +277,13 @@ export const RoleManagement = () => {
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading roles...</p>
         ) : userRoles.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No roles assigned yet</p>
+          <div className="text-center py-8">
+            <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" />
+            <p className="text-sm text-muted-foreground mb-2">No roles assigned yet</p>
+            <p className="text-xs text-muted-foreground">
+              Click "Assign Role" to grant permissions to users
+            </p>
+          </div>
         ) : (
           <Table>
             <TableHeader>
@@ -306,13 +299,13 @@ export const RoleManagement = () => {
               {userRoles.map((userRole) => (
                 <TableRow key={userRole.id}>
                   <TableCell className="font-medium">
-                    {userRole.profiles?.name || "Unknown"}
+                    {userRole.profile?.name || "Unknown"}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {userRole.profiles?.email || "N/A"}
+                    {userRole.profile?.email || "N/A"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={getRoleBadgeVariant(userRole.role)}>
+                    <Badge variant={getRoleBadgeVariant(userRole.role) as any}>
                       {AVAILABLE_ROLES.find(r => r.value === userRole.role)?.label || userRole.role}
                     </Badge>
                   </TableCell>
