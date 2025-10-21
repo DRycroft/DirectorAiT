@@ -141,7 +141,7 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
             onDragOver={(e) => handleDragOver(e, index)}
             onDragEnd={handleDragEnd}
             className={cn(
-              "flex items-center gap-2 py-1.5 px-2 rounded-md border bg-card cursor-move hover:border-primary/50 transition-colors",
+              "flex items-center gap-2 py-0.5 px-2 rounded-md border bg-card cursor-move hover:border-primary/50 transition-colors",
               section.level === 1 && "ml-16 border-l-4 border-l-primary bg-accent/20"
             )}
           >
@@ -155,7 +155,7 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
               value={section.title}
               onChange={(e) => handleUpdateSection(section.id, { title: e.target.value })}
               className={cn(
-                "flex-1 h-8",
+                "flex-1",
                 section.level === 0 ? "font-semibold" : "font-normal",
                 section.title === "New Section" && "text-primary"
               )}
@@ -164,15 +164,15 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
             />
 
             {section.required && (
-              <Badge variant="secondary" className="text-xs py-0 h-5">Required</Badge>
+              <Badge variant="secondary" className="text-xs">Required</Badge>
             )}
 
             {section.level === 1 && (
-              <Badge variant="outline" className="text-xs py-0 h-5">Sub-heading</Badge>
+              <Badge variant="outline" className="text-xs">Sub-heading</Badge>
             )}
 
             <div className="grid grid-cols-3 gap-0 w-fit">
-              <div className="w-7"></div>
+              <div className="w-6"></div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -182,11 +182,11 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
                 }}
                 disabled={index === 0}
                 title="Move up"
-                className="h-6 w-6"
+                className="h-7 w-6 p-0"
               >
-                <ChevronUp className="h-3 w-3" />
+                <ChevronUp className="h-3.5 w-3.5" />
               </Button>
-              <div className="w-7"></div>
+              <div className="w-6"></div>
               
               <Button
                 variant="ghost"
@@ -197,11 +197,11 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
                 }}
                 disabled={section.level <= 0}
                 title="Make main heading (outdent)"
-                className="h-6 w-6"
+                className="h-7 w-6 p-0"
               >
-                <ChevronLeft className="h-3 w-3" />
+                <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
-              <div className="w-7"></div>
+              <div className="w-6"></div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -211,12 +211,12 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
                 }}
                 disabled={section.level >= 1}
                 title="Make sub-heading (indent)"
-                className="h-6 w-6"
+                className="h-7 w-6 p-0"
               >
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight className="h-3.5 w-3.5" />
               </Button>
               
-              <div className="w-7"></div>
+              <div className="w-6"></div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -226,11 +226,11 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
                 }}
                 disabled={index === sections.length - 1}
                 title="Move down"
-                className="h-6 w-6"
+                className="h-7 w-6 p-0"
               >
-                <ChevronDown className="h-3 w-3" />
+                <ChevronDown className="h-3.5 w-3.5" />
               </Button>
-              <div className="w-7"></div>
+              <div className="w-6"></div>
             </div>
 
             {!section.required && (
@@ -238,9 +238,9 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
                 variant="ghost"
                 size="icon"
                 onClick={() => handleRemoveSection(section.id)}
-                className="text-destructive hover:text-destructive h-6 w-6"
+                className="text-destructive hover:text-destructive h-7 w-7 p-0"
               >
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5" />
               </Button>
             )}
           </div>

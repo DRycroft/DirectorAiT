@@ -196,7 +196,7 @@ export const StaffFormTemplateEditor = ({
           {sortedFields.map((field, index) => (
             <div 
               key={field.id} 
-              className={`flex items-center justify-between py-1.5 px-2 border rounded-md ${
+              className={`flex items-center justify-between py-0.5 px-2 border rounded-md ${
                 field.locked ? 'bg-muted/30' : 'hover:bg-accent/50'
               } transition-colors`}
             >
@@ -222,12 +222,12 @@ export const StaffFormTemplateEditor = ({
               </div>
               <div className="flex items-center gap-2">
                 {field.required && (
-                  <Badge variant="destructive" className="text-xs py-0 h-5">
+                  <Badge variant="destructive" className="text-xs">
                     Required
                   </Badge>
                 )}
                 {!field.required && (
-                  <Badge variant="outline" className="text-xs py-0 h-5">
+                  <Badge variant="outline" className="text-xs">
                     Optional
                   </Badge>
                 )}
@@ -237,18 +237,18 @@ export const StaffFormTemplateEditor = ({
                     size="sm"
                     onClick={() => handleMoveUp(index)}
                     disabled={index === 0}
-                    className="h-6 w-6 p-0"
+                    className="h-7 w-7 p-0"
                   >
-                    <ChevronUp className="h-3 w-3" />
+                    <ChevronUp className="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleMoveDown(index)}
                     disabled={index === sortedFields.length - 1}
-                    className="h-6 w-6 p-0"
+                    className="h-7 w-7 p-0"
                   >
-                    <ChevronDown className="h-3 w-3" />
+                    <ChevronDown className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
