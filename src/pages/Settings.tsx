@@ -1199,118 +1199,121 @@ const Settings = () => {
                           </div>
                         )}
 
-                        {/* Step 3: Select Industry Sector(s) */}
-                        <div className="space-y-1.5">
-                          <Label>Industry Sector(s)</Label>
-                          <p className="text-xs text-muted-foreground mb-2">
-                            {aiSuggestions 
-                              ? "✓ AI recommended industries checked. Select all industries your business operates in." 
-                              : "Select all industries your business operates in"
-                            }
-                          </p>
-                          <div className="max-h-[300px] overflow-y-auto border rounded-md p-3 space-y-2 bg-background">
-                            {Object.keys(industryCategories).map((industry) => {
-                              const isSelected = companyData.industry_sector.includes(industry);
-                              const isRecommended = aiSuggestions?.recommended_industry === industry || 
-                                                   aiSuggestions?.alternative_industries.includes(industry);
-                              return (
-                                <div key={industry} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={`industry-${industry}`}
-                                    checked={isSelected}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        setCompanyData({
-                                          ...companyData,
-                                          industry_sector: [...companyData.industry_sector, industry],
-                                          // Clear business categories when industries change
-                                          business_category: []
-                                        });
-                                      } else {
-                                        setCompanyData({
-                                          ...companyData,
-                                          industry_sector: companyData.industry_sector.filter(i => i !== industry),
-                                          business_category: []
-                                        });
-                                      }
-                                    }}
-                                  />
-                                  <Label
-                                    htmlFor={`industry-${industry}`}
-                                    className="text-sm font-normal cursor-pointer flex items-center gap-2"
-                                  >
-                                    {industry}
-                                    {isRecommended && <span className="text-yellow-500">⭐</span>}
-                                  </Label>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Step 4: Select Business Categories */}
-                        <div className="space-y-1.5">
-                          <Label>Government Business Categories</Label>
-                          <p className="text-xs text-muted-foreground mb-2">
-                            {companyData.industry_sector.length === 0 
-                              ? "Please select industry sectors first"
-                              : aiSuggestions && aiSuggestions.recommended_categories.length > 0
-                                ? "⭐ = AI recommended. Select all categories that apply to your business."
-                                : "Government classification for regulatory requirements - select all that apply"
-                            }
-                          </p>
-                          {companyData.industry_sector.length > 0 ? (
-                            <div className="max-h-[300px] overflow-y-auto border rounded-md p-3 space-y-3 bg-background">
-                              {companyData.industry_sector.map((industry) => {
-                                const categories = industryCategories[industry] || [];
-                                if (categories.length === 0) return null;
-                                
+                        {/* Step 3 & 4: Two Column Layout */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Step 3: Select Industry Sector(s) */}
+                          <div className="space-y-1.5">
+                            <Label>Industry Sector(s)</Label>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              {aiSuggestions 
+                                ? "✓ AI recommended industries checked. Select all industries your business operates in." 
+                                : "Select all industries your business operates in"
+                              }
+                            </p>
+                            <div className="max-h-[300px] overflow-y-auto border rounded-md p-3 space-y-2 bg-background">
+                              {Object.keys(industryCategories).map((industry) => {
+                                const isSelected = companyData.industry_sector.includes(industry);
+                                const isRecommended = aiSuggestions?.recommended_industry === industry || 
+                                                     aiSuggestions?.alternative_industries.includes(industry);
                                 return (
-                                  <div key={industry} className="space-y-2">
-                                    <h4 className="text-sm font-semibold text-muted-foreground">{industry}</h4>
-                                    <div className="space-y-2 pl-2">
-                                      {categories.map((category) => {
-                                        const isSelected = companyData.business_category.includes(category);
-                                        const isRecommended = aiSuggestions?.recommended_categories.includes(category);
-                                        return (
-                                          <div key={category} className="flex items-center space-x-2">
-                                            <Checkbox
-                                              id={`category-${category}`}
-                                              checked={isSelected}
-                                              onCheckedChange={(checked) => {
-                                                if (checked) {
-                                                  setCompanyData({
-                                                    ...companyData,
-                                                    business_category: [...companyData.business_category, category]
-                                                  });
-                                                } else {
-                                                  setCompanyData({
-                                                    ...companyData,
-                                                    business_category: companyData.business_category.filter(c => c !== category)
-                                                  });
-                                                }
-                                              }}
-                                            />
-                                            <Label
-                                              htmlFor={`category-${category}`}
-                                              className="text-sm font-normal cursor-pointer flex items-center gap-2"
-                                            >
-                                              {category}
-                                              {isRecommended && <span className="text-yellow-500">⭐</span>}
-                                            </Label>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
+                                  <div key={industry} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`industry-${industry}`}
+                                      checked={isSelected}
+                                      onCheckedChange={(checked) => {
+                                        if (checked) {
+                                          setCompanyData({
+                                            ...companyData,
+                                            industry_sector: [...companyData.industry_sector, industry],
+                                            // Clear business categories when industries change
+                                            business_category: []
+                                          });
+                                        } else {
+                                          setCompanyData({
+                                            ...companyData,
+                                            industry_sector: companyData.industry_sector.filter(i => i !== industry),
+                                            business_category: []
+                                          });
+                                        }
+                                      }}
+                                    />
+                                    <Label
+                                      htmlFor={`industry-${industry}`}
+                                      className="text-sm font-normal cursor-pointer flex items-center gap-2"
+                                    >
+                                      {industry}
+                                      {isRecommended && <span className="text-yellow-500">⭐</span>}
+                                    </Label>
                                   </div>
                                 );
                               })}
                             </div>
-                          ) : (
-                            <div className="border rounded-md p-4 text-center text-sm text-muted-foreground bg-muted/20">
-                              Select industry sectors above to see available business categories
-                            </div>
-                          )}
+                          </div>
+
+                          {/* Step 4: Select Business Categories */}
+                          <div className="space-y-1.5">
+                            <Label>Government Business Categories</Label>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              {companyData.industry_sector.length === 0 
+                                ? "Please select industry sectors first"
+                                : aiSuggestions && aiSuggestions.recommended_categories.length > 0
+                                  ? "⭐ = AI recommended. Select all categories that apply to your business."
+                                  : "Government classification for regulatory requirements - select all that apply"
+                              }
+                            </p>
+                            {companyData.industry_sector.length > 0 ? (
+                              <div className="max-h-[300px] overflow-y-auto border rounded-md p-3 space-y-3 bg-background">
+                                {companyData.industry_sector.map((industry) => {
+                                  const categories = industryCategories[industry] || [];
+                                  if (categories.length === 0) return null;
+                                  
+                                  return (
+                                    <div key={industry} className="space-y-2">
+                                      <h4 className="text-sm font-semibold text-muted-foreground">{industry}</h4>
+                                      <div className="space-y-2 pl-2">
+                                        {categories.map((category) => {
+                                          const isSelected = companyData.business_category.includes(category);
+                                          const isRecommended = aiSuggestions?.recommended_categories.includes(category);
+                                          return (
+                                            <div key={category} className="flex items-center space-x-2">
+                                              <Checkbox
+                                                id={`category-${category}`}
+                                                checked={isSelected}
+                                                onCheckedChange={(checked) => {
+                                                  if (checked) {
+                                                    setCompanyData({
+                                                      ...companyData,
+                                                      business_category: [...companyData.business_category, category]
+                                                    });
+                                                  } else {
+                                                    setCompanyData({
+                                                      ...companyData,
+                                                      business_category: companyData.business_category.filter(c => c !== category)
+                                                    });
+                                                  }
+                                                }}
+                                              />
+                                              <Label
+                                                htmlFor={`category-${category}`}
+                                                className="text-sm font-normal cursor-pointer flex items-center gap-2"
+                                              >
+                                                {category}
+                                                {isRecommended && <span className="text-yellow-500">⭐</span>}
+                                              </Label>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <div className="border rounded-md p-4 text-center text-sm text-muted-foreground bg-muted/20">
+                                Select industry sectors above to see available business categories
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {/* Compliance Scan Status */}
