@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getPositionsByType } from "@/config/positions";
 import { Combobox } from "@/components/ui/combobox";
 import { Card } from "@/components/ui/card";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 const formSchema = z.object({
   member_type: z.enum(["board", "executive", "key_staff"]),
@@ -435,15 +436,12 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
                   <FormItem>
                     <FormLabel>Phone Number</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="tel"
-                        placeholder="+64 21 123 4567" 
-                        {...field} 
+                      <PhoneInput 
+                        placeholder="21 123 4567" 
+                        value={field.value}
+                        onChange={field.onChange}
                       />
                     </FormControl>
-                    <FormDescription className="text-xs">
-                      Include country code (e.g., +64 for NZ, +61 for AU, +1 for US)
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -648,15 +646,12 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
                   <FormItem>
                     <FormLabel>Emergency Contact Phone</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="tel"
-                        placeholder="+64 21 123 4567" 
-                        {...field} 
+                      <PhoneInput 
+                        placeholder="21 123 4567" 
+                        value={field.value}
+                        onChange={field.onChange}
                       />
                     </FormControl>
-                    <FormDescription className="text-xs">
-                      Include country code
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
