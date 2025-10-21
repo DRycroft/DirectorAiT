@@ -290,6 +290,7 @@ const Settings = () => {
   const { toast } = useToast();
   const [selectedType, setSelectedType] = useState<string>("");
   const [sections, setSections] = useState<TemplateSection[]>([]);
+  const [selectedStaffFormType, setSelectedStaffFormType] = useState<string>("");
   const [activeTab, setActiveTab] = useState("company");
   const [businessDescription, setBusinessDescription] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
@@ -1412,11 +1413,18 @@ const Settings = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <div className="text-center py-4">
-                    <Users className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Coming soon: Customizable forms for Board Members, Executive Team, and Key Staff
-                    </p>
+                  <div>
+                    <Label htmlFor="staff-form-type">Select Form Type</Label>
+                    <Select value={selectedStaffFormType} onValueChange={setSelectedStaffFormType}>
+                      <SelectTrigger id="staff-form-type" className="w-full mt-2 bg-background z-50">
+                        <SelectValue placeholder="Choose a form type..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="board_members">Board Members</SelectItem>
+                        <SelectItem value="executive_team">Executive Team</SelectItem>
+                        <SelectItem value="key_staff">Key Staff</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </CardContent>
               </Card>
@@ -1451,6 +1459,32 @@ const Settings = () => {
                         Save Template
                       </Button>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Staff Form Workspace Area */}
+            {selectedStaffFormType && (
+              <Card className="mt-6">
+                <CardHeader className="border-b">
+                  <CardTitle>
+                    Editing: {selectedStaffFormType === "board_members" ? "Board Members" : 
+                             selectedStaffFormType === "executive_team" ? "Executive Team" : "Key Staff"} Form
+                  </CardTitle>
+                  <CardDescription>
+                    Customize the induction form fields for this team type
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground mb-4">
+                      Form template customization coming soon
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      This will allow you to customize fields like: Name, Title, Address, Email, Phone, LinkedIn, Position, Reports, Qualifications, Conflicts of Interest, Personal Interests, and Health Notes
+                    </p>
                   </div>
                 </CardContent>
               </Card>
