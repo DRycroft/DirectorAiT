@@ -191,12 +191,12 @@ export const StaffFormTemplateEditor = ({
         </div>
       </div>
 
-      <div className="space-y-3">
-        <div className="grid gap-3">
+      <div className="space-y-2">
+        <div className="grid gap-2">
           {sortedFields.map((field, index) => (
             <div 
               key={field.id} 
-              className={`flex items-center justify-between p-3 border rounded-lg ${
+              className={`flex items-center justify-between py-1.5 px-2 border rounded-md ${
                 field.locked ? 'bg-muted/30' : 'hover:bg-accent/50'
               } transition-colors`}
             >
@@ -222,12 +222,12 @@ export const StaffFormTemplateEditor = ({
               </div>
               <div className="flex items-center gap-2">
                 {field.required && (
-                  <Badge variant="destructive" className="text-xs">
+                  <Badge variant="destructive" className="text-xs py-0 h-5">
                     Required
                   </Badge>
                 )}
                 {!field.required && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs py-0 h-5">
                     Optional
                   </Badge>
                 )}
@@ -237,18 +237,18 @@ export const StaffFormTemplateEditor = ({
                     size="sm"
                     onClick={() => handleMoveUp(index)}
                     disabled={index === 0}
-                    className="h-8 w-8 p-0"
+                    className="h-6 w-6 p-0"
                   >
-                    <ChevronUp className="h-4 w-4" />
+                    <ChevronUp className="h-3 w-3" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleMoveDown(index)}
                     disabled={index === sortedFields.length - 1}
-                    className="h-8 w-8 p-0"
+                    className="h-6 w-6 p-0"
                   >
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
