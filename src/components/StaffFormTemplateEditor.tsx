@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Lock, ChevronUp, ChevronDown } from "lucide-react";
 
 export interface FormField {
   id: string;
@@ -43,6 +44,40 @@ export const StaffFormTemplateEditor = ({
     onFieldsChange(updatedFields);
   };
 
+  const handleMoveUp = (index: number) => {
+    if (index === 0) return;
+    
+    const newFields = [...sortedFields];
+    const temp = newFields[index];
+    newFields[index] = newFields[index - 1];
+    newFields[index - 1] = temp;
+    
+    // Update order property
+    const reorderedFields = newFields.map((field, idx) => ({
+      ...field,
+      order: idx
+    }));
+    
+    onFieldsChange(reorderedFields);
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index === sortedFields.length - 1) return;
+    
+    const newFields = [...sortedFields];
+    const temp = newFields[index];
+    newFields[index] = newFields[index + 1];
+    newFields[index + 1] = temp;
+    
+    // Update order property
+    const reorderedFields = newFields.map((field, idx) => ({
+      ...field,
+      order: idx
+    }));
+    
+    onFieldsChange(reorderedFields);
+  };
+
   const sortedFields = [...fields].sort((a, b) => a.order - b.order);
 
   return (
@@ -56,7 +91,7 @@ export const StaffFormTemplateEditor = ({
 
       <div className="space-y-3">
         <div className="grid gap-3">
-          {sortedFields.map((field) => (
+          {sortedFields.map((field, index) => (
             <div 
               key={field.id} 
               className={`flex items-center justify-between p-3 border rounded-lg ${
@@ -94,6 +129,26 @@ export const StaffFormTemplateEditor = ({
                     Optional
                   </Badge>
                 )}
+                <div className="flex gap-1 ml-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleMoveUp(index)}
+                    disabled={index === 0}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleMoveDown(index)}
+                    disabled={index === sortedFields.length - 1}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}

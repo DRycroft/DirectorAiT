@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -54,6 +54,8 @@ const formSchema = z.object({
   professional_qualifications: z.string().optional(),
   personal_interests: z.string().optional(),
   health_notes: z.string().optional(),
+  emergency_contact_name: z.string().optional(),
+  emergency_contact_phone: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -68,6 +70,8 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess }: AddPer
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [existingMembers, setExistingMembers] = useState<any[]>([]);
+  const [formTemplate, setFormTemplate] = useState<any[]>([]);
+  const [loadingTemplate, setLoadingTemplate] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -86,10 +90,56 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess }: AddPer
       professional_qualifications: "",
       personal_interests: "",
       health_notes: "",
+      emergency_contact_name: "",
+      emergency_contact_phone: "",
     },
   });
 
   const memberType = form.watch("member_type");
+
+  // Fetch form template when member type changes
+  useEffect(() => {
+    const loadFormTemplate = async () => {
+      setLoadingTemplate(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("org_id")
+          .eq("id", user.id)
+          .single();
+
+        if (!profile?.org_id) return;
+
+        // Fetch template for this member type
+        const { data: template } = await supabase
+          .from("staff_form_templates")
+          .select("fields")
+          .eq("org_id", profile.org_id)
+          .eq("form_type", memberType === "board" ? "board_members" : memberType === "executive" ? "executive_team" : "key_staff")
+          .single();
+
+        if (template?.fields) {
+          const fields = template.fields as any[];
+          // Sort by order and filter enabled fields
+          const sortedFields = fields
+            .filter(f => f.enabled)
+            .sort((a, b) => a.order - b.order);
+          setFormTemplate(sortedFields);
+        }
+      } catch (error) {
+        console.error("Error loading form template:", error);
+      } finally {
+        setLoadingTemplate(false);
+      }
+    };
+
+    if (open) {
+      loadFormTemplate();
+    }
+  }, [memberType, open]);
 
   // Fetch existing members when dialog opens
   const handleOpenChange = async (isOpen: boolean) => {
@@ -139,6 +189,8 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess }: AddPer
         professional_qualifications: values.professional_qualifications || null,
         personal_interests: values.personal_interests || null,
         health_notes: values.health_notes || null,
+        emergency_contact_name: values.emergency_contact_name || null,
+        emergency_contact_phone: values.emergency_contact_phone || null,
         status: "active",
       };
 
@@ -482,6 +534,48 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess }: AddPer
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="emergency_contact_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Emergency Contact Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Jane Smith" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="emergency_contact_phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Emergency Contact Phone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="+64 21 123 4567" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {loadingTemplate && (
+              <div className="text-sm text-muted-foreground text-center p-2 bg-muted/50 rounded">
+                Loading form template...
+              </div>
+            )}
+
+            {!loadingTemplate && formTemplate.length > 0 && (
+              <div className="text-sm text-muted-foreground text-center p-2 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded">
+                Form fields are displayed in the order configured in Settings → Document Templates
+              </div>
+            )}
 
             <div className="flex justify-end gap-3 pt-4">
               <Button
