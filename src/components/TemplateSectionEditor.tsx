@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Plus, ChevronRight, ChevronLeft } from "lucide-react";
+import { X, Plus, ChevronRight, ChevronLeft, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -96,6 +96,32 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
     setDraggedItem(null);
   };
 
+  const handleMoveUp = (index: number) => {
+    if (index === 0) return;
+    
+    const newSections = [...sections];
+    const temp = newSections[index];
+    newSections[index] = newSections[index - 1];
+    newSections[index - 1] = temp;
+    
+    // Update order property
+    newSections.forEach((s, i) => (s.order = i));
+    onSectionsChange(newSections);
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index === sections.length - 1) return;
+    
+    const newSections = [...sections];
+    const temp = newSections[index];
+    newSections[index] = newSections[index + 1];
+    newSections[index + 1] = temp;
+    
+    // Update order property
+    newSections.forEach((s, i) => (s.order = i));
+    onSectionsChange(newSections);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -146,6 +172,32 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
             )}
 
             <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleMoveUp(index);
+                }}
+                disabled={index === 0}
+                title="Move up"
+                className="h-8 w-8"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleMoveDown(index);
+                }}
+                disabled={index === sections.length - 1}
+                title="Move down"
+                className="h-8 w-8"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
