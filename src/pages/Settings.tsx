@@ -1361,49 +1361,91 @@ const Settings = () => {
           </TabsContent>
 
           <TabsContent value="templates" className="space-y-6">
-            <div className="flex items-center justify-between gap-4 mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-1">
-                  Document Templates
-                </h2>
-                <p className="text-muted-foreground">Create and customize document templates for your organization</p>
-              </div>
-              <Select value={selectedType} onValueChange={handleTemplateTypeChange}>
-                <SelectTrigger className="w-full max-w-md">
-                  <SelectValue placeholder="Choose a template type..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {templateTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-foreground mb-1">
+                Document Templates
+              </h2>
+              <p className="text-muted-foreground">Create and customize templates for your organization</p>
             </div>
 
-            {selectedType && (
-              <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="text-2xl">{selectedType.toUpperCase()}</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="space-y-6">
-                    <TemplateSectionEditor
-                      sections={sections}
-                      onSectionsChange={setSections}
-                    />
-                    
-                    <div className="flex justify-end pt-4 border-t">
-                      <Button onClick={handleSaveTemplate} size="lg">
-                        <Save className="h-4 w-4 mr-2" />
-                        Save Template
-                      </Button>
-                    </div>
+            {/* Board Paper and Report Templates Section */}
+            <Card>
+              <CardHeader className="border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Board Paper and Report Templates
+                </CardTitle>
+                <CardDescription>
+                  Customize the structure and sections for board papers and executive reports
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="template-type">Select Template Type</Label>
+                    <Select value={selectedType} onValueChange={handleTemplateTypeChange}>
+                      <SelectTrigger id="template-type" className="w-full max-w-md mt-2">
+                        <SelectValue placeholder="Choose a template type..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {templateTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+
+                  {selectedType && (
+                    <>
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <h3 className="font-semibold text-lg mb-2">{selectedType}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Customize the sections and structure for this template type
+                        </p>
+                      </div>
+                      
+                      <TemplateSectionEditor
+                        sections={sections}
+                        onSectionsChange={setSections}
+                      />
+                      
+                      <div className="flex justify-end pt-4 border-t">
+                        <Button onClick={handleSaveTemplate} size="lg">
+                          <Save className="h-4 w-4 mr-2" />
+                          Save Template
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Board Members, Exec and Staff Forms Section */}
+            <Card>
+              <CardHeader className="border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Board Members, Exec and Staff Forms
+                </CardTitle>
+                <CardDescription>
+                  Create and customize induction forms for board members, executives, and staff
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground mb-4">
+                    Induction form templates will be configured here
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Coming soon: Customizable forms for Board Members, Executive Team, and Key Staff
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
