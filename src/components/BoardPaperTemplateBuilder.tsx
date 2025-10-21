@@ -208,7 +208,7 @@ export const BoardPaperTemplateBuilder = () => {
               onDragStart={() => handleDragStart(section.id)}
               onDragOver={(e) => handleDragOver(e, section.id)}
               onDragEnd={handleDragEnd}
-              className={`flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors ${
+              className={`flex items-center gap-3 py-0.5 px-2 rounded-lg border bg-card hover:bg-accent/50 transition-colors ${
                 draggedItem === section.id ? "opacity-50" : ""
               } ${section.required ? "cursor-default" : "cursor-move"}`}
             >
