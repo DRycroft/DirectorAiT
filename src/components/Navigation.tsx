@@ -14,6 +14,7 @@ const Navigation = () => {
   const isActive = (path: string) => {
     if (path === '/team') return location.pathname === '/team';
     if (path === '/dashboard') return location.pathname === '/dashboard';
+    if (path === '/boards-committees') return location.pathname === '/boards-committees';
     if (path === '/board-papers') return location.pathname.startsWith('/board-papers');
     if (path === '/compliance') return location.pathname === '/compliance';
     if (path === '/library') return location.pathname === '/library';
@@ -79,6 +80,18 @@ const Navigation = () => {
               style={isActive('/team') ? { marginBottom: '-1px' } : {}}
             >
               Board & Team
+            </Link>
+            <Link 
+              to="/boards-committees" 
+              className={cn(
+                "relative px-5 pt-3 pb-4 text-sm font-medium transition-all rounded-t-xl",
+                isActive('/boards-committees')
+                  ? "text-foreground bg-background border-t-2 border-x-2 border-primary shadow-[0_-2px_8px_rgba(0,0,0,0.1)]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30 mb-0.5"
+              )}
+              style={isActive('/boards-committees') ? { marginBottom: '-1px' } : {}}
+            >
+              Boards & Committees
             </Link>
             <Link 
               to="/board-papers" 

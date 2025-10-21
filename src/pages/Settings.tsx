@@ -16,7 +16,6 @@ import TwoPersonApproval from "@/components/TwoPersonApproval";
 import COIManagement from "@/components/COIManagement";
 import AuditHistory from "@/components/AuditHistory";
 import AdminManagement from "@/components/settings/AdminManagement";
-import BoardsManagement from "@/components/settings/BoardsManagement";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -1004,12 +1003,8 @@ const Settings = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="space-y-2 mb-8">
-            <TabsList className="grid w-full grid-cols-6 h-auto">
+            <TabsList className="grid w-full grid-cols-5 h-auto">
               <TabsTrigger value="company">Company Details</TabsTrigger>
-              <TabsTrigger value="boards">
-                <Building2 className="mr-2 h-4 w-4" />
-                Boards & Committees
-              </TabsTrigger>
               <TabsTrigger value="board">
                 <Users className="mr-2 h-4 w-4" />
                 Board Members
@@ -1610,10 +1605,7 @@ const Settings = () => {
             )}
           </TabsContent>
 
-          {/* Boards & Committees Management Tab */}
-          <TabsContent value="boards">
-            <BoardsManagement />
-          </TabsContent>
+          {/* Boards & Committees Management Tab - Moved to main menu */}
 
           <TabsContent value="board" className="space-y-6">
             <BoardManagement

@@ -18,6 +18,7 @@ import MemberIntake from "./pages/MemberIntake";
 import MemberInvite from "./pages/MemberInvite";
 import MemberApproval from "./pages/MemberApproval";
 import ExportTeam from "./pages/ExportTeam";
+import BoardsAndCommittees from "./pages/BoardsAndCommittees";
 import Settings from "./pages/Settings";
 import Compliance from "./pages/Compliance";
 import NotFound from "./pages/NotFound";
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/boards-committees" element={<BoardsAndCommittees />} />
           <Route path="/team" element={<TeamOverview />} />
           <Route path="/boards" element={<Boards />} />
           <Route path="/boards/:boardId" element={<BoardDetail />} />
