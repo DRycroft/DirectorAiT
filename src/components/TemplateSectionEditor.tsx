@@ -132,7 +132,7 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
         </Button>
       </div>
 
-      <div className="space-y-2">
+      <div className="grid gap-2">
         {sections.map((section, index) => (
           <div
             key={section.id}
