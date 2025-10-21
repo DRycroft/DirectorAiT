@@ -251,7 +251,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
         )}
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader className="sticky top-0 bg-background z-10 pb-4">
+        <DialogHeader>
           <DialogTitle className="text-center text-2xl">
             <div className="mb-1 text-lg font-normal text-muted-foreground">
               {organizationName}
