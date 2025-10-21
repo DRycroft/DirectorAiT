@@ -12,6 +12,10 @@ import { StaffFormTemplateEditor, FormField } from "@/components/StaffFormTempla
 import { MembersList } from "@/components/settings/MembersList";
 import { AddPersonDialog } from "@/components/AddPersonDialog";
 import RoleManagement from "@/components/settings/RoleManagement";
+import TwoPersonApproval from "@/components/TwoPersonApproval";
+import COIManagement from "@/components/COIManagement";
+import AuditHistory from "@/components/AuditHistory";
+import AdminManagement from "@/components/settings/AdminManagement";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -1782,6 +1786,26 @@ const Settings = () => {
           {/* Role Management Tab */}
           <TabsContent value="roles">
             <RoleManagement />
+          </TabsContent>
+
+          {/* Admin Management Tab */}
+          <TabsContent value="admins">
+            <AdminManagement />
+          </TabsContent>
+
+          {/* Two-Person Approval Tab */}
+          <TabsContent value="approvals">
+            <TwoPersonApproval />
+          </TabsContent>
+
+          {/* COI Management Tab */}
+          <TabsContent value="coi">
+            <COIManagement />
+          </TabsContent>
+
+          {/* Audit History Tab */}
+          <TabsContent value="audit">
+            <AuditHistory />
           </TabsContent>
         </Tabs>
       </main>

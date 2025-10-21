@@ -150,6 +150,81 @@ export type Database = {
           },
         ]
       }
+      approval_requests: {
+        Row: {
+          board_id: string | null
+          comments: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          first_approved_at: string | null
+          first_approver: string | null
+          id: string
+          org_id: string
+          request_data: Json
+          request_type: string
+          requested_at: string
+          requested_by: string
+          second_approved_at: string | null
+          second_approver: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          board_id?: string | null
+          comments?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          first_approved_at?: string | null
+          first_approver?: string | null
+          id?: string
+          org_id: string
+          request_data?: Json
+          request_type: string
+          requested_at?: string
+          requested_by: string
+          second_approved_at?: string | null
+          second_approver?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          board_id?: string | null
+          comments?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          first_approved_at?: string | null
+          first_approver?: string | null
+          id?: string
+          org_id?: string
+          request_data?: Json
+          request_type?: string
+          requested_at?: string
+          requested_by?: string
+          second_approved_at?: string | null
+          second_approver?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_requests_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       archived_documents: {
         Row: {
           approved: boolean | null
@@ -1378,6 +1453,44 @@ export type Database = {
           },
           {
             foreignKeyName: "meeting_minutes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_admins: {
+        Row: {
+          admin_type: string
+          appointed_at: string
+          appointed_by: string | null
+          created_at: string
+          id: string
+          org_id: string
+          user_id: string
+        }
+        Insert: {
+          admin_type: string
+          appointed_at?: string
+          appointed_by?: string | null
+          created_at?: string
+          id?: string
+          org_id: string
+          user_id: string
+        }
+        Update: {
+          admin_type?: string
+          appointed_at?: string
+          appointed_by?: string | null
+          created_at?: string
+          id?: string
+          org_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_admins_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
