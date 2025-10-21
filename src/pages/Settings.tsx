@@ -14,12 +14,22 @@ import { AddPersonDialog } from "@/components/AddPersonDialog";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCircle, Plus } from "lucide-react";
+import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCircle, Plus, X } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import BoardManagement from "@/components/settings/BoardManagement";
 import { BOARD_POSITIONS, EXECUTIVE_POSITIONS, KEY_STAFF_POSITIONS } from "@/config/positions";
 import { Combobox } from "@/components/ui/combobox";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const templateTypes = [
   "Board Papers",
@@ -310,6 +320,9 @@ const Settings = () => {
     alternative_industries: string[];
     reasoning: string;
   } | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
+  const [pendingTemplateChange, setPendingTemplateChange] = useState<{type: 'board' | 'staff', value: string} | null>(null);
   const [companyData, setCompanyData] = useState({
     name: "",
     domain: "",
@@ -744,8 +757,19 @@ const Settings = () => {
   };
 
   const handleTemplateTypeChange = (type: string) => {
+    if (hasUnsavedChanges) {
+      setPendingTemplateChange({ type: 'board', value: type });
+      setShowCloseDialog(true);
+      return;
+    }
+    
+    // Close staff form if it's open
+    setSelectedStaffFormType("");
+    setStaffFormFields([]);
+    
     setSelectedType(type);
     setSections(defaultSectionsMap[type] || []);
+    setHasUnsavedChanges(false);
   };
 
   const handleSaveTemplate = async () => {
@@ -792,11 +816,23 @@ const Settings = () => {
     // Reset form
     setSelectedType("");
     setSections([]);
+    setHasUnsavedChanges(false);
   };
 
   const handleStaffFormTypeChange = async (type: string) => {
+    if (hasUnsavedChanges) {
+      setPendingTemplateChange({ type: 'staff', value: type });
+      setShowCloseDialog(true);
+      return;
+    }
+    
+    // Close board paper template if it's open
+    setSelectedType("");
+    setSections([]);
+    
     setSelectedStaffFormType(type);
     setLoadingStaffForm(true);
+    setHasUnsavedChanges(false);
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -883,10 +919,72 @@ const Settings = () => {
       if (error) throw error;
 
       sonnerToast.success("Form template saved successfully!");
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error saving staff form template:", error);
       sonnerToast.error("Failed to save form template");
     }
+  };
+
+  const handleCloseTemplate = () => {
+    if (hasUnsavedChanges) {
+      setShowCloseDialog(true);
+    } else {
+      closeCurrentTemplate();
+    }
+  };
+
+  const closeCurrentTemplate = () => {
+    setSelectedType("");
+    setSections([]);
+    setSelectedStaffFormType("");
+    setStaffFormFields([]);
+    setHasUnsavedChanges(false);
+    setShowCloseDialog(false);
+    setPendingTemplateChange(null);
+  };
+
+  const handleSaveAndClose = async () => {
+    if (selectedType) {
+      await handleSaveTemplate();
+    } else if (selectedStaffFormType) {
+      await handleSaveStaffFormTemplate();
+    }
+    closeCurrentTemplate();
+  };
+
+  const handleDiscardAndClose = () => {
+    if (pendingTemplateChange) {
+      // User wants to switch templates
+      const { type, value } = pendingTemplateChange;
+      setHasUnsavedChanges(false);
+      setPendingTemplateChange(null);
+      setShowCloseDialog(false);
+      
+      if (type === 'board') {
+        setSelectedStaffFormType("");
+        setStaffFormFields([]);
+        setSelectedType(value);
+        setSections(defaultSectionsMap[value] || []);
+      } else {
+        setSelectedType("");
+        setSections([]);
+        handleStaffFormTypeChange(value);
+      }
+    } else {
+      // User just wants to close
+      closeCurrentTemplate();
+    }
+  };
+
+  const handleSectionsChange = (newSections: TemplateSection[]) => {
+    setSections(newSections);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleFieldsChange = (newFields: FormField[]) => {
+    setStaffFormFields(newFields);
+    setHasUnsavedChanges(true);
   };
 
   return (
@@ -1575,10 +1673,22 @@ const Settings = () => {
             {selectedType && (
               <Card className="mt-6">
                 <CardHeader className="border-b">
-                  <CardTitle>Editing: {selectedType}</CardTitle>
-                  <CardDescription>
-                    Customize the sections and structure for this template type
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Editing: {selectedType}</CardTitle>
+                      <CardDescription>
+                        Customize the sections and structure for this template type
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleCloseTemplate}
+                      className="h-8 w-8"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <div className="space-y-6">
@@ -1591,7 +1701,7 @@ const Settings = () => {
                     
                     <TemplateSectionEditor
                       sections={sections}
-                      onSectionsChange={setSections}
+                      onSectionsChange={handleSectionsChange}
                     />
                     
                     <div className="flex justify-end pt-4 border-t">
@@ -1609,10 +1719,22 @@ const Settings = () => {
             {selectedStaffFormType && (
               <Card className="mt-6">
                 <CardHeader className="border-b">
-                  <CardTitle>Form Template</CardTitle>
-                  <CardDescription>
-                    Customize the induction form fields
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Form Template</CardTitle>
+                      <CardDescription>
+                        Customize the induction form fields
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleCloseTemplate}
+                      className="h-8 w-8"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="pt-6">
                   {loadingStaffForm ? (
@@ -1624,7 +1746,7 @@ const Settings = () => {
                     <>
                       <StaffFormTemplateEditor
                         fields={staffFormFields}
-                        onFieldsChange={setStaffFormFields}
+                        onFieldsChange={handleFieldsChange}
                         formType={selectedStaffFormType}
                       />
                       <div className="flex justify-end pt-6 mt-6 border-t">
@@ -1649,6 +1771,26 @@ const Settings = () => {
         </Tabs>
       </main>
       <Footer />
+
+      {/* Save Changes Dialog */}
+      <AlertDialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Would you like to save them before {pendingTemplateChange ? 'switching templates' : 'closing'}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDiscardAndClose}>
+              Discard Changes
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleSaveAndClose}>
+              Save Changes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
