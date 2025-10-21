@@ -66,9 +66,10 @@ interface AddPersonDialogProps {
   boardId: string;
   organizationName: string;
   onSuccess: () => void;
+  trigger?: React.ReactNode;
 }
 
-export function AddPersonDialog({ boardId, organizationName, onSuccess }: AddPersonDialogProps) {
+export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger }: AddPersonDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [existingMembers, setExistingMembers] = useState<any[]>([]);
@@ -240,10 +241,12 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess }: AddPer
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <UserPlus className="h-4 w-4" />
-          Add New Person
-        </Button>
+        {trigger || (
+          <Button className="gap-2">
+            <UserPlus className="h-4 w-4" />
+            Add New Person
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
