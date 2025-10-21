@@ -67,9 +67,10 @@ interface AddPersonDialogProps {
   organizationName: string;
   onSuccess: () => void;
   trigger?: React.ReactNode;
+  defaultMemberType?: 'board' | 'executive' | 'key_staff';
 }
 
-export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger }: AddPersonDialogProps) {
+export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger, defaultMemberType }: AddPersonDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [existingMembers, setExistingMembers] = useState<any[]>([]);
@@ -80,7 +81,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      member_type: "board",
+      member_type: defaultMemberType || "board",
       full_name: "",
       preferred_title: "",
       position: "",
@@ -248,8 +249,8 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger 
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader className="sticky top-0 bg-background z-10 pb-4">
           <DialogTitle className="text-center text-2xl">
             <div className="mb-1 text-lg font-normal text-muted-foreground">
               {organizationName}
@@ -260,30 +261,32 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger 
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Card className="p-4 bg-muted/50">
-              <FormField
-                control={form.control}
-                name="member_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Member Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="board">Board</SelectItem>
-                        <SelectItem value="executive">Executive</SelectItem>
-                        <SelectItem value="key_staff">Staff</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </Card>
+            {!defaultMemberType && (
+              <Card className="p-4 bg-muted/50">
+                <FormField
+                  control={form.control}
+                  name="member_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Member Category</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="board">Board</SelectItem>
+                          <SelectItem value="executive">Executive</SelectItem>
+                          <SelectItem value="key_staff">Staff</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </Card>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -432,8 +435,15 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger 
                   <FormItem>
                     <FormLabel>Phone Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="+64 21 123 4567" {...field} />
+                      <Input 
+                        type="tel"
+                        placeholder="+64 21 123 4567" 
+                        {...field} 
+                      />
                     </FormControl>
+                    <FormDescription className="text-xs">
+                      Include country code (e.g., +64 for NZ, +61 for AU, +1 for US)
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -500,7 +510,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger 
                 control={form.control}
                 name="public_social_links"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <FormLabel>LinkedIn Profile</FormLabel>
                     <FormControl>
                       <Input placeholder="https://linkedin.com/in/..." {...field} />
@@ -638,8 +648,15 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger 
                   <FormItem>
                     <FormLabel>Emergency Contact Phone</FormLabel>
                     <FormControl>
-                      <Input placeholder="+64 21 123 4567" {...field} />
+                      <Input 
+                        type="tel"
+                        placeholder="+64 21 123 4567" 
+                        {...field} 
+                      />
                     </FormControl>
+                    <FormDescription className="text-xs">
+                      Include country code
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

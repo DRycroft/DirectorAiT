@@ -157,6 +157,7 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
               boardId={selectedBoard}
               organizationName={organizationName}
               onSuccess={() => setRefreshMembers(prev => prev + 1)}
+              defaultMemberType={memberType}
               trigger={
                 <Button variant="default">
                   <Plus className="mr-2 h-4 w-4" />
