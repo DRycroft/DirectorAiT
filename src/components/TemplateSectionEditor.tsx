@@ -171,8 +171,8 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
               <Badge variant="outline" className="text-xs">Sub-heading</Badge>
             )}
 
-            <div className="grid grid-cols-3 gap-0.5">
-              <div></div>
+            <div className="grid grid-cols-3 gap-0 w-fit">
+              <div className="w-8"></div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -182,11 +182,11 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
                 }}
                 disabled={index === 0}
                 title="Move up"
-                className="h-8 w-8"
+                className="h-7 w-7"
               >
-                <ChevronUp className="h-4 w-4" />
+                <ChevronUp className="h-3.5 w-3.5" />
               </Button>
-              <div></div>
+              <div className="w-8"></div>
               
               <Button
                 variant="ghost"
@@ -197,11 +197,11 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
                 }}
                 disabled={section.level <= 0}
                 title="Make main heading (outdent)"
-                className="h-8 w-8"
+                className="h-7 w-7"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
-              <div></div>
+              <div className="w-8"></div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -211,12 +211,12 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
                 }}
                 disabled={section.level >= 1}
                 title="Make sub-heading (indent)"
-                className="h-8 w-8"
+                className="h-7 w-7"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3.5 w-3.5" />
               </Button>
               
-              <div></div>
+              <div className="w-8"></div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -226,11 +226,11 @@ export const TemplateSectionEditor = ({ sections, onSectionsChange, isAdmin = fa
                 }}
                 disabled={index === sections.length - 1}
                 title="Move down"
-                className="h-8 w-8"
+                className="h-7 w-7"
               >
-                <ChevronDown className="h-4 w-4" />
+                <ChevronDown className="h-3.5 w-3.5" />
               </Button>
-              <div></div>
+              <div className="w-8"></div>
             </div>
 
             {!section.required && (
