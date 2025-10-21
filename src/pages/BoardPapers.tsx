@@ -32,6 +32,32 @@ interface ExecutiveReport {
   status: string;
 }
 
+interface MeetingMinute {
+  id: string;
+  meeting_date: string;
+  meeting_type: string;
+  file_name: string;
+  file_path: string;
+  uploaded_by: string;
+  uploaded_by_name: string;
+  uploaded_at: string;
+  status: string;
+}
+
+interface SpecialPaper {
+  id: string;
+  title: string;
+  category: string;
+  file_name: string;
+  file_path: string;
+  uploaded_by: string;
+  uploaded_by_name: string;
+  uploaded_at: string;
+  deadline: string | null;
+  status: string;
+  description: string | null;
+}
+
 const BoardPapers = () => {
   const { toast } = useToast();
   const [createPaperDialogOpen, setCreatePaperDialogOpen] = useState(false);
@@ -45,6 +71,18 @@ const BoardPapers = () => {
   const [filterPeriod, setFilterPeriod] = useState<string>("all");
   const [filterPerson, setFilterPerson] = useState<string>("all");
   const [isUploading, setIsUploading] = useState(false);
+  const [meetingMinutes, setMeetingMinutes] = useState<MeetingMinute[]>([]);
+  const [specialPapers, setSpecialPapers] = useState<SpecialPaper[]>([]);
+  const [minutesUploadOpen, setMinutesUploadOpen] = useState(false);
+  const [specialPaperUploadOpen, setSpecialPaperUploadOpen] = useState(false);
+  const [minutesFile, setMinutesFile] = useState<File | null>(null);
+  const [minutesMeetingDate, setMinutesMeetingDate] = useState("");
+  const [minutesMeetingType, setMinutesMeetingType] = useState("Regular Board Meeting");
+  const [specialPaperFile, setSpecialPaperFile] = useState<File | null>(null);
+  const [specialPaperTitle, setSpecialPaperTitle] = useState("");
+  const [specialPaperCategory, setSpecialPaperCategory] = useState("");
+  const [specialPaperDescription, setSpecialPaperDescription] = useState("");
+  const [specialPaperDeadline, setSpecialPaperDeadline] = useState("");
   const [newPaperData, setNewPaperData] = useState({
     date: new Date().toISOString().split('T')[0],
     companyName: "",
@@ -53,6 +91,8 @@ const BoardPapers = () => {
 
   useEffect(() => {
     fetchOrganizationData();
+    fetchMeetingMinutes();
+    fetchSpecialPapers();
   }, []);
 
   useEffect(() => {
@@ -318,6 +358,274 @@ const BoardPapers = () => {
     }
   };
 
+  const fetchMeetingMinutes = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('org_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.org_id) return;
+
+      const { data, error } = await supabase
+        .from('meeting_minutes')
+        .select('*')
+        .eq('org_id', profile.org_id)
+        .order('meeting_date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching minutes:', error);
+        return;
+      }
+
+      setMeetingMinutes(data || []);
+    } catch (error) {
+      console.error('Error in fetchMeetingMinutes:', error);
+    }
+  };
+
+  const fetchSpecialPapers = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('org_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.org_id) return;
+
+      const { data, error } = await supabase
+        .from('special_papers')
+        .select('*')
+        .eq('org_id', profile.org_id)
+        .order('uploaded_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching special papers:', error);
+        return;
+      }
+
+      setSpecialPapers(data || []);
+    } catch (error) {
+      console.error('Error in fetchSpecialPapers:', error);
+    }
+  };
+
+  const handleUploadMinutes = async () => {
+    if (!minutesFile || !minutesMeetingDate) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a file and meeting date.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('org_id, name')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.org_id) throw new Error("No organization found");
+
+      const fileExt = minutesFile.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const filePath = fileName;
+
+      const { error: uploadError } = await supabase.storage
+        .from('meeting-minutes')
+        .upload(filePath, minutesFile);
+
+      if (uploadError) throw uploadError;
+
+      const { error: dbError } = await supabase
+        .from('meeting_minutes')
+        .insert({
+          meeting_date: minutesMeetingDate,
+          meeting_type: minutesMeetingType,
+          file_name: minutesFile.name,
+          file_path: filePath,
+          uploaded_by: user.id,
+          uploaded_by_name: profile.name,
+          org_id: profile.org_id,
+          status: 'draft'
+        });
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "Minutes Uploaded",
+        description: "Meeting minutes uploaded successfully.",
+      });
+
+      setMinutesUploadOpen(false);
+      setMinutesFile(null);
+      setMinutesMeetingDate("");
+      setMinutesMeetingType("Regular Board Meeting");
+      fetchMeetingMinutes();
+    } catch (error) {
+      console.error('Error uploading minutes:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload minutes. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleUploadSpecialPaper = async () => {
+    if (!specialPaperFile || !specialPaperTitle || !specialPaperCategory) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('org_id, name')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.org_id) throw new Error("No organization found");
+
+      const fileExt = specialPaperFile.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const filePath = fileName;
+
+      const { error: uploadError } = await supabase.storage
+        .from('special-papers')
+        .upload(filePath, specialPaperFile);
+
+      if (uploadError) throw uploadError;
+
+      const { error: dbError } = await supabase
+        .from('special_papers')
+        .insert({
+          title: specialPaperTitle,
+          category: specialPaperCategory,
+          file_name: specialPaperFile.name,
+          file_path: filePath,
+          uploaded_by: user.id,
+          uploaded_by_name: profile.name,
+          org_id: profile.org_id,
+          description: specialPaperDescription || null,
+          deadline: specialPaperDeadline || null,
+          status: 'pending'
+        });
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "Special Paper Uploaded",
+        description: "Special paper uploaded successfully.",
+      });
+
+      setSpecialPaperUploadOpen(false);
+      setSpecialPaperFile(null);
+      setSpecialPaperTitle("");
+      setSpecialPaperCategory("");
+      setSpecialPaperDescription("");
+      setSpecialPaperDeadline("");
+      fetchSpecialPapers();
+    } catch (error) {
+      console.error('Error uploading special paper:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload special paper. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDownloadMinutes = async (minute: MeetingMinute) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('meeting-minutes')
+        .download(minute.file_path);
+
+      if (error) throw error;
+
+      const url = window.URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = minute.file_name;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download Started",
+        description: `Downloading ${minute.file_name}`,
+      });
+    } catch (error) {
+      console.error('Error downloading minutes:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download minutes. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadSpecialPaper = async (paper: SpecialPaper) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('special-papers')
+        .download(paper.file_path);
+
+      if (error) throw error;
+
+      const url = window.URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = paper.file_name;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download Started",
+        description: `Downloading ${paper.file_name}`,
+      });
+    } catch (error) {
+      console.error('Error downloading special paper:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download special paper. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Get unique periods and people for filters
   const uniquePeriods = Array.from(new Set(executiveReports.map(r => r.period_covered)));
   const uniquePeople = Array.from(new Set(executiveReports.map(r => r.uploaded_by_name)));
@@ -443,15 +751,127 @@ const BoardPapers = () => {
           <TabsContent value="minutes" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Minutes</CardTitle>
-                <CardDescription>
-                  Record and manage meeting minutes
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl">Meeting Minutes</CardTitle>
+                    <CardDescription className="text-base mt-1">
+                      Record and manage meeting minutes
+                    </CardDescription>
+                  </div>
+                  <Dialog open={minutesUploadOpen} onOpenChange={setMinutesUploadOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="accent" size="lg" className="shadow-lg hover:shadow-xl">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Minutes
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Upload Meeting Minutes</DialogTitle>
+                        <DialogDescription>
+                          Upload the minutes from a board meeting.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="minutes-file">Minutes File</Label>
+                          <Input
+                            id="minutes-file"
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            onChange={(e) => setMinutesFile(e.target.files?.[0] || null)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="meeting-date">Meeting Date</Label>
+                          <Input
+                            id="meeting-date"
+                            type="date"
+                            value={minutesMeetingDate}
+                            onChange={(e) => setMinutesMeetingDate(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="meeting-type">Meeting Type</Label>
+                          <Select value={minutesMeetingType} onValueChange={setMinutesMeetingType}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Regular Board Meeting">Regular Board Meeting</SelectItem>
+                              <SelectItem value="Special Meeting">Special Meeting</SelectItem>
+                              <SelectItem value="Annual General Meeting">Annual General Meeting</SelectItem>
+                              <SelectItem value="Emergency Meeting">Emergency Meeting</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setMinutesUploadOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleUploadMinutes} disabled={isUploading}>
+                          {isUploading ? "Uploading..." : "Upload Minutes"}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Minutes management will appear here.
-                </p>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-5 gap-4 px-4 text-sm font-medium text-muted-foreground">
+                    <div>Meeting Date</div>
+                    <div>Meeting Type</div>
+                    <div>Uploaded By</div>
+                    <div>Status</div>
+                    <div></div>
+                  </div>
+                  {meetingMinutes.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No minutes uploaded yet. Upload your first meeting minutes to get started.
+                    </div>
+                  ) : (
+                    meetingMinutes.map((minute) => (
+                      <div 
+                        key={minute.id}
+                        className="px-4 py-2 border rounded-lg hover:border-primary transition-all group bg-slate-50"
+                      >
+                        <div className="grid grid-cols-5 gap-4 items-center">
+                          <div>
+                            <p className="text-sm font-medium text-black">
+                              {new Date(minute.meeting_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-black">{minute.meeting_type}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-black">{minute.uploaded_by_name}</p>
+                          </div>
+                          <div>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              minute.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {minute.status}
+                            </span>
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="h-7 py-0.5"
+                              onClick={() => handleDownloadMinutes(minute)}
+                            >
+                              <Download className="w-3 h-3 mr-1" />
+                              Download
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -459,15 +879,151 @@ const BoardPapers = () => {
           <TabsContent value="special" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Special Papers</CardTitle>
-                <CardDescription>
-                  One-off matters to be sent out and later added to board papers
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl">Special Papers</CardTitle>
+                    <CardDescription className="text-base mt-1">
+                      One-off matters to be sent out and later added to board papers
+                    </CardDescription>
+                  </div>
+                  <Dialog open={specialPaperUploadOpen} onOpenChange={setSpecialPaperUploadOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="accent" size="lg" className="shadow-lg hover:shadow-xl">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Special Paper
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Upload Special Paper</DialogTitle>
+                        <DialogDescription>
+                          Upload a one-off matter or special paper for board consideration.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="special-title">Title *</Label>
+                          <Input
+                            id="special-title"
+                            placeholder="e.g., Capital Investment Proposal"
+                            value={specialPaperTitle}
+                            onChange={(e) => setSpecialPaperTitle(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="special-category">Category *</Label>
+                          <Select value={specialPaperCategory} onValueChange={setSpecialPaperCategory}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Strategic">Strategic</SelectItem>
+                              <SelectItem value="Financial">Financial</SelectItem>
+                              <SelectItem value="Governance">Governance</SelectItem>
+                              <SelectItem value="Risk">Risk</SelectItem>
+                              <SelectItem value="Compliance">Compliance</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="special-description">Description</Label>
+                          <Input
+                            id="special-description"
+                            placeholder="Brief description"
+                            value={specialPaperDescription}
+                            onChange={(e) => setSpecialPaperDescription(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="special-deadline">Deadline (Optional)</Label>
+                          <Input
+                            id="special-deadline"
+                            type="date"
+                            value={specialPaperDeadline}
+                            onChange={(e) => setSpecialPaperDeadline(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="special-file">Document File *</Label>
+                          <Input
+                            id="special-file"
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            onChange={(e) => setSpecialPaperFile(e.target.files?.[0] || null)}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setSpecialPaperUploadOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleUploadSpecialPaper} disabled={isUploading}>
+                          {isUploading ? "Uploading..." : "Upload Paper"}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Special papers list will appear here.
-                </p>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-6 gap-4 px-4 text-sm font-medium text-muted-foreground">
+                    <div>Title</div>
+                    <div>Category</div>
+                    <div>Uploaded By</div>
+                    <div>Deadline</div>
+                    <div>Status</div>
+                    <div></div>
+                  </div>
+                  {specialPapers.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No special papers yet. Upload your first special paper to get started.
+                    </div>
+                  ) : (
+                    specialPapers.map((paper) => (
+                      <div 
+                        key={paper.id}
+                        className="px-4 py-2 border rounded-lg hover:border-primary transition-all group bg-slate-50"
+                      >
+                        <div className="grid grid-cols-6 gap-4 items-center">
+                          <div>
+                            <p className="text-sm font-medium text-black">{paper.title}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-black">{paper.category}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-black">{paper.uploaded_by_name}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-black">
+                              {paper.deadline ? new Date(paper.deadline).toLocaleDateString() : 'None'}
+                            </p>
+                          </div>
+                          <div>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              paper.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {paper.status}
+                            </span>
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="h-7 py-0.5"
+                              onClick={() => handleDownloadSpecialPaper(paper)}
+                            >
+                              <Download className="w-3 h-3 mr-1" />
+                              Download
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

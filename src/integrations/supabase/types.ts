@@ -1266,6 +1266,75 @@ export type Database = {
           },
         ]
       }
+      meeting_minutes: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          board_id: string | null
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          meeting_date: string
+          meeting_type: string
+          org_id: string
+          status: string
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string
+          uploaded_by_name: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          board_id?: string | null
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          meeting_date: string
+          meeting_type?: string
+          org_id: string
+          status?: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by: string
+          uploaded_by_name: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          board_id?: string | null
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          meeting_date?: string
+          meeting_type?: string
+          org_id?: string
+          status?: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string
+          uploaded_by_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_minutes_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_minutes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           admin_email: string | null
@@ -1408,6 +1477,75 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      special_papers: {
+        Row: {
+          board_id: string | null
+          category: string
+          created_at: string
+          deadline: string | null
+          description: string | null
+          file_name: string
+          file_path: string
+          id: string
+          org_id: string
+          status: string
+          title: string
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string
+          uploaded_by_name: string
+        }
+        Insert: {
+          board_id?: string | null
+          category: string
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          file_name: string
+          file_path: string
+          id?: string
+          org_id: string
+          status?: string
+          title: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by: string
+          uploaded_by_name: string
+        }
+        Update: {
+          board_id?: string | null
+          category?: string
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          org_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string
+          uploaded_by_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_papers_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "special_papers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       staff_form_templates: {
         Row: {
