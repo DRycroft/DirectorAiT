@@ -50,19 +50,24 @@ const createFormSchema = (template: any[]) => {
     if (!field.enabled) return;
     
     const fieldId = field.id || field.label?.toLowerCase().replace(/\s+/g, '_');
+    const fieldType = field.field_type || field.type; // Handle both field_type and type
     
-    if (field.type === 'email') {
+    if (fieldType === 'email') {
       schemaFields[fieldId] = field.required 
         ? z.string().email("Invalid email address").min(1, `${field.label} is required`)
         : z.string().email("Invalid email address").optional().or(z.literal(''));
-    } else if (field.type === 'date') {
+    } else if (fieldType === 'date') {
       schemaFields[fieldId] = field.required 
         ? z.date({ required_error: `${field.label} is required` })
         : z.date().optional();
-    } else if (field.type === 'tel') {
+    } else if (fieldType === 'tel' || fieldType === 'phone') {
       schemaFields[fieldId] = field.required
         ? z.string().min(1, `${field.label} is required`)
         : z.string().optional();
+    } else if (fieldType === 'url') {
+      schemaFields[fieldId] = field.required
+        ? z.string().url("Invalid URL").min(1, `${field.label} is required`)
+        : z.string().url("Invalid URL").optional().or(z.literal(''));
     } else {
       schemaFields[fieldId] = field.required
         ? z.string().min(1, `${field.label} is required`)
@@ -249,11 +254,17 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
           .filter(r => r);
       }
 
-      // Separate custom fields from standard fields
+      // Separate custom fields from standard fields and convert dates
       const customFields: Record<string, any> = {};
       Object.keys(values).forEach(key => {
         if (!standardFields.has(key)) {
-          customFields[key] = values[key];
+          const value = values[key];
+          // Convert Date objects to ISO strings for storage
+          if (value instanceof Date) {
+            customFields[key] = value.toISOString().split('T')[0];
+          } else {
+            customFields[key] = value;
+          }
         }
       });
 
@@ -376,7 +387,9 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
       );
     }
 
-    if (fieldId === 'starting_date' || fieldId === 'finishing_date' || fieldId === 'date_of_birth') {
+    // Handle date fields with calendar
+    const fieldType = field.field_type || field.type;
+    if (fieldId === 'starting_date' || fieldId === 'finishing_date' || fieldId === 'date_of_birth' || fieldType === 'date') {
       return (
         <FormField
           key={fieldId}
