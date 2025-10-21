@@ -62,23 +62,25 @@ export default function BoardsManagement() {
         .from("profiles")
         .select("org_id")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (!profile?.org_id) return;
 
-      const query = supabase
+      let query = supabase
         .from("boards")
         .select("*")
         .eq("org_id", profile.org_id)
         .order("created_at", { ascending: false });
 
       if (!showArchived) {
-        query.eq("status", "active");
+        query = query.eq("status", "active");
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
+      
+      console.log("Fetched boards:", data);
       setBoards((data || []) as Board[]);
 
       // Fetch parent boards for dropdown
