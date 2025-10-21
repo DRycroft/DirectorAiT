@@ -11,10 +11,11 @@ import { TemplateSectionEditor, TemplateSection } from "@/components/TemplateSec
 import { StaffFormTemplateEditor, FormField } from "@/components/StaffFormTemplateEditor";
 import { MembersList } from "@/components/settings/MembersList";
 import { AddPersonDialog } from "@/components/AddPersonDialog";
+import RoleManagement from "@/components/settings/RoleManagement";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCircle, Plus, X } from "lucide-react";
+import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCircle, Plus, X, Shield } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import BoardManagement from "@/components/settings/BoardManagement";
 import { BOARD_POSITIONS, EXECUTIVE_POSITIONS, KEY_STAFF_POSITIONS } from "@/config/positions";
@@ -1776,6 +1777,16 @@ const Settings = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Role Management Tab */}
+          <TabsContent value="roles">
+            <RoleManagement />
+          </TabsContent>
+
+          {/* Role Management Tab */}
+          <TabsContent value="roles">
+            <RoleManagement />
           </TabsContent>
         </Tabs>
       </main>

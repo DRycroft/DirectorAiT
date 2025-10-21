@@ -1,11 +1,13 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GripVertical, Lock, Upload, Building2 } from "lucide-react";
+import { GripVertical, Lock, Upload, Building2, Save, Plus, Trash } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface TemplateSection {
   id: string;
@@ -64,7 +66,42 @@ export const BoardPaperTemplateBuilder = () => {
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [templateName, setTemplateName] = useState("");
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
+
+  const fetchTemplates = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("org_id")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile?.org_id) return;
+
+      const { data, error } = await supabase
+        .from("board_paper_templates")
+        .select("*")
+        .eq("org_id", profile.org_id)
+        .eq("template_type", "Board Papers")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setTemplates(data || []);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+    }
+  };
 
   const handleToggleSection = (id: string) => {
     setSections(sections.map(section => 
@@ -114,26 +151,112 @@ export const BoardPaperTemplateBuilder = () => {
     }
   };
 
-  const handleSaveTemplate = () => {
-    const enabledSections = sections.filter(s => s.enabled);
-    console.log("Saving template with sections:", enabledSections);
-    toast.success(`Template saved with ${enabledSections.length} sections`);
-  };
-
-  const handleCreateTemplate = () => {
-    if (!companyName) {
-      toast.error("Please enter your company name");
+  const handleSaveTemplate = async () => {
+    if (!templateName) {
+      toast.error("Please enter a template name");
       return;
     }
-    const enabledSections = sections.filter(s => s.enabled);
-    console.log("Creating template:", { companyName, logoUrl, sections: enabledSections });
-    toast.success("Board paper template created successfully!");
+
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("org_id")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile?.org_id) throw new Error("No organization found");
+
+      const templateData = {
+        org_id: profile.org_id,
+        template_name: templateName,
+        template_type: "Board Papers",
+        company_name: companyName,
+        logo_url: logoUrl,
+        sections: sections as any,
+        created_by: user.id,
+      };
+
+      if (selectedTemplateId) {
+        // Update existing template
+        const { error } = await supabase
+          .from("board_paper_templates")
+          .update(templateData)
+          .eq("id", selectedTemplateId);
+
+        if (error) throw error;
+        toast.success("Template updated successfully!");
+      } else {
+        // Create new template
+        const { error } = await supabase
+          .from("board_paper_templates")
+          .insert([templateData]);
+
+        if (error) throw error;
+        toast.success("Template saved successfully!");
+      }
+
+      await fetchTemplates();
+    } catch (error: any) {
+      console.error("Error saving template:", error);
+      toast.error(error.message || "Failed to save template");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLoadTemplate = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (!template) return;
+
+    setSelectedTemplateId(templateId);
+    setTemplateName(template.template_name);
+    setCompanyName(template.company_name || "");
+    setLogoUrl(template.logo_url);
+    setSections(template.sections || defaultSections);
+    toast.success("Template loaded");
+  };
+
+  const handleDeleteTemplate = async (templateId: string) => {
+    if (!confirm("Are you sure you want to delete this template?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("board_paper_templates")
+        .delete()
+        .eq("id", templateId);
+
+      if (error) throw error;
+
+      toast.success("Template deleted");
+      await fetchTemplates();
+
+      if (selectedTemplateId === templateId) {
+        handleResetTemplate();
+      }
+    } catch (error: any) {
+      console.error("Error deleting template:", error);
+      toast.error("Failed to delete template");
+    }
+  };
+
+  const handleNewTemplate = () => {
+    setSelectedTemplateId(null);
+    setTemplateName("");
+    setCompanyName("");
+    setLogoUrl(null);
+    setSections(defaultSections);
   };
 
   const handleResetTemplate = () => {
     setSections(defaultSections);
     setCompanyName("");
     setLogoUrl(null);
+    setTemplateName("");
+    setSelectedTemplateId(null);
     toast.success("Template reset to defaults");
   };
 
@@ -146,6 +269,56 @@ export const BoardPaperTemplateBuilder = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Template Management Section */}
+        <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Saved Templates</h3>
+            <Button onClick={handleNewTemplate} variant="outline" size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              New Template
+            </Button>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="savedTemplates">Load Template</Label>
+              <Select value={selectedTemplateId || ""} onValueChange={handleLoadTemplate}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a saved template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map((template) => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.template_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="templateName">Template Name</Label>
+              <Input
+                id="templateName"
+                placeholder="My Board Paper Template"
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {selectedTemplateId && (
+            <Button 
+              onClick={() => handleDeleteTemplate(selectedTemplateId)} 
+              variant="destructive" 
+              size="sm"
+            >
+              <Trash className="h-4 w-4 mr-2" />
+              Delete Template
+            </Button>
+          )}
+        </div>
+
         {/* Company Branding Section */}
         <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
           <h3 className="text-sm font-semibold flex items-center gap-2">
@@ -242,14 +415,12 @@ export const BoardPaperTemplateBuilder = () => {
         </div>
 
         <div className="flex gap-3 pt-4 border-t">
-          <Button onClick={handleCreateTemplate} size="lg" className="flex-1">
-            Create Template
+          <Button onClick={handleSaveTemplate} size="lg" className="flex-1" disabled={loading}>
+            <Save className="h-4 w-4 mr-2" />
+            {selectedTemplateId ? "Update Template" : "Save Template"}
           </Button>
-          <Button onClick={handleSaveTemplate} variant="outline" size="lg">
-            Save Changes
-          </Button>
-          <Button onClick={handleResetTemplate} variant="ghost" size="lg">
-            Reset
+          <Button onClick={handleResetTemplate} variant="outline" size="lg">
+            Reset to Defaults
           </Button>
         </div>
       </CardContent>

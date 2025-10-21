@@ -544,6 +544,56 @@ export type Database = {
           },
         ]
       }
+      board_paper_templates: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          created_by: string
+          id: string
+          is_default: boolean | null
+          logo_url: string | null
+          org_id: string
+          sections: Json
+          template_name: string
+          template_type: string
+          updated_at: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          is_default?: boolean | null
+          logo_url?: string | null
+          org_id: string
+          sections?: Json
+          template_name: string
+          template_type: string
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_default?: boolean | null
+          logo_url?: string | null
+          org_id?: string
+          sections?: Json
+          template_name?: string
+          template_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_paper_templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       board_role_overrides: {
         Row: {
           board_id: string
