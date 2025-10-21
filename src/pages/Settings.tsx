@@ -1605,40 +1605,6 @@ const Settings = () => {
               </Card>
             )}
 
-            {/* Staff Form Workspace Area */}
-            {selectedStaffFormType && selectedBoard && (
-              <Card className="mt-6">
-                <CardHeader className="border-b">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle>
-                        {selectedStaffFormType === "board_members" ? "Board Members" : 
-                         selectedStaffFormType === "executive_team" ? "Executive Team" : "Key Staff"}
-                      </CardTitle>
-                      <CardDescription>
-                        Manage members and customize form fields
-                      </CardDescription>
-                    </div>
-                    <div className="flex gap-2">
-                      <AddPersonDialog 
-                        boardId={selectedBoard}
-                        organizationName={organizationName}
-                        onSuccess={() => setRefreshMembers(prev => prev + 1)}
-                      />
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <MembersList
-                    boardId={selectedBoard}
-                    memberType={selectedStaffFormType === "board_members" ? "board" : 
-                               selectedStaffFormType === "executive_team" ? "executive" : "key_staff"}
-                    key={refreshMembers}
-                  />
-                </CardContent>
-              </Card>
-            )}
-
             {/* Form Template Editor */}
             {selectedStaffFormType && (
               <Card className="mt-6">
