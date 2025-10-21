@@ -3,7 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-export default function AuditHistory() {
+interface AuditHistoryProps {
+  memberId?: string;
+}
+
+export default function AuditHistory({ memberId }: AuditHistoryProps) {
   const { toast } = useToast();
 
   return (

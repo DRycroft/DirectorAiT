@@ -32,7 +32,7 @@ interface Profile {
   email: string;
 }
 
-export function AdminManagement() {
+export default function AdminManagement() {
   const [admins, setAdmins] = useState<OrgAdmin[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);

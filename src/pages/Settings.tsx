@@ -1002,7 +1002,7 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10 mb-8">
             <TabsTrigger value="company">Company Details</TabsTrigger>
             <TabsTrigger value="board">
               <Users className="mr-2 h-4 w-4" />
@@ -1017,6 +1017,26 @@ const Settings = () => {
               Key Staff
             </TabsTrigger>
             <TabsTrigger value="templates">Document Templates</TabsTrigger>
+            <TabsTrigger value="roles">
+              <Shield className="mr-2 h-4 w-4" />
+              Roles
+            </TabsTrigger>
+            <TabsTrigger value="admins">
+              <Shield className="mr-2 h-4 w-4" />
+              Admins
+            </TabsTrigger>
+            <TabsTrigger value="approvals">
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Approvals
+            </TabsTrigger>
+            <TabsTrigger value="coi">
+              <AlertCircle className="mr-2 h-4 w-4" />
+              COI
+            </TabsTrigger>
+            <TabsTrigger value="audit">
+              <Clock className="mr-2 h-4 w-4" />
+              Audit
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="company" className="space-y-4">

@@ -3,7 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-export default function COIManagement() {
+interface COIManagementProps {
+  memberId?: string;
+  isEditable?: boolean;
+}
+
+export default function COIManagement({ memberId, isEditable = true }: COIManagementProps) {
   const { toast } = useToast();
 
   return (
