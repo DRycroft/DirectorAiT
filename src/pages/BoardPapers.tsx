@@ -23,6 +23,7 @@ const BoardPapers = () => {
   const [createPaperDialogOpen, setCreatePaperDialogOpen] = useState(false);
   const [boardPapers, setBoardPapers] = useState<BoardPaper[]>([]);
   const [organization, setOrganization] = useState<any>(null);
+  const [selectedReportType, setSelectedReportType] = useState<string | null>(null);
   const [newPaperData, setNewPaperData] = useState({
     date: new Date().toISOString().split('T')[0],
     companyName: "",
@@ -299,71 +300,159 @@ const BoardPapers = () => {
           </TabsContent>
 
           <TabsContent value="exec" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-2xl">Executive Reports</CardTitle>
-                    <CardDescription className="text-base mt-1">
-                      Select report type to view or create reports
-                    </CardDescription>
+            {!selectedReportType ? (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-2xl">Executive Reports</CardTitle>
+                      <CardDescription className="text-base mt-1">
+                        Select report type to view or create reports
+                      </CardDescription>
+                    </div>
+                    <Button variant="accent" size="lg" className="shadow-lg hover:shadow-xl">Add New Report</Button>
                   </div>
-                  <Button variant="accent" size="lg" className="shadow-lg hover:shadow-xl">Add New Report</Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4 pt-6">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <Button variant="outline" className="justify-start h-auto py-6 border-primary/30 hover:border-primary hover:bg-primary/5 hover:shadow-lg transition-all group">
-                    <div className="text-left">
-                      <div className="font-semibold text-lg group-hover:text-primary transition-colors">Chair Report</div>
-                      <div className="text-xs text-muted-foreground mt-1">Board Chair updates</div>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-6">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <Button 
+                      variant="outline" 
+                      className="justify-start h-auto py-6 border-primary/30 hover:border-primary hover:bg-primary/5 hover:shadow-lg transition-all group"
+                      onClick={() => setSelectedReportType("Chair Report")}
+                    >
+                      <div className="text-left">
+                        <div className="font-semibold text-lg group-hover:text-primary transition-colors">Chair Report</div>
+                        <div className="text-xs text-muted-foreground mt-1">Board Chair updates</div>
+                      </div>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="justify-start h-auto py-6 border-accent/30 hover:border-accent hover:bg-accent/5 hover:shadow-lg transition-all group"
+                      onClick={() => setSelectedReportType("CEO Report")}
+                    >
+                      <div className="text-left">
+                        <div className="font-semibold text-lg group-hover:text-accent transition-colors">CEO Report</div>
+                        <div className="text-xs text-muted-foreground mt-1">Chief Executive updates</div>
+                      </div>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="justify-start h-auto py-6 border-primary/30 hover:border-primary hover:bg-primary/5 hover:shadow-lg transition-all group"
+                      onClick={() => setSelectedReportType("CFO Report")}
+                    >
+                      <div className="text-left">
+                        <div className="font-semibold text-lg group-hover:text-primary transition-colors">CFO Report</div>
+                        <div className="text-xs text-muted-foreground mt-1">Chief Financial Officer</div>
+                      </div>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="justify-start h-auto py-6 border-accent/30 hover:border-accent hover:bg-accent/5 hover:shadow-lg transition-all group"
+                      onClick={() => setSelectedReportType("OSH Report")}
+                    >
+                      <div className="text-left">
+                        <div className="font-semibold text-lg group-hover:text-accent transition-colors">OSH Report</div>
+                        <div className="text-xs text-muted-foreground mt-1">Occupational Safety & Health</div>
+                      </div>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="justify-start h-auto py-6 border-primary/30 hover:border-primary hover:bg-primary/5 hover:shadow-lg transition-all group"
+                      onClick={() => setSelectedReportType("Finance Report")}
+                    >
+                      <div className="text-left">
+                        <div className="font-semibold text-lg group-hover:text-primary transition-colors">Finance Report</div>
+                        <div className="text-xs text-muted-foreground mt-1">Financial performance</div>
+                      </div>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="justify-start h-auto py-6 border-accent/30 hover:border-accent hover:bg-accent/5 hover:shadow-lg transition-all group"
+                      onClick={() => setSelectedReportType("S&M Report")}
+                    >
+                      <div className="text-left">
+                        <div className="font-semibold text-lg group-hover:text-accent transition-colors">S&M Report</div>
+                        <div className="text-xs text-muted-foreground mt-1">Sales & Marketing</div>
+                      </div>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="justify-start h-auto py-6 border-primary/30 hover:border-primary hover:bg-primary/5 hover:shadow-lg transition-all group"
+                      onClick={() => setSelectedReportType("HR Report")}
+                    >
+                      <div className="text-left">
+                        <div className="font-semibold text-lg group-hover:text-primary transition-colors">HR Report</div>
+                        <div className="text-xs text-muted-foreground mt-1">Human Resources</div>
+                      </div>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="justify-start h-auto py-6 border-accent/30 hover:border-accent hover:bg-accent/5 hover:shadow-lg transition-all group"
+                      onClick={() => setSelectedReportType("KPIs Report")}
+                    >
+                      <div className="text-left">
+                        <div className="font-semibold text-lg group-hover:text-accent transition-colors">KPIs Report</div>
+                        <div className="text-xs text-muted-foreground mt-1">Key Performance Indicators</div>
+                      </div>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-2xl">{selectedReportType}</CardTitle>
+                      <CardDescription className="text-base mt-1">
+                        Repository of uploaded {selectedReportType.toLowerCase()}s
+                      </CardDescription>
                     </div>
-                  </Button>
-                  <Button variant="outline" className="justify-start h-auto py-6 border-accent/30 hover:border-accent hover:bg-accent/5 hover:shadow-lg transition-all group">
-                    <div className="text-left">
-                      <div className="font-semibold text-lg group-hover:text-accent transition-colors">CEO Report</div>
-                      <div className="text-xs text-muted-foreground mt-1">Chief Executive updates</div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={() => setSelectedReportType(null)}>
+                        Back to Reports
+                      </Button>
+                      <Button variant="accent" size="lg" className="shadow-lg hover:shadow-xl">
+                        Upload New Report
+                      </Button>
                     </div>
-                  </Button>
-                  <Button variant="outline" className="justify-start h-auto py-6 border-primary/30 hover:border-primary hover:bg-primary/5 hover:shadow-lg transition-all group">
-                    <div className="text-left">
-                      <div className="font-semibold text-lg group-hover:text-primary transition-colors">CFO Report</div>
-                      <div className="text-xs text-muted-foreground mt-1">Chief Financial Officer</div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-4 gap-4 px-4 text-sm font-medium text-muted-foreground">
+                      <div>Date Uploaded</div>
+                      <div>Uploaded By</div>
+                      <div>Period Covered</div>
+                      <div></div>
                     </div>
-                  </Button>
-                  <Button variant="outline" className="justify-start h-auto py-6 border-accent/30 hover:border-accent hover:bg-accent/5 hover:shadow-lg transition-all group">
-                    <div className="text-left">
-                      <div className="font-semibold text-lg group-hover:text-accent transition-colors">OSH Report</div>
-                      <div className="text-xs text-muted-foreground mt-1">Occupational Safety & Health</div>
+                    {/* Sample data - will be replaced with actual data from database */}
+                    <div className="px-4 py-1 border rounded-lg hover:border-primary transition-all cursor-pointer group bg-slate-50">
+                      <div className="grid grid-cols-4 gap-4 items-center">
+                        <div>
+                          <p className="text-sm font-medium text-black">01/03/2024</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-black">CEO Name</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-black">Q1 2024</p>
+                        </div>
+                        <div className="flex justify-end">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-white bg-black border-black hover:bg-primary hover:text-white hover:border-primary transition-colors h-7 py-0.5"
+                          >
+                            View Report
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                  </Button>
-                  <Button variant="outline" className="justify-start h-auto py-6 border-primary/30 hover:border-primary hover:bg-primary/5 hover:shadow-lg transition-all group">
-                    <div className="text-left">
-                      <div className="font-semibold text-lg group-hover:text-primary transition-colors">Finance Report</div>
-                      <div className="text-xs text-muted-foreground mt-1">Financial performance</div>
-                    </div>
-                  </Button>
-                  <Button variant="outline" className="justify-start h-auto py-6 border-accent/30 hover:border-accent hover:bg-accent/5 hover:shadow-lg transition-all group">
-                    <div className="text-left">
-                      <div className="font-semibold text-lg group-hover:text-accent transition-colors">S&M Report</div>
-                      <div className="text-xs text-muted-foreground mt-1">Sales & Marketing</div>
-                    </div>
-                  </Button>
-                  <Button variant="outline" className="justify-start h-auto py-6 border-primary/30 hover:border-primary hover:bg-primary/5 hover:shadow-lg transition-all group">
-                    <div className="text-left">
-                      <div className="font-semibold text-lg group-hover:text-primary transition-colors">HR Report</div>
-                      <div className="text-xs text-muted-foreground mt-1">Human Resources</div>
-                    </div>
-                  </Button>
-                  <Button variant="outline" className="justify-start h-auto py-6 border-accent/30 hover:border-accent hover:bg-accent/5 hover:shadow-lg transition-all group">
-                    <div className="text-left">
-                      <div className="font-semibold text-lg group-hover:text-accent transition-colors">KPIs Report</div>
-                      <div className="text-xs text-muted-foreground mt-1">Key Performance Indicators</div>
-                    </div>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </main>
