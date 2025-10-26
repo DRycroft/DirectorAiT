@@ -1957,6 +1957,25 @@ export type Database = {
         Args: { board_id: string; user_id: string }
         Returns: boolean
       }
+      log_audit_entry: {
+        Args: {
+          _action: string
+          _detail_json?: Json
+          _entity_id: string
+          _entity_type: string
+        }
+        Returns: undefined
+      }
+      log_board_member_audit: {
+        Args: {
+          _change_type: string
+          _field_name: string
+          _member_id: string
+          _new_value?: string
+          _old_value?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:

@@ -12,6 +12,18 @@ serve(async (req) => {
   }
 
   try {
+    // Verify cron secret for security (since JWT verification is disabled)
+    const cronSecret = req.headers.get("x-cron-secret");
+    const expectedSecret = Deno.env.get("CRON_SECRET") || "default-secret-change-me";
+    
+    if (cronSecret !== expectedSecret) {
+      console.error("Unauthorized: Invalid cron secret");
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -49,12 +61,12 @@ serve(async (req) => {
         })
         .eq("id", member.id);
 
-      // Create audit log
-      await supabase.from("board_member_audit").insert({
-        member_id: member.id,
-        field_name: "annual_review_reminder",
-        new_value: "Annual review reminder sent",
-        change_type: "updated",
+      // Create audit log using the new secure function
+      await supabase.rpc("log_board_member_audit", {
+        _member_id: member.id,
+        _field_name: "annual_review_reminder",
+        _change_type: "updated",
+        _new_value: "Annual review reminder sent",
       });
 
       const reviewLink = `${Deno.env.get("SUPABASE_URL")
