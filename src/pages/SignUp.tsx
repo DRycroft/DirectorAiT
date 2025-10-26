@@ -9,29 +9,50 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
+import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 
 const signUpSchema = z.object({
   // User details
-  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
-  email: z.string().trim().email("Invalid email address").max(255),
-  password: z.string().min(8, "Password must be at least 8 characters").max(100),
-  phone: z.string().trim().optional(),
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100)
+    .refine(s => s.length > 0, "Name cannot be empty"),
+  email: z.string().trim().email("Invalid email address").max(255).toLowerCase(),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128, "Password is too long")
+    .refine(
+      (pwd) => /[A-Z]/.test(pwd) && /[a-z]/.test(pwd) && /[0-9]/.test(pwd),
+      "Password must contain uppercase, lowercase, and numbers"
+    ),
+  phone: z.string().trim()
+    .regex(/^(\+64|0)\d{8,10}$/, "Invalid NZ phone number format")
+    .optional()
+    .or(z.literal('')),
   
   // Company details
-  companyName: z.string().trim().min(2, "Company name required").max(100),
-  businessNumber: z.string().trim().optional(),
+  companyName: z.string().trim().min(2, "Company name required").max(200)
+    .refine(s => s.length > 0, "Company name cannot be empty"),
+  businessNumber: z.string().trim()
+    .regex(/^\d{8,13}$/, "Invalid business number (8-13 digits)")
+    .optional()
+    .or(z.literal('')),
   
   // Primary contact
-  primaryContactName: z.string().trim().min(2, "Primary contact name required").max(100),
+  primaryContactName: z.string().trim().min(2, "Primary contact name required").max(200),
   primaryContactRole: z.string().trim().min(2, "Role required").max(100),
-  primaryContactEmail: z.string().trim().email("Invalid email").max(255),
-  primaryContactPhone: z.string().trim().optional(),
+  primaryContactEmail: z.string().trim().email("Invalid email").max(255).toLowerCase(),
+  primaryContactPhone: z.string().trim()
+    .regex(/^(\+64|0)\d{8,10}$/, "Invalid NZ phone number format")
+    .optional()
+    .or(z.literal('')),
   
   // Admin details
-  adminName: z.string().trim().min(2, "Admin name required").max(100),
+  adminName: z.string().trim().min(2, "Admin name required").max(200),
   adminRole: z.string().trim().min(2, "Admin role required").max(100),
-  adminEmail: z.string().trim().email("Invalid email").max(255),
-  adminPhone: z.string().trim().optional(),
+  adminEmail: z.string().trim().email("Invalid email").max(255).toLowerCase(),
+  adminPhone: z.string().trim()
+    .regex(/^(\+64|0)\d{8,10}$/, "Invalid NZ phone number format")
+    .optional()
+    .or(z.literal('')),
   
   // Board reporting
   reportingFrequency: z.enum(['monthly', 'bi-monthly', 'quarterly', 'biannually']),
@@ -149,8 +170,8 @@ const SignUp = () => {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
-        console.error("Signup error:", error);
-        toast.error(error instanceof Error ? error.message : "Failed to create account");
+        logError("SignUp", error);
+        toast.error(getUserFriendlyError(error));
       }
     } finally {
       setLoading(false);

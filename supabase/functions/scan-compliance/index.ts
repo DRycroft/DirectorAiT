@@ -245,8 +245,11 @@ Provide 15-25 requirements for this sector. Be thorough and specific to NZ regul
     });
 
   } catch (error) {
-    console.error('Error in scan-compliance function:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
+    console.error('[INTERNAL] Error in scan-compliance function:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Unable to scan compliance requirements. Please try again later.',
+      success: false 
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

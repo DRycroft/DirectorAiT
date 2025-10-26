@@ -135,9 +135,11 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error processing document:", error);
+    console.error("[INTERNAL] Error processing document:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ 
+        error: "Unable to process document. Please try again later."
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

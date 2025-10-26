@@ -1944,14 +1944,8 @@ export type Database = {
         Args: { p_org_id: string }
         Returns: undefined
       }
-      generate_member_invite_token: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_org_id: {
-        Args: { user_id: string }
-        Returns: string
-      }
+      generate_member_invite_token: { Args: never; Returns: string }
+      get_user_org_id: { Args: { user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
