@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -70,6 +71,30 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { description } = await req.json();
 
     if (!description || description.trim().length < 3) {
@@ -165,6 +190,17 @@ Be precise - only use industry names exactly as provided in the list.`;
     const recommendedIndustry = analysis.recommended_industry;
     const availableCategories = industryCategories[recommendedIndustry as keyof typeof industryCategories] || [];
     
+    // Log function invocation for audit trail
+    await supabase.rpc('log_audit_entry', {
+      _entity_type: 'edge_function',
+      _entity_id: crypto.randomUUID(),
+      _action: 'analyze_business_invoked',
+      _detail_json: { 
+        description_length: description.length,
+        recommended_industry: recommendedIndustry
+      }
+    });
+
     return new Response(JSON.stringify({
       success: true,
       recommended_industry: recommendedIndustry,
