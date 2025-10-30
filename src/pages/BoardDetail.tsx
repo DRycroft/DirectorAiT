@@ -144,35 +144,47 @@ const BoardDetail = () => {
           onCustomRangeChange={setCustomRange}
         />
 
+        {/* Priority Matters - Top of page */}
+        <div className="mt-8">
+          <BoardPulseSection />
+        </div>
+
         {/* Dashboard Sections */}
         <div className="space-y-8 mt-8">
-          {/* Board Pulse */}
-          <BoardPulseSection />
-
           <Separator />
 
           {/* Financial Health */}
-          <FinancialSection />
+          <div id="financial-section" className="border-4 border-red-500 rounded-lg p-4">
+            <FinancialSection />
+          </div>
 
           <Separator />
 
           {/* People & HR */}
-          <PeopleSection />
+          <div id="people-section" className="border-4 border-amber-500 rounded-lg p-4">
+            <PeopleSection />
+          </div>
 
           <Separator />
 
           {/* Health & Safety */}
-          <HealthSafetySection />
+          <div id="health-safety-section" className="border-4 border-green-500 rounded-lg p-4">
+            <HealthSafetySection />
+          </div>
 
           <Separator />
 
           {/* Customers & Sales */}
-          <CustomersSalesSection />
+          <div id="customers-sales-section" className="border-4 border-amber-500 rounded-lg p-4">
+            <CustomersSalesSection />
+          </div>
 
           <Separator />
 
           {/* Governance & Board Actions */}
-          <GovernanceSection />
+          <div id="governance-section" className="border-4 border-green-500 rounded-lg p-4">
+            <GovernanceSection />
+          </div>
         </div>
       </main>
     </div>
