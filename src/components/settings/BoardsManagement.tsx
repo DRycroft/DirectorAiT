@@ -169,6 +169,11 @@ export default function BoardsManagement() {
         org_id: profile.org_id,
       };
 
+      console.log("=== Board Creation Debug ===");
+      console.log("User ID:", user.id);
+      console.log("Profile org_id:", profile.org_id);
+      console.log("Board data to insert:", boardData);
+
       if (editingBoard) {
         const { error } = await supabase
           .from("boards")
@@ -176,6 +181,13 @@ export default function BoardsManagement() {
           .eq("id", editingBoard.id);
 
         if (error) {
+          console.error("Update board error details:", {
+            error,
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
           logError("BoardsManagement.updateBoard", error);
           throw error;
         }
@@ -192,6 +204,14 @@ export default function BoardsManagement() {
           .single();
 
         if (error) {
+          console.error("Create board error details:", {
+            error,
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            boardData
+          });
           logError("BoardsManagement.createBoard", error);
           throw error;
         }
