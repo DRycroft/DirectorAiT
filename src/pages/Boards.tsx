@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Users, Calendar, FileText, Settings } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { logError } from "@/lib/errorHandling";
 
 const Boards = () => {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ const Boards = () => {
       if (error) throw error;
       setBoards(data || []);
     } catch (error: any) {
-      console.error("Error fetching boards:", error);
+      logError("Boards - Fetch boards", error);
       toast({
         title: "Error",
         description: "Failed to load boards",

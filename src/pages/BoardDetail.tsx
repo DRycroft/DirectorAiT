@@ -4,7 +4,7 @@ import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { getUserFriendlyError } from "@/lib/errorHandling";
+import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 import { Settings } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TemporalFilter, TemporalPeriod, BaselineType } from "@/components/dashboard/TemporalFilter";
@@ -59,12 +59,11 @@ const BoardDetail = () => {
         .maybeSingle();
 
       if (boardError) {
-        console.error("Board fetch error:", boardError);
+        logError("BoardDetail - Board fetch", boardError);
         throw boardError;
       }
 
       if (!boardData) {
-        console.log("No board data returned - user may not have access");
         setBoard(null);
         setLoading(false);
         return;
@@ -72,7 +71,7 @@ const BoardDetail = () => {
 
       setBoard(boardData);
     } catch (error: any) {
-      console.error("Error fetching board data:", error);
+      logError("BoardDetail - Fetch board data", error);
       const errorMessage = getUserFriendlyError(error);
       toast({
         title: "Error",

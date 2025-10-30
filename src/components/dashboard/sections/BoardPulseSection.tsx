@@ -78,11 +78,11 @@ export const BoardPulseSection = ({ data }: BoardPulseSectionProps) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {priorityIssues.map((issue, index) => {
+        {priorityIssues.map((issue) => {
           const config = severityConfig[issue.severity];
           return (
             <Card
-              key={index}
+              key={`${issue.sectionId}-${issue.title}`}
               className={cn(
                 "border-l-4 cursor-pointer transition-all",
                 config.borderColor,

@@ -176,7 +176,7 @@ export const FinancialSection = () => {
                       label
                     >
                       {agedDebtorsData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell key={`cell-${entry.range}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
                   </PieChart>

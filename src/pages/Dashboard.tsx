@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Users, FileText, CheckCircle2, AlertCircle, TrendingUp, Calendar } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { logError } from "@/lib/errorHandling";
 
 interface DashboardStats {
   totalBoards: number;
@@ -91,7 +92,7 @@ const Dashboard = () => {
 
       setBoards(boardsData || []);
     } catch (error: any) {
-      console.error("Error fetching dashboard data:", error);
+      logError("Dashboard - Fetch dashboard data", error);
       toast({
         title: "Error",
         description: "Failed to load dashboard data",

@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Briefcase, UserCog, Eye, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { logError } from "@/lib/errorHandling";
 
 const BoardAndTeam = () => {
   const { boardId } = useParams();
@@ -31,13 +32,10 @@ const BoardAndTeam = () => {
   }, [boardId]);
 
   const checkAuth = async () => {
-    console.log("BoardAndTeam - checkAuth called, boardId:", boardId);
     const { data: { user } } = await supabase.auth.getUser();
-    console.log("BoardAndTeam - user:", user?.id);
     
     if (!user) {
       // Public view
-      console.log("BoardAndTeam - No user, setting public view");
       setViewerRole('public');
       await fetchBoardData();
       return;
@@ -51,8 +49,6 @@ const BoardAndTeam = () => {
       .eq("user_id", user.id)
       .single();
 
-    console.log("BoardAndTeam - membership:", membership);
-
     if (membership) {
       setViewerRole(membership.role === "chair" || membership.role === "admin" ? "admin" : "internal");
     } else {
@@ -64,7 +60,6 @@ const BoardAndTeam = () => {
 
   const fetchBoardData = async () => {
     try {
-      console.log("BoardAndTeam - fetchBoardData called for boardId:", boardId);
       setLoading(true);
 
       // Fetch board details
@@ -74,7 +69,6 @@ const BoardAndTeam = () => {
         .eq("id", boardId)
         .single();
 
-      console.log("BoardAndTeam - boardData:", boardData, "error:", boardError);
       if (boardError) throw boardError;
       setBoard(boardData);
 
@@ -86,7 +80,6 @@ const BoardAndTeam = () => {
         .eq("status", "active")
         .order("position");
 
-      console.log("BoardAndTeam - allMembers:", allMembers, "error:", membersError);
       if (membersError) throw membersError;
 
       // Separate by type
@@ -94,18 +87,12 @@ const BoardAndTeam = () => {
       const executivesFiltered = allMembers?.filter(m => m.member_type === "executive") || [];
       const keyStaffFiltered = allMembers?.filter(m => m.member_type === "key_staff") || [];
       
-      console.log("BoardAndTeam - filtered counts:", {
-        board: boardMembersFiltered.length,
-        executives: executivesFiltered.length,
-        keyStaff: keyStaffFiltered.length
-      });
-      
       setBoardMembers(boardMembersFiltered);
       setExecutives(executivesFiltered);
       setKeyStaff(keyStaffFiltered);
 
     } catch (error: any) {
-      console.error("BoardAndTeam - Error fetching board data:", error);
+      logError("BoardAndTeam - Fetch board data", error);
       toast({
         title: "Error",
         description: "Failed to load board data",

@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, UserPlus, Trash2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { logError } from "@/lib/errorHandling";
 
 const AVAILABLE_ROLES = [
   { value: "super_admin", label: "Super Admin", description: "Full system access" },
@@ -90,7 +91,7 @@ export const RoleManagement = () => {
       }
 
     } catch (error: any) {
-      console.error("Error fetching data:", error);
+      logError("RoleManagement - Fetch data", error);
       toast({
         title: "Error",
         description: "Failed to load role data",
@@ -145,7 +146,7 @@ export const RoleManagement = () => {
       setSelectedRole("");
       await fetchData();
     } catch (error: any) {
-      console.error("Error assigning role:", error);
+      logError("RoleManagement - Assign role", error);
       toast({
         title: "Error",
         description: error.message || "Failed to assign role",
@@ -172,7 +173,7 @@ export const RoleManagement = () => {
 
       await fetchData();
     } catch (error: any) {
-      console.error("Error removing role:", error);
+      logError("RoleManagement - Remove role", error);
       toast({
         title: "Error",
         description: "Failed to remove role",

@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { getPositionsByType } from "@/config/positions";
 import { AddPersonDialog } from "@/components/AddPersonDialog";
+import { logError } from "@/lib/errorHandling";
 
 const TeamOverview = () => {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ const TeamOverview = () => {
       }
 
     } catch (error: any) {
-      console.error("Error fetching team data:", error);
+      logError("TeamOverview - Fetch team data", error);
       toast({
         title: "Error",
         description: "Failed to load team data",
@@ -179,8 +180,8 @@ const TeamOverview = () => {
                     <h4 className="font-medium mb-1">Skills & Competencies</h4>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {selectedMember.skills_competencies && Array.isArray(selectedMember.skills_competencies) && selectedMember.skills_competencies.length > 0 ? (
-                        selectedMember.skills_competencies.map((skill: string, index: number) => (
-                          <Badge key={index} variant="secondary">{skill}</Badge>
+                        selectedMember.skills_competencies.map((skill: string) => (
+                          <Badge key={`${selectedMember.id}-skill-${skill}`} variant="secondary">{skill}</Badge>
                         ))
                       ) : (
                         <p className="text-sm text-muted-foreground">No skills listed</p>
@@ -250,7 +251,7 @@ const TeamOverview = () => {
                     {selectedMember.reappointment_history && Array.isArray(selectedMember.reappointment_history) && selectedMember.reappointment_history.length > 0 ? (
                       <ul className="space-y-2 mt-2">
                         {selectedMember.reappointment_history.map((record: any, index: number) => (
-                          <li key={index} className="text-sm text-muted-foreground">
+                          <li key={`${selectedMember.id}-reappointment-${index}-${record.date || index}`} className="text-sm text-muted-foreground">
                             {JSON.stringify(record)}
                           </li>
                         ))}

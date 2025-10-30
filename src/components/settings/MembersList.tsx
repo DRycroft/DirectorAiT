@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Mail, Copy, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { logError } from "@/lib/errorHandling";
 
 interface Member {
   id: string;
@@ -43,7 +44,7 @@ export function MembersList({ boardId, memberType, onRefresh }: MembersListProps
       if (error) throw error;
       setMembers(data || []);
     } catch (error: any) {
-      console.error("Error loading members:", error);
+      logError("MembersList - Load members", error);
       toast({
         title: "Error",
         description: "Failed to load members",
@@ -83,7 +84,7 @@ export function MembersList({ boardId, memberType, onRefresh }: MembersListProps
 
       loadMembers();
     } catch (error: any) {
-      console.error("Error generating invite:", error);
+      logError("MembersList - Generate invite", error);
       toast({
         title: "Error",
         description: "Failed to generate invite link",

@@ -8,6 +8,7 @@ import { GripVertical, Lock, Upload, Building2, Save, Plus, Trash } from "lucide
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { logError } from "@/lib/errorHandling";
 
 interface TemplateSection {
   id: string;
@@ -99,7 +100,7 @@ export const BoardPaperTemplateBuilder = () => {
       if (error) throw error;
       setTemplates(data || []);
     } catch (error) {
-      console.error("Error fetching templates:", error);
+      logError("BoardPaperTemplateBuilder - Fetch templates", error);
     }
   };
 
@@ -201,7 +202,7 @@ export const BoardPaperTemplateBuilder = () => {
 
       await fetchTemplates();
     } catch (error: any) {
-      console.error("Error saving template:", error);
+      logError("BoardPaperTemplateBuilder - Save template", error);
       toast.error(error.message || "Failed to save template");
     } finally {
       setLoading(false);
@@ -238,7 +239,7 @@ export const BoardPaperTemplateBuilder = () => {
         handleResetTemplate();
       }
     } catch (error: any) {
-      console.error("Error deleting template:", error);
+      logError("BoardPaperTemplateBuilder - Delete template", error);
       toast.error("Failed to delete template");
     }
   };

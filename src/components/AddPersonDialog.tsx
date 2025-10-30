@@ -39,6 +39,7 @@ import { getPositionsByType } from "@/config/positions";
 import { Combobox } from "@/components/ui/combobox";
 import { Card } from "@/components/ui/card";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { logError } from "@/lib/errorHandling";
 
 // Create dynamic schema based on template
 const createFormSchema = (template: any[]) => {
@@ -174,19 +175,16 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
           .single();
 
         if (templateError) {
-          console.error("Error fetching template:", templateError);
+          logError("AddPersonDialog - Template fetch", templateError);
         }
 
         if (template?.fields) {
           const fields = template.fields as any[];
-          console.log("Loaded template fields:", fields.map(f => ({ id: f.id, label: f.label, order: f.order, enabled: f.enabled })));
           
           // Sort by order and filter enabled fields
           const sortedFields = fields
             .filter(f => f.enabled)
             .sort((a, b) => a.order - b.order);
-          
-          console.log("Filtered and sorted fields:", sortedFields.length);
           setFormTemplate(sortedFields);
           
           // Update form schema based on template
@@ -202,7 +200,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
           form.reset(defaultValues);
         }
       } catch (error) {
-        console.error("Error loading form template:", error);
+        logError("AddPersonDialog - Template load", error);
       } finally {
         setLoadingTemplate(false);
       }
@@ -305,7 +303,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
       setOpen(false);
       onSuccess();
     } catch (error: any) {
-      console.error("Error adding team member:", error);
+      logError("AddPersonDialog - Add member", error);
       toast({
         title: "Error",
         description: error.message || "Failed to add team member",
