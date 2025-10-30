@@ -59,7 +59,7 @@ const BoardDetail = () => {
           board_settings(*)
         `)
         .eq("id", boardId)
-        .single();
+        .maybeSingle();
 
       if (boardError) throw boardError;
 
