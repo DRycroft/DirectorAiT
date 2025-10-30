@@ -44,7 +44,7 @@ const MemberApproval = () => {
         .from("board_members")
         .select("*, boards(title)")
         .eq("id", memberId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       setMember(data);

@@ -59,7 +59,7 @@ const MemberInvite = () => {
         .select("*")
         .eq("invite_token", token)
         .eq("status", "invited")
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       

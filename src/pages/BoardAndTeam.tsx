@@ -48,7 +48,7 @@ const BoardAndTeam = () => {
       .select("role")
       .eq("board_id", boardId)
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (membership) {
       setViewerRole(membership.role === "chair" || membership.role === "admin" ? "admin" : "internal");
