@@ -149,10 +149,6 @@ export default function BoardsManagement() {
         .eq("id", user.id)
         .single();
 
-      console.log("[BoardsManagement] User ID:", user.id);
-      console.log("[BoardsManagement] Profile data:", profile);
-      console.log("[BoardsManagement] Profile error:", profileError);
-
       if (profileError) {
         logError("BoardsManagement.handleSubmit", profileError);
         toast({
@@ -240,9 +236,6 @@ export default function BoardsManagement() {
         committee_purpose: formData.committee_purpose?.trim() || null,
         org_id: orgId,
       };
-
-      console.log("[BoardsManagement] About to insert board with data:", boardData);
-      console.log("[BoardsManagement] orgId being used:", orgId);
 
       if (editingBoard) {
         const { error } = await supabase
