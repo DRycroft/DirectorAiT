@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
+import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,13 @@ interface ParentBoard {
 interface BoardWithChildren extends Board {
   children?: Board[];
 }
+
+const boardSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
+  description: z.string().trim().max(2000, "Description must be less than 2000 characters").optional().or(z.literal("")),
+  board_type: z.enum(['main', 'sub_committee', 'special_purpose']),
+  committee_purpose: z.string().trim().max(2000, "Purpose must be less than 2000 characters").optional().or(z.literal("")),
+});
 
 export default function BoardsManagement() {
   const [boards, setBoards] = useState<Board[]>([]);
@@ -110,7 +118,7 @@ export default function BoardsManagement() {
 
       setParentBoards(activeBoards || []);
     } catch (error: any) {
-      console.error("Error fetching boards:", error);
+      logError("BoardsManagement.fetchBoards", error);
       toast({
         title: "Error",
         description: error.message,
@@ -160,19 +168,33 @@ export default function BoardsManagement() {
         return;
       }
 
+      // Validate input
+      try {
+        boardSchema.parse({
+          title: formData.title,
+          description: formData.description,
+          board_type: formData.board_type,
+          committee_purpose: formData.committee_purpose,
+        });
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          toast({
+            title: "Validation Error",
+            description: error.errors[0].message,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
       const boardData = {
-        title: formData.title,
-        description: formData.description || null,
+        title: formData.title.trim(),
+        description: formData.description?.trim() || null,
         board_type: formData.board_type,
         parent_board_id: formData.parent_board_id === "none" ? null : formData.parent_board_id,
-        committee_purpose: formData.committee_purpose || null,
+        committee_purpose: formData.committee_purpose?.trim() || null,
         org_id: profile.org_id,
       };
-
-      console.log("=== Board Creation Debug ===");
-      console.log("User ID:", user.id);
-      console.log("Profile org_id:", profile.org_id);
-      console.log("Board data to insert:", boardData);
 
       if (editingBoard) {
         const { error } = await supabase
@@ -181,13 +203,6 @@ export default function BoardsManagement() {
           .eq("id", editingBoard.id);
 
         if (error) {
-          console.error("Update board error details:", {
-            error,
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint
-          });
           logError("BoardsManagement.updateBoard", error);
           throw error;
         }
@@ -204,14 +219,6 @@ export default function BoardsManagement() {
           .single();
 
         if (error) {
-          console.error("Create board error details:", {
-            error,
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            boardData
-          });
           logError("BoardsManagement.createBoard", error);
           throw error;
         }

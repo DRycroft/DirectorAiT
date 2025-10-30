@@ -41,7 +41,6 @@ serve(async (req) => {
       .lt("profile_completed_at", oneYearAgo.toISOString());
 
     if (error) {
-      console.error("Error fetching members:", error);
       throw error;
     }
 
@@ -69,11 +68,7 @@ serve(async (req) => {
         _new_value: "Annual review reminder sent",
       });
 
-      const reviewLink = `${Deno.env.get("SUPABASE_URL")
-        ?.replace("supabase.co", "lovableproject.com")
-        || ""}/member-invite?token=${reviewToken}`;
-
-      console.log(`Annual review reminder for ${member.full_name}: ${reviewLink}`);
+      console.log(`Annual review reminder sent to member ${member.id}`);
 
       // TODO: Send email notification
       // For now, just log the review link

@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getUserFriendlyError, logError } from "@/lib/errorHandling";
+import { z } from "zod";
 import { Plus, Mail } from "lucide-react";
 import { MembersList } from "./MembersList";
 import { AddPersonDialog } from "../AddPersonDialog";
@@ -17,6 +19,13 @@ interface BoardManagementProps {
   description: string;
   positions: string[];
 }
+
+const memberInviteSchema = z.object({
+  board_id: z.string().min(1, "Board is required"),
+  full_name: z.string().trim().min(1, "Full name is required").max(100, "Name must be less than 100 characters"),
+  personal_email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  position: z.string().trim().max(100, "Position must be less than 100 characters").optional().or(z.literal("")),
+});
 
 const BoardManagement = ({ memberType, title, description, positions }: BoardManagementProps) => {
   const { toast } = useToast();
@@ -76,7 +85,7 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
         setSelectedBoard(boardsData[0].id);
       }
     } catch (error: any) {
-      console.error("Error fetching data:", error);
+      logError("BoardManagement.fetchData", error);
       toast({
         title: "Error",
         description: "Failed to load data",
@@ -88,13 +97,18 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
   };
 
   const handleInvite = async () => {
-    if (!formData.board_id || !formData.full_name || !formData.personal_email) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
+    // Validate input
+    try {
+      memberInviteSchema.parse(formData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     try {
@@ -107,9 +121,9 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
       const { error } = await supabase.from("board_members").insert({
         board_id: formData.board_id,
         member_type: memberType,
-        position: formData.position || null,
-        full_name: formData.full_name,
-        personal_email: formData.personal_email,
+        position: formData.position?.trim() || null,
+        full_name: formData.full_name.trim(),
+        personal_email: formData.personal_email.trim(),
         status: "invited",
         invite_token: tokenData,
         invite_sent_at: new Date().toISOString(),
@@ -117,14 +131,10 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
 
       if (error) throw error;
 
-      const inviteLink = `${window.location.origin}/member-invite?token=${tokenData}`;
-
       toast({
         title: "Member invited",
         description: `Invite sent to ${formData.personal_email}`,
       });
-
-      console.log("Invite link:", inviteLink);
 
       setFormData({
         board_id: "",
@@ -135,10 +145,10 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
       setDialogOpen(false);
       setRefreshMembers(prev => prev + 1);
     } catch (error: any) {
-      console.error("Error inviting member:", error);
+      logError("BoardManagement.handleInvite", error);
       toast({
         title: "Error",
-        description: "Failed to invite member",
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     }

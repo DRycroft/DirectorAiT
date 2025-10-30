@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -29,8 +30,8 @@ const Auth = () => {
       toast.success("Signed in successfully!");
       navigate("/dashboard");
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to sign in");
+      logError("Auth.handleLogin", error);
+      toast.error(getUserFriendlyError(error));
     } finally {
       setLoading(false);
     }

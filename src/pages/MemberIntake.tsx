@@ -7,8 +7,20 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
 import { UserPlus, Shield, Link as LinkIcon } from "lucide-react";
+
+const memberIntakeSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  linkedinUrl: z.string().trim().url("Invalid LinkedIn URL").optional().or(z.literal("")),
+  organizationUrl: z.string().trim().url("Invalid organization URL").optional().or(z.literal("")),
+  additionalLinks: z.string().trim().max(2000, "Additional links must be less than 2000 characters").optional().or(z.literal("")),
+  consentGiven: z.boolean(),
+  consentPublicData: z.boolean(),
+});
 
 const MemberIntake = () => {
   const { toast } = useToast();
@@ -26,6 +38,20 @@ const MemberIntake = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate input
+    try {
+      memberIntakeSchema.parse(formData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     if (!formData.consentGiven) {
       toast({
         title: "Consent Required",
@@ -40,7 +66,15 @@ const MemberIntake = () => {
     try {
       // This would call an edge function to initiate member scanning
       const { data, error } = await supabase.functions.invoke("member-intake", {
-        body: formData,
+        body: {
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          linkedinUrl: formData.linkedinUrl.trim(),
+          organizationUrl: formData.organizationUrl.trim(),
+          additionalLinks: formData.additionalLinks.trim(),
+          consentGiven: formData.consentGiven,
+          consentPublicData: formData.consentPublicData,
+        },
       });
 
       if (error) throw error;
@@ -61,10 +95,10 @@ const MemberIntake = () => {
         consentPublicData: false,
       });
     } catch (error: any) {
-      console.error("Error submitting member intake:", error);
+      logError("MemberIntake.handleSubmit", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to submit member information",
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     } finally {

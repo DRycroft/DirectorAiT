@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 import { Shield, User, Crown, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -77,10 +78,10 @@ export default function AdminManagement() {
       if (primary) setSelectedPrimaryAdmin(primary.user_id);
       if (secondary) setSelectedSecondaryAdmin(secondary.user_id);
     } catch (error) {
-      console.error("Error fetching admins:", error);
+      logError("AdminManagement.fetchAdmins", error);
       toast({
         title: "Error",
-        description: "Failed to load admin information",
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     } finally {
@@ -110,7 +111,7 @@ export default function AdminManagement() {
       if (error) throw error;
       setProfiles(data || []);
     } catch (error) {
-      console.error("Error fetching profiles:", error);
+      logError("AdminManagement.fetchProfiles", error);
     }
   };
 
@@ -184,10 +185,10 @@ export default function AdminManagement() {
 
       fetchAdmins();
     } catch (error) {
-      console.error("Error assigning admin:", error);
+      logError("AdminManagement.handleAssignAdmin", error);
       toast({
         title: "Error",
-        description: "Failed to assign admin",
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     }
@@ -213,10 +214,10 @@ export default function AdminManagement() {
 
       fetchAdmins();
     } catch (error) {
-      console.error("Error removing admin:", error);
+      logError("AdminManagement.handleRemoveAdmin", error);
       toast({
         title: "Error",
-        description: "Failed to remove admin assignment",
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     }
