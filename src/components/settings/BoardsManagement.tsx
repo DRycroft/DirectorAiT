@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Archive, ArchiveRestore, Edit, Users, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import CommitteeMembersDialog from "./CommitteeMembersDialog";
 
 interface Board {
@@ -21,7 +22,7 @@ interface Board {
   title: string;
   description: string | null;
   board_type: 'main' | 'sub_committee' | 'special_purpose';
-  status: 'active' | 'archived';
+  status: 'active' | 'pending' | 'archived';
   parent_board_id: string | null;
   committee_purpose: string | null;
   created_at: string;
@@ -279,6 +280,34 @@ export default function BoardsManagement() {
       fetchBoards();
     } catch (error: any) {
       logError("BoardsManagement.handleSubmit", error);
+      toast({
+        title: "Error",
+        description: getUserFriendlyError(error),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStatusChange = async (board: Board, newStatus: 'active' | 'pending' | 'archived') => {
+    try {
+      const { error } = await supabase
+        .from("boards")
+        .update({ 
+          status: newStatus,
+          archived_at: newStatus === 'archived' ? new Date().toISOString() : null
+        })
+        .eq("id", board.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Status Updated",
+        description: `Board status changed to ${newStatus}.`,
+      });
+      
+      fetchBoards();
+    } catch (error: any) {
+      logError("BoardsManagement.handleStatusChange", error);
       toast({
         title: "Error",
         description: getUserFriendlyError(error),
@@ -610,9 +639,37 @@ export default function BoardsManagement() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={parentBoard.status === 'active' ? 'default' : 'secondary'}>
-                        {parentBoard.status}
-                      </Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="h-auto p-0 hover:bg-transparent"
+                          >
+                            <Badge 
+                              variant={
+                                parentBoard.status === 'active' ? 'default' : 
+                                parentBoard.status === 'pending' ? 'secondary' : 
+                                'outline'
+                              }
+                              className="cursor-pointer hover:opacity-80"
+                            >
+                              {parentBoard.status}
+                            </Badge>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          <DropdownMenuItem onClick={() => handleStatusChange(parentBoard, 'active')}>
+                            Active
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleStatusChange(parentBoard, 'pending')}>
+                            Pending
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleStatusChange(parentBoard, 'archived')}>
+                            Archived
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {new Date(parentBoard.created_at).toLocaleDateString()}
@@ -667,12 +724,40 @@ export default function BoardsManagement() {
                         <Badge variant="outline">
                           {getBoardTypeLabel(childBoard.board_type)}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={childBoard.status === 'active' ? 'default' : 'secondary'}>
-                          {childBoard.status}
-                        </Badge>
-                      </TableCell>
+                       </TableCell>
+                       <TableCell>
+                         <DropdownMenu>
+                           <DropdownMenuTrigger asChild>
+                             <Button 
+                               variant="ghost" 
+                               size="sm"
+                               className="h-auto p-0 hover:bg-transparent"
+                             >
+                               <Badge 
+                                 variant={
+                                   childBoard.status === 'active' ? 'default' : 
+                                   childBoard.status === 'pending' ? 'secondary' : 
+                                   'outline'
+                                 }
+                                 className="cursor-pointer hover:opacity-80"
+                               >
+                                 {childBoard.status}
+                               </Badge>
+                             </Button>
+                           </DropdownMenuTrigger>
+                           <DropdownMenuContent align="start">
+                             <DropdownMenuItem onClick={() => handleStatusChange(childBoard, 'active')}>
+                               Active
+                             </DropdownMenuItem>
+                             <DropdownMenuItem onClick={() => handleStatusChange(childBoard, 'pending')}>
+                               Pending
+                             </DropdownMenuItem>
+                             <DropdownMenuItem onClick={() => handleStatusChange(childBoard, 'archived')}>
+                               Archived
+                             </DropdownMenuItem>
+                           </DropdownMenuContent>
+                         </DropdownMenu>
+                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {new Date(childBoard.created_at).toLocaleDateString()}
                       </TableCell>
