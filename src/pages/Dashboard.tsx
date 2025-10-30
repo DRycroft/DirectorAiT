@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Users, FileText, CheckCircle2, AlertCircle, TrendingUp, Calendar } from "lucide-react";
+import { Users, FileText, CheckCircle2, AlertCircle, TrendingUp, Calendar, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardStats {
@@ -148,6 +148,10 @@ const Dashboard = () => {
             <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
             <p className="text-muted-foreground">Welcome back to BoardConnect</p>
           </div>
+          <Button onClick={() => navigate("/dashboard/builder")}>
+            <Plus className="h-4 w-4 mr-2" />
+            Build Custom Dashboard
+          </Button>
         </div>
 
         {/* Stats Grid */}

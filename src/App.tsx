@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import SignUp from "./pages/SignUp";
 import BoardLibrary from "./pages/BoardLibrary";
 import Dashboard from "./pages/Dashboard";
+import DashboardBuilder from "./pages/DashboardBuilder";
 import Boards from "./pages/Boards";
 import BoardDetail from "./pages/BoardDetail";
 import BoardAndTeam from "./pages/BoardAndTeam";
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/builder" element={<DashboardBuilder />} />
           <Route path="/boards-committees" element={<BoardsAndCommittees />} />
           <Route path="/team" element={<TeamOverview />} />
           <Route path="/boards" element={<Boards />} />

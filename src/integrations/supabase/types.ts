@@ -1036,6 +1036,176 @@ export type Database = {
           },
         ]
       }
+      dashboard_metrics: {
+        Row: {
+          category: string
+          created_at: string | null
+          created_by: string
+          data_source: string
+          id: string
+          last_synced_at: string | null
+          metadata_json: Json | null
+          metric_name: string
+          metric_unit: string | null
+          metric_value: number | null
+          org_id: string
+          period_end: string | null
+          period_start: string | null
+          period_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          created_by: string
+          data_source: string
+          id?: string
+          last_synced_at?: string | null
+          metadata_json?: Json | null
+          metric_name: string
+          metric_unit?: string | null
+          metric_value?: number | null
+          org_id: string
+          period_end?: string | null
+          period_start?: string | null
+          period_type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          created_by?: string
+          data_source?: string
+          id?: string
+          last_synced_at?: string | null
+          metadata_json?: Json | null
+          metric_name?: string
+          metric_unit?: string | null
+          metric_value?: number | null
+          org_id?: string
+          period_end?: string | null
+          period_start?: string | null
+          period_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_metrics_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dashboard_metrics_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dashboard_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          is_default: boolean | null
+          layout_json: Json
+          name: string
+          org_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          layout_json?: Json
+          name: string
+          org_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          layout_json?: Json
+          name?: string
+          org_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dashboard_templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dashboard_widgets: {
+        Row: {
+          config_json: Json
+          created_at: string | null
+          height: number
+          id: string
+          position_x: number
+          position_y: number
+          template_id: string
+          title: string
+          updated_at: string | null
+          widget_type: string
+          width: number
+        }
+        Insert: {
+          config_json?: Json
+          created_at?: string | null
+          height?: number
+          id?: string
+          position_x?: number
+          position_y?: number
+          template_id: string
+          title: string
+          updated_at?: string | null
+          widget_type: string
+          width?: number
+        }
+        Update: {
+          config_json?: Json
+          created_at?: string | null
+          height?: number
+          id?: string
+          position_x?: number
+          position_y?: number
+          template_id?: string
+          title?: string
+          updated_at?: string | null
+          widget_type?: string
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_widgets_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "dashboard_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_drafts: {
         Row: {
           board_id: string | null
