@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, UserPlus, Trash2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { logError } from "@/lib/errorHandling";
+import { UserRoleWithProfile, Profile, AppRole } from "@/types/database";
 
 const AVAILABLE_ROLES = [
   { value: "super_admin", label: "Super Admin", description: "Full system access" },
@@ -23,8 +24,8 @@ const AVAILABLE_ROLES = [
 
 export const RoleManagement = () => {
   const { toast } = useToast();
-  const [userRoles, setUserRoles] = useState<any[]>([]);
-  const [profiles, setProfiles] = useState<any[]>([]);
+  const [userRoles, setUserRoles] = useState<UserRoleWithProfile[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
@@ -63,7 +64,7 @@ export const RoleManagement = () => {
       if (rolesData) {
         // Enrich with profile data
         const enrichedRoles = await Promise.all(
-          rolesData.map(async (role: any) => {
+          rolesData.map(async (role) => {
             const { data: profileData } = await supabase
               .from("profiles")
               .select("name, email")
@@ -129,7 +130,7 @@ export const RoleManagement = () => {
         .from("user_roles")
         .insert([{
           user_id: selectedUserId,
-          role: selectedRole as any,
+          role: selectedRole as AppRole,
           org_id: currentOrgId,
           granted_by: user.id,
         }]);
@@ -311,7 +312,7 @@ export const RoleManagement = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {new Date(userRole.granted_at).toLocaleDateString()}
+                    {new Date(userRole.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button

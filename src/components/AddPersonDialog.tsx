@@ -40,18 +40,19 @@ import { Combobox } from "@/components/ui/combobox";
 import { Card } from "@/components/ui/card";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { logError } from "@/lib/errorHandling";
+import { TemplateField, BoardMemberInsert } from "@/types/database";
 
 // Create dynamic schema based on template
-const createFormSchema = (template: any[]) => {
-  const schemaFields: any = {
+const createFormSchema = (template: TemplateField[]) => {
+  const schemaFields: Record<string, z.ZodTypeAny> = {
     member_type: z.enum(["board", "executive", "key_staff"]),
   };
   
-  template.forEach((field: any) => {
+  template.forEach((field) => {
     if (!field.enabled) return;
     
     const fieldId = field.id || field.label?.toLowerCase().replace(/\s+/g, '_');
-    const fieldType = field.field_type || field.type; // Handle both field_type and type
+    const fieldType = field.field_type || field.type;
     
     if (fieldType === 'email') {
       schemaFields[fieldId] = field.required 
@@ -113,8 +114,8 @@ interface AddPersonDialogProps {
 export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger, defaultMemberType }: AddPersonDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [existingMembers, setExistingMembers] = useState<any[]>([]);
-  const [formTemplate, setFormTemplate] = useState<any[]>([]);
+  const [existingMembers, setExistingMembers] = useState<Array<{ id: string; full_name: string; position: string }>>([]);
+  const [formTemplate, setFormTemplate] = useState<TemplateField[]>([]);
   const [loadingTemplate, setLoadingTemplate] = useState(false);
   const { toast } = useToast();
 
@@ -179,7 +180,9 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
         }
 
         if (template?.fields) {
-          const fields = template.fields as any[];
+          const fields = Array.isArray(template.fields) 
+            ? (template.fields as unknown) as TemplateField[]
+            : [];
           
           // Sort by order and filter enabled fields
           const sortedFields = fields
@@ -188,11 +191,11 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
           setFormTemplate(sortedFields);
           
           // Update form schema based on template
-          const dynamicSchema = createFormSchema(sortedFields);
+          const dynamicSchema = createFormSchema(sortedFields) as typeof baseFormSchema;
           setFormSchema(dynamicSchema);
           
           // Reset form with new schema
-          const defaultValues: any = { member_type: memberType };
+          const defaultValues: Record<string, string> = { member_type: memberType };
           sortedFields.forEach(field => {
             const fieldId = field.id || field.label?.toLowerCase().replace(/\s+/g, '_');
             defaultValues[fieldId] = '';
@@ -266,7 +269,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
         }
       });
 
-      const insertData: any = {
+      const insertData: BoardMemberInsert = {
         board_id: boardId,
         member_type: values.member_type,
         full_name: values.full_name,
@@ -354,7 +357,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
     'emergency_contact_phone': 'emergency_contact_phone',
   };
 
-  const renderField = (field: any) => {
+  const renderField = (field: TemplateField) => {
     const fieldId = standardFieldMap[field.id] || field.id || field.label?.toLowerCase().replace(/\s+/g, '_');
     const fieldLabel = field.label || field.id?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
 

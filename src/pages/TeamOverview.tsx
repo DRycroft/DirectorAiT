@@ -15,16 +15,17 @@ import { Separator } from "@/components/ui/separator";
 import { getPositionsByType } from "@/config/positions";
 import { AddPersonDialog } from "@/components/AddPersonDialog";
 import { logError } from "@/lib/errorHandling";
+import { BoardWithOrg, BoardMemberWithBoard } from "@/types/database";
 
 const TeamOverview = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [boards, setBoards] = useState<any[]>([]);
-  const [allBoardMembers, setAllBoardMembers] = useState<any[]>([]);
-  const [allExecutives, setAllExecutives] = useState<any[]>([]);
-  const [allKeyStaff, setAllKeyStaff] = useState<any[]>([]);
-  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [boards, setBoards] = useState<BoardWithOrg[]>([]);
+  const [allBoardMembers, setAllBoardMembers] = useState<BoardMemberWithBoard[]>([]);
+  const [allExecutives, setAllExecutives] = useState<BoardMemberWithBoard[]>([]);
+  const [allKeyStaff, setAllKeyStaff] = useState<BoardMemberWithBoard[]>([]);
+  const [selectedMember, setSelectedMember] = useState<BoardMemberWithBoard | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [organizationName, setOrganizationName] = useState<string>("");
 
@@ -96,7 +97,7 @@ const TeamOverview = () => {
     }
   };
 
-  const handleViewDetails = (member: any) => {
+  const handleViewDetails = (member: BoardMemberWithBoard) => {
     setSelectedMember(member);
     setDetailDialogOpen(true);
   };
@@ -250,8 +251,8 @@ const TeamOverview = () => {
                     <h4 className="font-medium mb-1">Reappointment History</h4>
                     {selectedMember.reappointment_history && Array.isArray(selectedMember.reappointment_history) && selectedMember.reappointment_history.length > 0 ? (
                       <ul className="space-y-2 mt-2">
-                        {selectedMember.reappointment_history.map((record: any, index: number) => (
-                          <li key={`${selectedMember.id}-reappointment-${index}-${record.date || index}`} className="text-sm text-muted-foreground">
+                        {(selectedMember.reappointment_history as unknown[]).map((record: unknown, index: number) => (
+                          <li key={`${selectedMember.id}-reappointment-${index}`} className="text-sm text-muted-foreground">
                             {JSON.stringify(record)}
                           </li>
                         ))}
@@ -284,10 +285,10 @@ const TeamOverview = () => {
     accentColor,
     memberType 
   }: { 
-    members: any[], 
+    members: BoardMemberWithBoard[], 
     title: string, 
     description: string,
-    icon: any,
+    icon: React.ComponentType<{ className?: string }>,
     accentColor: string,
     memberType: 'board' | 'executive' | 'staff'
   }) => {
@@ -326,8 +327,8 @@ const TeamOverview = () => {
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg bg-${accentColor}/10`}>
-                <Icon className="h-6 w-6" style={{ color: `hsl(var(--${accentColor}))` }} />
+              <div className={`p-2 rounded-lg`} style={{ backgroundColor: `hsl(var(--${accentColor})/0.1)` }}>
+                <Icon className="h-6 w-6 text-primary" />
               </div>
               <div>
                 <CardTitle className="text-xl">{title}</CardTitle>

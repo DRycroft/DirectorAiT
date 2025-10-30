@@ -8,6 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Users, FileText, CheckCircle2, AlertCircle, TrendingUp, Calendar } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { logError } from "@/lib/errorHandling";
+import { LucideIcon } from "lucide-react";
+import { BoardWithOrg } from "@/types/database";
 
 interface DashboardStats {
   totalBoards: number;
@@ -103,7 +105,19 @@ const Dashboard = () => {
     }
   };
 
-  const StatCard = ({ title, value, icon: Icon, description, onClick }: any) => (
+  const StatCard = ({ 
+    title, 
+    value, 
+    icon: Icon, 
+    description, 
+    onClick 
+  }: { 
+    title: string; 
+    value: number; 
+    icon: LucideIcon; 
+    description?: string;
+    onClick?: () => void;
+  }) => (
     <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={onClick}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -189,7 +203,7 @@ const Dashboard = () => {
           />
           <StatCard
             title="Intelligence Scans"
-            value="Active"
+            value={0}
             icon={TrendingUp}
             description="Competitor monitoring"
             onClick={() => navigate("/intelligence")}

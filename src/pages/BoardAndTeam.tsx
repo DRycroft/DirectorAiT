@@ -12,18 +12,19 @@ import { useToast } from "@/hooks/use-toast";
 import { Users, Briefcase, UserCog, Eye, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { logError } from "@/lib/errorHandling";
+import { BoardWithOrg, BoardMember, ViewerRole } from "@/types/database";
 
 const BoardAndTeam = () => {
   const { boardId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [board, setBoard] = useState<any>(null);
-  const [boardMembers, setBoardMembers] = useState<any[]>([]);
-  const [executives, setExecutives] = useState<any[]>([]);
-  const [keyStaff, setKeyStaff] = useState<any[]>([]);
-  const [selectedMember, setSelectedMember] = useState<any>(null);
-  const [viewerRole, setViewerRole] = useState<'public' | 'internal' | 'admin'>('public');
+  const [board, setBoard] = useState<BoardWithOrg | null>(null);
+  const [boardMembers, setBoardMembers] = useState<BoardMember[]>([]);
+  const [executives, setExecutives] = useState<BoardMember[]>([]);
+  const [keyStaff, setKeyStaff] = useState<BoardMember[]>([]);
+  const [selectedMember, setSelectedMember] = useState<BoardMember | null>(null);
+  const [viewerRole, setViewerRole] = useState<ViewerRole>('public');
 
   useEffect(() => {
     if (boardId) {
@@ -103,8 +104,8 @@ const BoardAndTeam = () => {
     }
   };
 
-  const getFilteredMember = (member: any) => {
-    const publishPrefs = member.publish_preferences || {};
+  const getFilteredMember = (member: BoardMember) => {
+    const publishPrefs = (member.publish_preferences as Record<string, boolean>) || {};
     
     if (viewerRole === 'admin') {
       return member; // Show everything
@@ -134,10 +135,10 @@ const BoardAndTeam = () => {
   };
 
   const MemberTable = ({ members, title, description, icon: Icon, accentColor }: { 
-    members: any[], 
+    members: BoardMember[], 
     title: string, 
     description: string,
-    icon: any,
+    icon: React.ComponentType<{ className?: string }>,
     accentColor: string 
   }) => {
     return (
@@ -145,8 +146,8 @@ const BoardAndTeam = () => {
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg bg-${accentColor}/10`}>
-                <Icon className="h-6 w-6" style={{ color: `hsl(var(--${accentColor}))` }} />
+              <div className={`p-2 rounded-lg`} style={{ backgroundColor: `hsl(var(--${accentColor})/0.1)` }}>
+                <Icon className="h-6 w-6 text-primary" />
               </div>
               <div>
                 <CardTitle className="text-xl">{title}</CardTitle>
