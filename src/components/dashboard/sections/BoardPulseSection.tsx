@@ -105,8 +105,8 @@ export const BoardPulseSection = ({ data }: BoardPulseSectionProps) => {
                     {config.label}
                   </span>
                 </div>
-                <div className="text-sm text-muted-foreground">{issue.description}</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-sm text-gray-700 dark:text-gray-300">{issue.description}</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">
                   Section: <span className="font-medium">{issue.section}</span>
                 </div>
               </CardContent>
