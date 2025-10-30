@@ -29,6 +29,9 @@ export function MembersList({ boardId, memberType, onRefresh }: MembersListProps
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingInvite, setGeneratingInvite] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const { toast } = useToast();
 
   const loadMembers = async () => {
@@ -103,6 +106,14 @@ export function MembersList({ boardId, memberType, onRefresh }: MembersListProps
   const activeMembers = members.filter(m => !isArchived(m) && m.status !== "archived");
   const archivedMembers = members.filter(m => isArchived(m) || m.status === "archived");
 
+  // Pagination logic
+  const displayMembers = showArchived ? archivedMembers : activeMembers;
+  const totalPages = Math.ceil(displayMembers.length / itemsPerPage);
+  const paginatedMembers = displayMembers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center py-8">
@@ -113,9 +124,31 @@ export function MembersList({ boardId, memberType, onRefresh }: MembersListProps
 
   return (
     <div className="space-y-6">
-      {activeMembers.length > 0 && (
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex gap-2">
+          <Button
+            variant={!showArchived ? "default" : "outline"}
+            onClick={() => {
+              setShowArchived(false);
+              setCurrentPage(1);
+            }}
+          >
+            Active ({activeMembers.length})
+          </Button>
+          <Button
+            variant={showArchived ? "default" : "outline"}
+            onClick={() => {
+              setShowArchived(true);
+              setCurrentPage(1);
+            }}
+          >
+            Archived ({archivedMembers.length})
+          </Button>
+        </div>
+      </div>
+
+      {paginatedMembers.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold mb-4">Active Members</h3>
           <Table>
             <TableHeader>
               <TableRow>
@@ -130,8 +163,11 @@ export function MembersList({ boardId, memberType, onRefresh }: MembersListProps
               </TableRow>
             </TableHeader>
             <TableBody>
-              {activeMembers.map((member) => (
-                <TableRow key={member.id}>
+              {paginatedMembers.map((member) => (
+                <TableRow 
+                  key={member.id}
+                  className={showArchived ? "opacity-50 bg-muted/30" : ""}
+                >
                   <TableCell>{member.preferred_title || "-"}</TableCell>
                   <TableCell className="font-medium">{member.full_name}</TableCell>
                   <TableCell>{member.position}</TableCell>
@@ -142,70 +178,68 @@ export function MembersList({ boardId, memberType, onRefresh }: MembersListProps
                   <TableCell>
                     {member.term_expiry ? format(new Date(member.term_expiry), "dd/MM/yyyy") : "-"}
                   </TableCell>
-                  <TableCell>
-                    <Badge variant={member.status === "active" ? "default" : "secondary"}>
-                      {member.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {member.status === "invited" ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleGenerateInvite(member.id)}
-                        disabled={generatingInvite === member.id}
-                      >
-                        {generatingInvite === member.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                  {!showArchived && (
+                    <>
+                      <TableCell>
+                        <Badge variant={member.status === "active" ? "default" : "secondary"}>
+                          {member.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {member.status === "invited" ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleGenerateInvite(member.id)}
+                            disabled={generatingInvite === member.id}
+                          >
+                            {generatingInvite === member.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <>
+                                <Copy className="h-4 w-4 mr-2" />
+                                Resend
+                              </>
+                            )}
+                          </Button>
                         ) : (
-                          <>
-                            <Copy className="h-4 w-4 mr-2" />
-                            Resend
-                          </>
+                          <span className="text-xs text-muted-foreground">Active</span>
                         )}
-                      </Button>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Active</span>
-                    )}
-                  </TableCell>
+                      </TableCell>
+                    </>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </div>
-      )}
 
-      {archivedMembers.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold mb-4 text-muted-foreground">Archived Members</h3>
-          <Table>
-            <TableHeader>
-              <TableRow className="opacity-60">
-                <TableHead>Title</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Position</TableHead>
-                <TableHead>Date Added</TableHead>
-                <TableHead>Starting Date</TableHead>
-                <TableHead>Finishing Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {archivedMembers.map((member) => (
-                <TableRow key={member.id} className="opacity-50 bg-muted/30">
-                  <TableCell>{member.preferred_title || "-"}</TableCell>
-                  <TableCell className="font-medium">{member.full_name}</TableCell>
-                  <TableCell>{member.position}</TableCell>
-                  <TableCell>{format(new Date(member.created_at), "dd/MM/yyyy")}</TableCell>
-                  <TableCell>
-                    {member.appointment_date ? format(new Date(member.appointment_date), "dd/MM/yyyy") : "-"}
-                  </TableCell>
-                  <TableCell>
-                    {member.term_expiry ? format(new Date(member.term_expiry), "dd/MM/yyyy") : "-"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-sm text-muted-foreground">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, displayMembers.length)} of{" "}
+                {displayMembers.length} members
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

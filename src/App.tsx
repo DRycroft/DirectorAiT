@@ -3,27 +3,40 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
+
+// Eagerly load landing and auth pages for fast initial load
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import SignUp from "./pages/SignUp";
-import BoardLibrary from "./pages/BoardLibrary";
-import Dashboard from "./pages/Dashboard";
-import DashboardBuilder from "./pages/DashboardBuilder";
-import ExecutiveDashboard from "./pages/ExecutiveDashboard";
-import Boards from "./pages/Boards";
-import BoardDetail from "./pages/BoardDetail";
-import BoardAndTeam from "./pages/BoardAndTeam";
-import TeamOverview from "./pages/TeamOverview";
-import BoardPapers from "./pages/BoardPapers";
-import BoardPaperDocument from "./pages/BoardPaperDocument";
-import MemberIntake from "./pages/MemberIntake";
-import MemberInvite from "./pages/MemberInvite";
-import MemberApproval from "./pages/MemberApproval";
-import ExportTeam from "./pages/ExportTeam";
-import BoardsAndCommittees from "./pages/BoardsAndCommittees";
-import Settings from "./pages/Settings";
-import Compliance from "./pages/Compliance";
 import NotFound from "./pages/NotFound";
+
+// Lazy load heavy/authenticated routes
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const DashboardBuilder = lazy(() => import("./pages/DashboardBuilder"));
+const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
+const Boards = lazy(() => import("./pages/Boards"));
+const BoardDetail = lazy(() => import("./pages/BoardDetail"));
+const BoardAndTeam = lazy(() => import("./pages/BoardAndTeam"));
+const TeamOverview = lazy(() => import("./pages/TeamOverview"));
+const BoardPapers = lazy(() => import("./pages/BoardPapers"));
+const BoardPaperDocument = lazy(() => import("./pages/BoardPaperDocument"));
+const MemberIntake = lazy(() => import("./pages/MemberIntake"));
+const MemberInvite = lazy(() => import("./pages/MemberInvite"));
+const MemberApproval = lazy(() => import("./pages/MemberApproval"));
+const ExportTeam = lazy(() => import("./pages/ExportTeam"));
+const BoardsAndCommittees = lazy(() => import("./pages/BoardsAndCommittees"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Compliance = lazy(() => import("./pages/Compliance"));
+const BoardLibrary = lazy(() => import("./pages/BoardLibrary"));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -33,30 +46,32 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/builder" element={<DashboardBuilder />} />
-          <Route path="/dashboard/executive" element={<ExecutiveDashboard />} />
-          <Route path="/boards-committees" element={<BoardsAndCommittees />} />
-          <Route path="/team" element={<TeamOverview />} />
-          <Route path="/boards" element={<Boards />} />
-          <Route path="/boards/:boardId" element={<BoardDetail />} />
-          <Route path="/boards/:boardId/team" element={<BoardAndTeam />} />
-          <Route path="/board-papers" element={<BoardPapers />} />
-          <Route path="/board-papers/:id" element={<BoardPaperDocument />} />
-          <Route path="/compliance" element={<Compliance />} />
-          <Route path="/library" element={<BoardLibrary />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/member-intake" element={<MemberIntake />} />
-          <Route path="/member-invite" element={<MemberInvite />} />
-          <Route path="/member-approval/:memberId" element={<MemberApproval />} />
-          <Route path="/export-team/:boardId" element={<ExportTeam />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/builder" element={<DashboardBuilder />} />
+            <Route path="/dashboard/executive" element={<ExecutiveDashboard />} />
+            <Route path="/boards-committees" element={<BoardsAndCommittees />} />
+            <Route path="/team" element={<TeamOverview />} />
+            <Route path="/boards" element={<Boards />} />
+            <Route path="/boards/:boardId" element={<BoardDetail />} />
+            <Route path="/boards/:boardId/team" element={<BoardAndTeam />} />
+            <Route path="/board-papers" element={<BoardPapers />} />
+            <Route path="/board-papers/:id" element={<BoardPaperDocument />} />
+            <Route path="/compliance" element={<Compliance />} />
+            <Route path="/library" element={<BoardLibrary />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/member-intake" element={<MemberIntake />} />
+            <Route path="/member-invite" element={<MemberInvite />} />
+            <Route path="/member-approval/:memberId" element={<MemberApproval />} />
+            <Route path="/export-team/:boardId" element={<ExportTeam />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
