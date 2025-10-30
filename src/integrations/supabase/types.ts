@@ -2213,6 +2213,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      user_can_create_in_org: {
+        Args: { check_org_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
