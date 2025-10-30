@@ -159,13 +159,54 @@ export default function BoardsManagement() {
         return;
       }
 
-      if (!profile?.org_id) {
+      // Auto-create organization if user doesn't have one
+      let orgId = profile?.org_id;
+      
+      if (!orgId) {
+        // Create organization using user's name or email
+        const { data: userData } = await supabase.auth.getUser();
+        const userName = userData.user?.user_metadata?.name || userData.user?.email?.split('@')[0] || 'My Organization';
+        
+        const { data: newOrg, error: orgError } = await supabase
+          .from("organizations")
+          .insert({
+            name: `${userName}'s Organization`,
+          })
+          .select()
+          .single();
+
+        if (orgError) {
+          logError("BoardsManagement.createOrganization", orgError);
+          toast({
+            title: "Error",
+            description: "Failed to create organization. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Update user's profile with new org_id
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({ org_id: newOrg.id })
+          .eq("id", user.id);
+
+        if (updateError) {
+          logError("BoardsManagement.updateProfile", updateError);
+          toast({
+            title: "Error",
+            description: "Failed to update profile. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        orgId = newOrg.id;
+
         toast({
-          title: "Organization Required",
-          description: "You must be part of an organization to create boards. Please contact your administrator.",
-          variant: "destructive",
+          title: "Organization Created",
+          description: "Your organization has been set up successfully.",
         });
-        return;
       }
 
       // Validate input
@@ -193,7 +234,7 @@ export default function BoardsManagement() {
         board_type: formData.board_type,
         parent_board_id: formData.parent_board_id === "none" ? null : formData.parent_board_id,
         committee_purpose: formData.committee_purpose?.trim() || null,
-        org_id: profile.org_id,
+        org_id: orgId,
       };
 
       if (editingBoard) {
