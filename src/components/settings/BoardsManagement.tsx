@@ -639,37 +639,13 @@ export default function BoardsManagement() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className="h-auto p-0 hover:bg-transparent"
-                          >
-                            <Badge 
-                              variant={
-                                parentBoard.status === 'active' ? 'default' : 
-                                parentBoard.status === 'pending' ? 'secondary' : 
-                                'outline'
-                              }
-                              className="cursor-pointer hover:opacity-80"
-                            >
-                              {parentBoard.status}
-                            </Badge>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                          <DropdownMenuItem onClick={() => handleStatusChange(parentBoard, 'active')}>
-                            Active
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleStatusChange(parentBoard, 'pending')}>
-                            Pending
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleStatusChange(parentBoard, 'archived')}>
-                            Archived
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Badge variant={
+                        parentBoard.status === 'active' ? 'default' : 
+                        parentBoard.status === 'pending' ? 'secondary' : 
+                        'outline'
+                      }>
+                        {parentBoard.status}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {new Date(parentBoard.created_at).toLocaleDateString()}
