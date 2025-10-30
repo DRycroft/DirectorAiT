@@ -1,10 +1,22 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// HTML escaping utility function
+function escapeHtml(unsafe: string): string {
+  if (!unsafe) return "";
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -12,17 +24,27 @@ serve(async (req) => {
   }
 
   try {
-    const { memberId } = await req.json();
+    const requestSchema = z.object({
+      memberId: z.string().uuid("Invalid member ID format")
+    });
 
-    if (!memberId) {
+    const body = await req.json();
+    const validationResult = requestSchema.safeParse(body);
+    
+    if (!validationResult.success) {
       return new Response(
-        JSON.stringify({ error: "memberId is required" }),
+        JSON.stringify({ 
+          error: "Invalid request", 
+          details: validationResult.error.errors 
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
+    
+    const { memberId } = validationResult.data;
 
     // Verify authentication
     const authHeader = req.headers.get('Authorization');
@@ -102,7 +124,7 @@ serve(async (req) => {
 
     const publishPrefs = member.publish_preferences || {};
 
-    // Generate HTML for PDF (simplified version)
+    // Generate HTML for PDF (simplified version) with escaped content
     const html = `
       <!DOCTYPE html>
       <html>
@@ -160,51 +182,51 @@ serve(async (req) => {
         </head>
         <body>
           <div class="header">
-            <h1>${publishPrefs.full_name && member.full_name ? member.full_name : "[Name]"}</h1>
+            <h1>${publishPrefs.full_name && member.full_name ? escapeHtml(member.full_name) : "[Name]"}</h1>
             ${publishPrefs.public_job_title && member.public_job_title ? 
-              `<div class="title">${member.public_job_title}</div>` : ""}
+              `<div class="title">${escapeHtml(member.public_job_title)}</div>` : ""}
           </div>
 
           ${publishPrefs.short_bio && member.short_bio ? `
             <div class="section">
               <h2>Biography</h2>
-              <p>${member.short_bio}</p>
+              <p>${escapeHtml(member.short_bio)}</p>
             </div>
           ` : ""}
 
           ${publishPrefs.professional_qualifications && member.professional_qualifications ? `
             <div class="section">
               <h2>Qualifications</h2>
-              <p>${member.professional_qualifications}</p>
+              <p>${escapeHtml(member.professional_qualifications)}</p>
             </div>
           ` : ""}
 
           ${publishPrefs.public_company_affiliations && member.public_company_affiliations ? `
             <div class="section">
               <h2>Company Affiliations</h2>
-              <p>${member.public_company_affiliations}</p>
+              <p>${escapeHtml(member.public_company_affiliations)}</p>
             </div>
           ` : ""}
 
           ${publishPrefs.public_contact_email && member.personal_email ? `
             <div class="section">
               <h2>Contact</h2>
-              <p><span class="label">Email:</span> ${member.personal_email}</p>
+              <p><span class="label">Email:</span> ${escapeHtml(member.personal_email)}</p>
             </div>
           ` : ""}
 
           ${member.appointment_date ? `
             <div class="section">
               <h2>Board Service</h2>
-              <p><span class="label">Appointed:</span> ${new Date(member.appointment_date).toLocaleDateString()}</p>
+              <p><span class="label">Appointed:</span> ${escapeHtml(new Date(member.appointment_date).toLocaleDateString())}</p>
               ${member.term_expiry ? 
-                `<p><span class="label">Term Expires:</span> ${new Date(member.term_expiry).toLocaleDateString()}</p>` 
+                `<p><span class="label">Term Expires:</span> ${escapeHtml(new Date(member.term_expiry).toLocaleDateString())}</p>` 
                 : ""}
             </div>
           ` : ""}
 
           <footer>
-            <p>Generated on ${new Date().toLocaleDateString()}</p>
+            <p>Generated on ${escapeHtml(new Date().toLocaleDateString())}</p>
             <p>This profile contains only information approved for public viewing</p>
           </footer>
         </body>

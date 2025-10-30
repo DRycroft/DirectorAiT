@@ -14,7 +14,15 @@ serve(async (req) => {
   try {
     // Verify cron secret for security (since JWT verification is disabled)
     const cronSecret = req.headers.get("x-cron-secret");
-    const expectedSecret = Deno.env.get("CRON_SECRET") || "default-secret-change-me";
+    const expectedSecret = Deno.env.get("CRON_SECRET");
+    
+    if (!expectedSecret) {
+      console.error("CRON_SECRET environment variable not configured");
+      return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     
     if (cronSecret !== expectedSecret) {
       console.error("Unauthorized: Invalid cron secret");

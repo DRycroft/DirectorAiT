@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -95,14 +96,30 @@ serve(async (req) => {
       );
     }
 
-    const { description } = await req.json();
+    const requestSchema = z.object({
+      description: z.string()
+        .trim()
+        .min(10, "Description must be at least 10 characters")
+        .max(5000, "Description too long (max 5000 characters)")
+    });
 
-    if (!description || description.trim().length < 3) {
-      return new Response(JSON.stringify({ error: 'Please provide a description of your business' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const body = await req.json();
+    const validationResult = requestSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid request", 
+          details: validationResult.error.errors 
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
+    
+    const { description } = validationResult.data;
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {

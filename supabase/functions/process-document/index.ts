@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,17 +25,27 @@ serve(async (req) => {
       );
     }
 
-    const { documentId } = await req.json();
+    const requestSchema = z.object({
+      documentId: z.string().uuid("Invalid document ID format")
+    });
+
+    const body = await req.json();
+    const validationResult = requestSchema.safeParse(body);
     
-    if (!documentId || typeof documentId !== "string") {
+    if (!validationResult.success) {
       return new Response(
-        JSON.stringify({ error: "Invalid documentId parameter" }),
+        JSON.stringify({ 
+          error: "Invalid request", 
+          details: validationResult.error.errors 
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
+    
+    const { documentId } = validationResult.data;
     
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",

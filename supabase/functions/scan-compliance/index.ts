@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -71,14 +72,27 @@ serve(async (req) => {
       );
     }
 
-    const { org_id } = await req.json();
+    const requestSchema = z.object({
+      org_id: z.string().uuid("Invalid organization ID format")
+    });
 
-    if (!org_id) {
-      return new Response(JSON.stringify({ error: 'Organization ID is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const body = await req.json();
+    const validationResult = requestSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid request", 
+          details: validationResult.error.errors 
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
+    
+    const { org_id } = validationResult.data;
 
     // Verify user belongs to the organization
     if (org_id !== profile.org_id) {

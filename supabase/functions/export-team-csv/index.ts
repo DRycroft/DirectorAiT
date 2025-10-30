@@ -1,10 +1,22 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// CSV escaping utility function
+function escapeCsv(field: string): string {
+  if (!field) return '""';
+  let safe = String(field);
+  // Remove leading characters that Excel interprets as formulas
+  safe = safe.replace(/^[=+\-@]/, "'");
+  // Escape quotes
+  safe = safe.replace(/"/g, '""');
+  return `"${safe}"`;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -12,17 +24,28 @@ serve(async (req) => {
   }
 
   try {
-    const { boardId, includeConfidential = false } = await req.json();
+    const requestSchema = z.object({
+      boardId: z.string().uuid("Invalid board ID format"),
+      includeConfidential: z.boolean().optional().default(false)
+    });
 
-    if (!boardId) {
+    const body = await req.json();
+    const validationResult = requestSchema.safeParse(body);
+    
+    if (!validationResult.success) {
       return new Response(
-        JSON.stringify({ error: "boardId is required" }),
+        JSON.stringify({ 
+          error: "Invalid request", 
+          details: validationResult.error.errors 
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
+    
+    const { boardId, includeConfidential } = validationResult.data;
 
     // Verify authentication
     const authHeader = req.headers.get('Authorization');
@@ -145,26 +168,26 @@ serve(async (req) => {
       headers.push("Legal Name", "National ID", "Home Address");
     }
 
-    // Generate CSV rows
+    // Generate CSV rows with proper escaping
     const rows = [headers];
     
     for (const member of members || []) {
       const row = [
-        member.full_name || "",
-        member.preferred_title || "",
-        member.public_job_title || "",
-        member.personal_email || "",
-        member.personal_mobile || "",
-        member.status || "",
-        member.appointment_date ? new Date(member.appointment_date).toLocaleDateString() : "",
-        member.term_expiry ? new Date(member.term_expiry).toLocaleDateString() : "",
+        escapeCsv(member.full_name || ""),
+        escapeCsv(member.preferred_title || ""),
+        escapeCsv(member.public_job_title || ""),
+        escapeCsv(member.personal_email || ""),
+        escapeCsv(member.personal_mobile || ""),
+        escapeCsv(member.status || ""),
+        escapeCsv(member.appointment_date ? new Date(member.appointment_date).toLocaleDateString() : ""),
+        escapeCsv(member.term_expiry ? new Date(member.term_expiry).toLocaleDateString() : ""),
       ];
 
       if (includeConfidential) {
         row.push(
-          member.legal_name || "",
-          member.national_id || "",
-          member.home_address || ""
+          escapeCsv(member.legal_name || ""),
+          escapeCsv(member.national_id || ""),
+          escapeCsv(member.home_address || "")
         );
       }
 
@@ -172,13 +195,7 @@ serve(async (req) => {
     }
 
     // Convert to CSV string
-    const csv = rows.map(row => 
-      row.map(cell => {
-        // Escape quotes and wrap in quotes if contains comma
-        const escaped = String(cell).replace(/"/g, '""');
-        return escaped.includes(',') || escaped.includes('\n') ? `"${escaped}"` : escaped;
-      }).join(',')
-    ).join('\n');
+    const csv = rows.map(row => row.join(',')).join('\n');
 
     // Create audit log for export
     await supabase.rpc('log_audit_entry', {
