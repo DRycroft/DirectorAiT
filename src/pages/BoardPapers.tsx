@@ -11,14 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Download, Upload, Filter } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-interface BoardPaper {
-  id: string;
-  date: string;
-  companyName: string;
-  periodCovered: string;
-  createdBy: string;
-}
+import type { BoardPaper } from "@/types/database";
 
 interface ExecutiveReport {
   id: string;
@@ -91,6 +84,7 @@ const BoardPapers = () => {
 
   useEffect(() => {
     fetchOrganizationData();
+    fetchBoardPapers();
     fetchMeetingMinutes();
     fetchSpecialPapers();
   }, []);
@@ -168,6 +162,36 @@ const BoardPapers = () => {
     }
   }, [createPaperDialogOpen, organization]);
 
+  const fetchBoardPapers = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('org_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.org_id) return;
+
+      const { data, error } = await supabase
+        .from('board_papers')
+        .select('*')
+        .eq('org_id', profile.org_id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching board papers:', error);
+        return;
+      }
+
+      setBoardPapers(data || []);
+    } catch (error) {
+      console.error('Error in fetchBoardPapers:', error);
+    }
+  };
+
   const handleCreateBoardPaper = async () => {
     if (!newPaperData.companyName || !newPaperData.periodCovered) {
       toast({
@@ -179,33 +203,48 @@ const BoardPapers = () => {
     }
 
     try {
-      // Fetch the saved Board Paper template
-      const { data: template, error: templateError } = await supabase
-        .from('templates')
-        .select('*')
-        .eq('name', 'Board Papers')
-        .eq('scope', 'personal')
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('org_id')
+        .eq('id', user.id)
         .single();
 
-      if (templateError && templateError.code !== 'PGRST116') {
-        console.error('Error fetching template:', templateError);
-      }
+      if (!profile?.org_id) throw new Error("No organization found");
 
-      const newPaper: BoardPaper = {
-        id: Date.now().toString(),
-        date: new Date(newPaperData.date).toLocaleDateString(),
-        companyName: newPaperData.companyName,
-        periodCovered: newPaperData.periodCovered,
-        createdBy: "Current User",
-      };
+      // Fetch the saved Board Paper template
+      const { data: template } = await supabase
+        .from('board_paper_templates')
+        .select('*')
+        .eq('org_id', profile.org_id)
+        .eq('is_default', true)
+        .maybeSingle();
+
+      // Save to database
+      const { error: insertError } = await supabase
+        .from('board_papers')
+        .insert({
+          org_id: profile.org_id,
+          created_by: user.id,
+          company_name: newPaperData.companyName,
+          period_covered: newPaperData.periodCovered,
+          template_id: template?.id || null,
+          status: 'draft'
+        });
+
+      if (insertError) throw insertError;
       
-      setBoardPapers([...boardPapers, newPaper]);
       setCreatePaperDialogOpen(false);
       setNewPaperData({
         date: new Date().toISOString().split('T')[0],
         companyName: "",
         periodCovered: "",
       });
+      
+      // Refresh the list
+      fetchBoardPapers();
       
       toast({
         title: "Board Paper Created",
@@ -710,7 +749,7 @@ const BoardPapers = () => {
                   <div>Date</div>
                   <div>Company Name</div>
                   <div>Period</div>
-                  <div>Created By</div>
+                  <div>Status</div>
                   <div></div>
                 </div>
                 {boardPapers.map((paper) => (
@@ -720,16 +759,16 @@ const BoardPapers = () => {
                   >
                     <div className="grid grid-cols-5 gap-4 items-center">
                       <div>
-                        <p className="text-sm font-medium text-black">{paper.date}</p>
+                        <p className="text-sm font-medium text-black">{new Date(paper.created_at).toLocaleDateString()}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-black">{paper.companyName}</p>
+                        <p className="text-sm font-medium text-black">{paper.company_name}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-black">{paper.periodCovered}</p>
+                        <p className="text-sm font-medium text-black">{paper.period_covered}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-black">{paper.createdBy}</p>
+                        <p className="text-sm font-medium text-black">{paper.status}</p>
                       </div>
                       <div className="flex justify-end">
                         <Button 

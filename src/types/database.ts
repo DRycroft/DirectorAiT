@@ -10,6 +10,7 @@ export type ComplianceItem = Database['public']['Tables']['compliance_items']['R
 export type ComplianceReview = Database['public']['Tables']['compliance_reviews']['Row'];
 export type UserRole = Database['public']['Tables']['user_roles']['Row'];
 export type BoardPaperTemplate = Database['public']['Tables']['board_paper_templates']['Row'];
+export type BoardPaper = Database['public']['Tables']['board_papers']['Row'];
 export type StaffFormTemplate = Database['public']['Tables']['staff_form_templates']['Row'];
 export type DashboardTemplate = Database['public']['Tables']['dashboard_templates']['Row'];
 export type DashboardWidget = Database['public']['Tables']['dashboard_widgets']['Row'];

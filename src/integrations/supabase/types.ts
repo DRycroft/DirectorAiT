@@ -669,6 +669,70 @@ export type Database = {
           },
         ]
       }
+      board_papers: {
+        Row: {
+          board_id: string | null
+          company_name: string
+          content: Json | null
+          created_at: string
+          created_by: string
+          id: string
+          org_id: string
+          period_covered: string
+          status: string
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          board_id?: string | null
+          company_name: string
+          content?: Json | null
+          created_at?: string
+          created_by: string
+          id?: string
+          org_id: string
+          period_covered: string
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          board_id?: string | null
+          company_name?: string
+          content?: Json | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          org_id?: string
+          period_covered?: string
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_papers_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_papers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_papers_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "board_paper_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       board_role_overrides: {
         Row: {
           board_id: string
