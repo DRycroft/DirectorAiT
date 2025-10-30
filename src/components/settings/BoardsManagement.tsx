@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -125,15 +126,39 @@ export default function BoardsManagement() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        toast({
+          title: "Authentication Error",
+          description: "You must be signed in to create boards",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("org_id")
         .eq("id", user.id)
         .single();
 
-      if (!profile?.org_id) return;
+      if (profileError) {
+        logError("BoardsManagement.handleSubmit", profileError);
+        toast({
+          title: "Error",
+          description: getUserFriendlyError(profileError),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!profile?.org_id) {
+        toast({
+          title: "Organization Required",
+          description: "You must be part of an organization to create boards. Please contact your administrator.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const boardData = {
         title: formData.title,
@@ -151,7 +176,7 @@ export default function BoardsManagement() {
           .eq("id", editingBoard.id);
 
         if (error) {
-          console.error("Error updating board:", error);
+          logError("BoardsManagement.updateBoard", error);
           throw error;
         }
 
@@ -167,11 +192,10 @@ export default function BoardsManagement() {
           .single();
 
         if (error) {
-          console.error("Error creating board:", error);
+          logError("BoardsManagement.createBoard", error);
           throw error;
         }
 
-        console.log("Board created successfully:", newBoard);
         toast({
           title: "Success",
           description: "Board created successfully",
@@ -182,9 +206,10 @@ export default function BoardsManagement() {
       resetForm();
       fetchBoards();
     } catch (error: any) {
+      logError("BoardsManagement.handleSubmit", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     }
