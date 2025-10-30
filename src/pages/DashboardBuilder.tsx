@@ -1,38 +1,98 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Eye, Plus } from "lucide-react";
-import WidgetLibrary from "@/components/dashboard/WidgetLibrary";
-import KPICard from "@/components/dashboard/widgets/KPICard";
-import TrafficLight from "@/components/dashboard/widgets/TrafficLight";
-import SimpleChart from "@/components/dashboard/widgets/SimpleChart";
+import { BarChart3, LineChart, Gauge, CircleDot, TrendingUp, Users, DollarSign, AlertTriangle, Clock, FileText } from "lucide-react";
 
-interface Widget {
+interface MetricOption {
   id: string;
-  type: string;
-  title: string;
-  position_x: number;
-  position_y: number;
-  width: number;
-  height: number;
-  config: any;
+  name: string;
+  description: string;
+  icon: any;
+  defaultVisualization: string;
+  visualizationOptions: string[];
 }
+
+interface SelectedMetric {
+  metricId: string;
+  visualization: string;
+  title: string;
+}
+
+const AVAILABLE_METRICS: MetricOption[] = [
+  {
+    id: "cash_balance",
+    name: "Cash Balance",
+    description: "Current cash position",
+    icon: DollarSign,
+    defaultVisualization: "kpi",
+    visualizationOptions: ["kpi", "gauge", "line_chart"]
+  },
+  {
+    id: "revenue",
+    name: "Revenue",
+    description: "Revenue over time",
+    icon: TrendingUp,
+    defaultVisualization: "line_chart",
+    visualizationOptions: ["line_chart", "bar_chart", "kpi"]
+  },
+  {
+    id: "active_projects",
+    name: "Active Projects",
+    description: "Number of ongoing projects",
+    icon: FileText,
+    defaultVisualization: "kpi",
+    visualizationOptions: ["kpi", "bar_chart"]
+  },
+  {
+    id: "team_size",
+    name: "Team Size",
+    description: "Total employees",
+    icon: Users,
+    defaultVisualization: "kpi",
+    visualizationOptions: ["kpi", "line_chart"]
+  },
+  {
+    id: "project_status",
+    name: "Project Status",
+    description: "On-track, at-risk, or critical",
+    icon: AlertTriangle,
+    defaultVisualization: "traffic_light",
+    visualizationOptions: ["traffic_light", "bar_chart"]
+  },
+  {
+    id: "overdue_tasks",
+    name: "Overdue Tasks",
+    description: "Tasks past their due date",
+    icon: Clock,
+    defaultVisualization: "kpi",
+    visualizationOptions: ["kpi", "bar_chart"]
+  }
+];
+
+const VISUALIZATION_LABELS: Record<string, string> = {
+  kpi: "KPI Card",
+  gauge: "Gauge",
+  traffic_light: "Traffic Light",
+  line_chart: "Line Chart",
+  bar_chart: "Bar Chart"
+};
 
 const DashboardBuilder = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [templateName, setTemplateName] = useState("");
-  const [templateDescription, setTemplateDescription] = useState("");
-  const [widgets, setWidgets] = useState<Widget[]>([]);
-  const [selectedWidget, setSelectedWidget] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [description, setDescription] = useState("");
+  const [selectedMetrics, setSelectedMetrics] = useState<SelectedMetric[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,7 +105,7 @@ const DashboardBuilder = () => {
       navigate("/auth");
       return;
     }
-    setUser(user);
+    setUserId(user.id);
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -58,45 +118,36 @@ const DashboardBuilder = () => {
     }
   };
 
-  const addWidget = (widgetType: string) => {
-    const newWidget: Widget = {
-      id: crypto.randomUUID(),
-      type: widgetType,
-      title: `New ${widgetType.replace('_', ' ')}`,
-      position_x: 0,
-      position_y: widgets.length * 2,
-      width: widgetType === 'kpi_card' ? 3 : 6,
-      height: 2,
-      config: {
-        metric_name: "Sample Metric",
-        value: 0,
-        unit: "",
-        threshold: { green: 100, amber: 50, red: 0 }
+  const toggleMetric = (metricId: string) => {
+    const isSelected = selectedMetrics.some(m => m.metricId === metricId);
+    
+    if (isSelected) {
+      setSelectedMetrics(selectedMetrics.filter(m => m.metricId !== metricId));
+    } else {
+      const metric = AVAILABLE_METRICS.find(m => m.id === metricId);
+      if (metric) {
+        setSelectedMetrics([...selectedMetrics, {
+          metricId: metric.id,
+          visualization: metric.defaultVisualization,
+          title: metric.name
+        }]);
       }
-    };
-    setWidgets([...widgets, newWidget]);
-    setSelectedWidget(newWidget.id);
+    }
   };
 
-  const updateWidget = (id: string, updates: Partial<Widget>) => {
-    setWidgets(widgets.map(w => w.id === id ? { ...w, ...updates } : w));
+  const updateVisualization = (metricId: string, visualization: string) => {
+    setSelectedMetrics(selectedMetrics.map(m => 
+      m.metricId === metricId ? { ...m, visualization } : m
+    ));
   };
 
-  const removeWidget = (id: string) => {
-    setWidgets(widgets.filter(w => w.id !== id));
-    if (selectedWidget === id) setSelectedWidget(null);
+  const updateTitle = (metricId: string, title: string) => {
+    setSelectedMetrics(selectedMetrics.map(m => 
+      m.metricId === metricId ? { ...m, title } : m
+    ));
   };
 
   const saveTemplate = async () => {
-    if (!orgId || !user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in and part of an organization",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (!templateName.trim()) {
       toast({
         title: "Error",
@@ -106,103 +157,89 @@ const DashboardBuilder = () => {
       return;
     }
 
+    if (selectedMetrics.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one metric",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!userId || !orgId) {
+      toast({
+        title: "Error",
+        description: "Authentication required",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      // Create template
       const { data: template, error: templateError } = await supabase
         .from("dashboard_templates")
         .insert({
-          org_id: orgId,
           name: templateName,
-          description: templateDescription,
-          created_by: user.id,
-          layout_json: {
-            widgets: widgets.map(w => ({ id: w.id, x: w.position_x, y: w.position_y, w: w.width, h: w.height })),
-            grid: { columns: 12, rowHeight: 100 }
-          }
+          description: description,
+          org_id: orgId,
+          created_by: userId,
+          layout_json: { metrics: selectedMetrics }
         })
         .select()
         .single();
 
       if (templateError) throw templateError;
 
-      // Create widgets
-      const widgetInserts = widgets.map(w => ({
+      // Insert widgets based on selected metrics
+      const widgetInserts = selectedMetrics.map((metric, index) => ({
         template_id: template.id,
-        widget_type: w.type,
-        title: w.title,
-        position_x: w.position_x,
-        position_y: w.position_y,
-        width: w.width,
-        height: w.height,
-        config_json: w.config
+        widget_type: metric.visualization,
+        title: metric.title,
+        position_x: (index % 3) * 4,
+        position_y: Math.floor(index / 3) * 2,
+        width: 4,
+        height: 2,
+        config_json: { metricId: metric.metricId }
       }));
 
-      const { error: widgetsError } = await supabase
-        .from("dashboard_widgets")
-        .insert(widgetInserts);
+      if (widgetInserts.length > 0) {
+        const { error: widgetsError } = await supabase
+          .from("dashboard_widgets")
+          .insert(widgetInserts);
 
-      if (widgetsError) throw widgetsError;
+        if (widgetsError) throw widgetsError;
+      }
 
       toast({
         title: "Success",
         description: "Dashboard template saved successfully"
       });
 
-      navigate("/dashboard");
+      navigate("/settings");
     } catch (error: any) {
-      console.error("Error saving template:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to save template",
+        description: error.message,
         variant: "destructive"
       });
-    }
-  };
-
-  const renderWidget = (widget: Widget) => {
-    const isSelected = selectedWidget === widget.id;
-    const commonProps = {
-      className: `cursor-pointer border-2 ${isSelected ? 'border-primary' : 'border-transparent'} hover:border-primary/50 transition-colors`,
-      onClick: () => setSelectedWidget(widget.id)
-    };
-
-    switch (widget.type) {
-      case 'kpi_card':
-        return <KPICard {...commonProps} title={widget.title} value={widget.config.value || 0} unit={widget.config.unit} />;
-      case 'traffic_light':
-        return <TrafficLight {...commonProps} title={widget.title} status={widget.config.status || 'green'} />;
-      case 'line_chart':
-      case 'bar_chart':
-        return <SimpleChart {...commonProps} title={widget.title} type={widget.type} data={widget.config.data || []} />;
-      default:
-        return <Card {...commonProps}><CardContent className="pt-6">Unknown widget type</CardContent></Card>;
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="container mx-auto px-4 py-8 pt-24">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Dashboard Template Builder</h1>
-            <p className="text-muted-foreground">Create custom dashboards for your organization</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate("/dashboard")}>
-              <Eye className="h-4 w-4 mr-2" />
-              Cancel
-            </Button>
-            <Button onClick={saveTemplate}>
-              <Save className="h-4 w-4 mr-2" />
-              Save Template
-            </Button>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Dashboard Template Builder</h1>
+          <p className="text-muted-foreground">
+            Select metrics and choose how to visualize them
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar: Widget Library + Properties */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Panel - Template Details & Metric Selection */}
           <div className="space-y-6">
+            {/* Template Details */}
             <Card>
               <CardHeader>
                 <CardTitle>Template Details</CardTitle>
@@ -214,95 +251,140 @@ const DashboardBuilder = () => {
                     id="name"
                     value={templateName}
                     onChange={(e) => setTemplateName(e.target.value)}
-                    placeholder="e.g., Board Pulse"
+                    placeholder="e.g., Executive Dashboard"
                   />
                 </div>
                 <div>
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
-                    value={templateDescription}
-                    onChange={(e) => setTemplateDescription(e.target.value)}
-                    placeholder="Brief description..."
-                    rows={3}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe what this dashboard shows..."
                   />
                 </div>
               </CardContent>
             </Card>
 
-            <WidgetLibrary onAddWidget={addWidget} />
-
-            {selectedWidget && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Widget Properties</CardTitle>
-                  <CardDescription>Configure selected widget</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {(() => {
-                    const widget = widgets.find(w => w.id === selectedWidget);
-                    if (!widget) return null;
-                    return (
-                      <>
-                        <div>
-                          <Label>Title</Label>
-                          <Input
-                            value={widget.title}
-                            onChange={(e) => updateWidget(widget.id, { title: e.target.value })}
-                          />
-                        </div>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => removeWidget(widget.id)}
-                        >
-                          Remove Widget
-                        </Button>
-                      </>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Main Canvas */}
-          <div className="lg:col-span-3">
+            {/* Metric Selection */}
             <Card>
               <CardHeader>
-                <CardTitle>Dashboard Preview</CardTitle>
+                <CardTitle>Select Metrics</CardTitle>
+                <CardDescription>Choose which metrics to display on your dashboard</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {AVAILABLE_METRICS.map((metric) => {
+                    const Icon = metric.icon;
+                    const isSelected = selectedMetrics.some(m => m.metricId === metric.id);
+                    
+                    return (
+                      <div key={metric.id} className="flex items-start space-x-3 p-3 rounded-lg border">
+                        <Checkbox
+                          id={metric.id}
+                          checked={isSelected}
+                          onCheckedChange={() => toggleMetric(metric.id)}
+                        />
+                        <div className="flex-1">
+                          <label
+                            htmlFor={metric.id}
+                            className="flex items-center gap-2 font-medium cursor-pointer"
+                          >
+                            <Icon className="h-4 w-4" />
+                            {metric.name}
+                          </label>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {metric.description}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Panel - Selected Metrics Configuration */}
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Configure Selected Metrics</CardTitle>
                 <CardDescription>
-                  Click widgets to select • Drag to reorder (coming soon)
+                  {selectedMetrics.length === 0 
+                    ? "Select metrics from the left to configure them"
+                    : `${selectedMetrics.length} metric${selectedMetrics.length > 1 ? 's' : ''} selected`
+                  }
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {widgets.length === 0 ? (
+                {selectedMetrics.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
-                    <Plus className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No widgets yet. Add widgets from the library on the left.</p>
+                    <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No metrics selected yet</p>
+                    <p className="text-sm mt-2">Select metrics from the left panel to configure them</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-12 gap-4 auto-rows-[100px]">
-                    {widgets.map(widget => (
-                      <div
-                        key={widget.id}
-                        className={`col-span-${widget.width} row-span-${widget.height}`}
-                        style={{
-                          gridColumn: `span ${widget.width}`,
-                          gridRow: `span ${widget.height}`
-                        }}
-                      >
-                        {renderWidget(widget)}
-                      </div>
-                    ))}
+                  <div className="space-y-6">
+                    {selectedMetrics.map((selected) => {
+                      const metric = AVAILABLE_METRICS.find(m => m.id === selected.metricId);
+                      if (!metric) return null;
+                      
+                      const Icon = metric.icon;
+                      
+                      return (
+                        <div key={selected.metricId} className="p-4 border rounded-lg space-y-3">
+                          <div className="flex items-center gap-2 font-medium">
+                            <Icon className="h-4 w-4" />
+                            {metric.name}
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Display Title</Label>
+                            <Input
+                              value={selected.title}
+                              onChange={(e) => updateTitle(selected.metricId, e.target.value)}
+                              placeholder={metric.name}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Visualization Type</Label>
+                            <Select
+                              value={selected.visualization}
+                              onValueChange={(value) => updateVisualization(selected.metricId, value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {metric.visualizationOptions.map((vizType) => (
+                                  <SelectItem key={vizType} value={vizType}>
+                                    {VISUALIZATION_LABELS[vizType]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
             </Card>
           </div>
         </div>
-      </main>
+
+        <div className="mt-8 flex justify-end gap-4">
+          <Button variant="outline" onClick={() => navigate("/settings")}>
+            Cancel
+          </Button>
+          <Button onClick={saveTemplate} disabled={selectedMetrics.length === 0}>
+            Save Template
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
