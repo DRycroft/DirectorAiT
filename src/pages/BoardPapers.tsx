@@ -190,10 +190,7 @@ const BoardPapers = () => {
 
       const { data, error } = await supabase
         .from('board_papers')
-        .select(`
-          *,
-          creator:profiles!board_papers_created_by_fkey(name)
-        `)
+        .select('*')
         .eq('org_id', profile.org_id)
         .order('created_at', { ascending: false });
 
@@ -202,7 +199,26 @@ const BoardPapers = () => {
         return;
       }
 
-      setBoardPapers(data || []);
+      // Fetch creator names for each paper
+      if (data && data.length > 0) {
+        const creatorIds = [...new Set(data.map(p => p.created_by))];
+        const { data: creators } = await supabase
+          .from('profiles')
+          .select('id, name')
+          .in('id', creatorIds);
+
+        const creatorMap = new Map(creators?.map(c => [c.id, c.name]) || []);
+        
+        const papersWithCreators = data.map(paper => ({
+          ...paper,
+          creator_name: creatorMap.get(paper.created_by) || 'Unknown'
+        }));
+
+        setBoardPapers(papersWithCreators as any);
+      } else {
+        setBoardPapers([]);
+      }
+
     } catch (error) {
       console.error('Error in fetchBoardPapers:', error);
     }
@@ -817,7 +833,7 @@ const BoardPapers = () => {
                         <p className="text-sm font-medium text-black">{paper.period_covered}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-black">{(paper as any).creator?.name || 'Unknown'}</p>
+                        <p className="text-sm font-medium text-black">{(paper as any).creator_name || 'Unknown'}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-black">{paper.status}</p>
