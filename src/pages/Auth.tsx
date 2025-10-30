@@ -8,6 +8,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
+import { z } from "zod";
+
+const signInSchema = z.object({
+  email: z.string()
+    .trim()
+    .email('Invalid email format')
+    .max(255, 'Email too long')
+    .toLowerCase(),
+  password: z.string()
+    .min(1, 'Password required')
+    .max(128, 'Password too long')
+});
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -20,9 +32,11 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      const validated = signInSchema.parse({ email, password });
+      
       const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: validated.email,
+        password: validated.password
       });
 
       if (error) throw error;
@@ -30,8 +44,12 @@ const Auth = () => {
       toast.success("Signed in successfully!");
       navigate("/dashboard");
     } catch (error) {
-      logError("Auth.handleLogin", error);
-      toast.error(getUserFriendlyError(error));
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        logError("Auth.handleLogin", error);
+        toast.error(getUserFriendlyError(error));
+      }
     } finally {
       setLoading(false);
     }
