@@ -50,7 +50,7 @@ export default function BoardsManagement() {
     title: "",
     description: "",
     board_type: "main" as 'main' | 'sub_committee' | 'special_purpose',
-    parent_board_id: "",
+    parent_board_id: "none",
     committee_purpose: "",
   });
 
@@ -139,7 +139,7 @@ export default function BoardsManagement() {
         title: formData.title,
         description: formData.description || null,
         board_type: formData.board_type,
-        parent_board_id: formData.parent_board_id || null,
+        parent_board_id: formData.parent_board_id === "none" ? null : formData.parent_board_id,
         committee_purpose: formData.committee_purpose || null,
         org_id: profile.org_id,
       };
@@ -226,7 +226,7 @@ export default function BoardsManagement() {
       title: "",
       description: "",
       board_type: "main",
-      parent_board_id: "",
+      parent_board_id: "none",
       committee_purpose: "",
     });
     setEditingBoard(null);
@@ -238,7 +238,7 @@ export default function BoardsManagement() {
       title: board.title,
       description: board.description || "",
       board_type: board.board_type,
-      parent_board_id: board.parent_board_id || "",
+      parent_board_id: board.parent_board_id || "none",
       committee_purpose: board.committee_purpose || "",
     });
     setDialogOpen(true);
@@ -330,7 +330,7 @@ export default function BoardsManagement() {
                         <SelectValue placeholder="None - Create as standalone entity" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None - Create as standalone entity</SelectItem>
+                        <SelectItem value="none">None - Create as standalone entity</SelectItem>
                         {parentBoards
                           .filter(b => !editingBoard || b.id !== editingBoard.id)
                           .map((board) => (
