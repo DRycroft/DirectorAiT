@@ -30,8 +30,13 @@ interface ParentBoard {
   title: string;
 }
 
+interface BoardWithChildren extends Board {
+  children?: Board[];
+}
+
 export default function BoardsManagement() {
   const [boards, setBoards] = useState<Board[]>([]);
+  const [hierarchicalBoards, setHierarchicalBoards] = useState<BoardWithChildren[]>([]);
   const [parentBoards, setParentBoards] = useState<ParentBoard[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -80,19 +85,31 @@ export default function BoardsManagement() {
 
       if (error) throw error;
       
-      console.log("Fetched boards:", data);
-      setBoards((data || []) as Board[]);
+      const boardsList = (data || []) as Board[];
+      setBoards(boardsList);
 
-      // Fetch parent boards for dropdown
-      const { data: mainBoards } = await supabase
+      // Build hierarchical structure
+      const parentBoardsList = boardsList.filter(b => !b.parent_board_id);
+      const childBoards = boardsList.filter(b => b.parent_board_id);
+      
+      const hierarchical: BoardWithChildren[] = parentBoardsList.map(parent => ({
+        ...parent,
+        children: childBoards.filter(child => child.parent_board_id === parent.id)
+      }));
+
+      setHierarchicalBoards(hierarchical);
+
+      // Fetch all active boards for parent dropdown (not just main boards)
+      const { data: activeBoards } = await supabase
         .from("boards")
         .select("id, title")
         .eq("org_id", profile.org_id)
-        .eq("board_type", "main")
-        .eq("status", "active");
+        .eq("status", "active")
+        .order("title");
 
-      setParentBoards(mainBoards || []);
+      setParentBoards(activeBoards || []);
     } catch (error: any) {
+      console.error("Error fetching boards:", error);
       toast({
         title: "Error",
         description: error.message,
@@ -133,19 +150,28 @@ export default function BoardsManagement() {
           .update(boardData)
           .eq("id", editingBoard.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating board:", error);
+          throw error;
+        }
 
         toast({
           title: "Success",
           description: "Board updated successfully",
         });
       } else {
-        const { error } = await supabase
+        const { data: newBoard, error } = await supabase
           .from("boards")
-          .insert(boardData);
+          .insert(boardData)
+          .select()
+          .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error creating board:", error);
+          throw error;
+        }
 
+        console.log("Board created successfully:", newBoard);
         toast({
           title: "Success",
           description: "Board created successfully",
@@ -290,28 +316,34 @@ export default function BoardsManagement() {
                     </Select>
                   </div>
 
-                  {formData.board_type !== 'main' && (
-                    <div>
-                      <Label htmlFor="parent_board_id">Parent Board</Label>
-                      <Select
-                        value={formData.parent_board_id}
-                        onValueChange={(value) => 
-                          setFormData({ ...formData, parent_board_id: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select parent board" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {parentBoards.map((board) => (
+                  <div>
+                    <Label htmlFor="parent_board_id">
+                      Parent Board/Entity <span className="text-muted-foreground">(Optional)</span>
+                    </Label>
+                    <Select
+                      value={formData.parent_board_id}
+                      onValueChange={(value) => 
+                        setFormData({ ...formData, parent_board_id: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="None - Create as standalone entity" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">None - Create as standalone entity</SelectItem>
+                        {parentBoards
+                          .filter(b => !editingBoard || b.id !== editingBoard.id)
+                          .map((board) => (
                             <SelectItem key={board.id} value={board.id}>
                               {board.title}
                             </SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Select a parent to create a sub-entity, or leave empty for a standalone board
+                    </p>
+                  </div>
 
                   <div>
                     <Label htmlFor="title">Title</Label>
@@ -377,9 +409,8 @@ export default function BoardsManagement() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
+              <TableHead>Board/Committee</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>Parent Board</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -388,56 +419,108 @@ export default function BoardsManagement() {
           <TableBody>
             {boards.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                   No boards found. Create your first board or committee.
                 </TableCell>
               </TableRow>
             ) : (
-              boards.map((board) => (
-                <TableRow key={board.id}>
-                  <TableCell className="font-medium">{board.title}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {getBoardTypeLabel(board.board_type)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {getParentBoardTitle(board.parent_board_id)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={board.status === 'active' ? 'default' : 'secondary'}>
-                      {board.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {new Date(board.created_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditDialog(board)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedBoard(board);
-                          setArchiveDialogOpen(true);
-                        }}
-                      >
-                        {board.status === 'active' ? (
-                          <Archive className="h-4 w-4" />
-                        ) : (
-                          <ArchiveRestore className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+              hierarchicalBoards.map((parentBoard) => (
+                <>
+                  {/* Parent Board Row */}
+                  <TableRow key={parentBoard.id} className="bg-muted/30">
+                    <TableCell className="font-semibold">
+                      {parentBoard.title}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="default">
+                        {getBoardTypeLabel(parentBoard.board_type)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={parentBoard.status === 'active' ? 'default' : 'secondary'}>
+                        {parentBoard.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {new Date(parentBoard.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditDialog(parentBoard)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedBoard(parentBoard);
+                            setArchiveDialogOpen(true);
+                          }}
+                        >
+                          {parentBoard.status === 'active' ? (
+                            <Archive className="h-4 w-4" />
+                          ) : (
+                            <ArchiveRestore className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  
+                  {/* Child Boards Rows */}
+                  {parentBoard.children && parentBoard.children.map((childBoard) => (
+                    <TableRow key={childBoard.id} className="border-l-4 border-l-primary/20">
+                      <TableCell className="pl-12 text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">└─</span>
+                          <span>{childBoard.title}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {getBoardTypeLabel(childBoard.board_type)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={childBoard.status === 'active' ? 'default' : 'secondary'}>
+                          {childBoard.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {new Date(childBoard.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditDialog(childBoard)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedBoard(childBoard);
+                              setArchiveDialogOpen(true);
+                            }}
+                          >
+                            {childBoard.status === 'active' ? (
+                              <Archive className="h-4 w-4" />
+                            ) : (
+                              <ArchiveRestore className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </>
               ))
             )}
           </TableBody>
