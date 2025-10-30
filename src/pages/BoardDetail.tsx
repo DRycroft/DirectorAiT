@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getUserFriendlyError } from "@/lib/errorHandling";
 import { Calendar, FileText, Users, Settings, Plus, CheckCircle2, XCircle, Loader2, ArrowLeft, Download } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -61,7 +62,17 @@ const BoardDetail = () => {
         .eq("id", boardId)
         .maybeSingle();
 
-      if (boardError) throw boardError;
+      if (boardError) {
+        console.error("Board fetch error:", boardError);
+        throw boardError;
+      }
+
+      if (!boardData) {
+        console.log("No board data returned - user may not have access");
+        setBoard(null);
+        setLoading(false);
+        return;
+      }
 
       // Fetch board members
       const { data: teamData, error: teamError } = await supabase
@@ -80,27 +91,29 @@ const BoardDetail = () => {
         .eq("board_id", boardId)
         .order("meeting_date", { ascending: false });
 
-      if (agendasError) throw agendasError;
+      if (agendasError) {
+        console.error("Agendas fetch error:", agendasError);
+      }
 
       // Fetch members
       const { data: membersData, error: membersError } = await supabase
         .from("board_memberships")
-        .select(`
-          *,
-          profiles(name, email)
-        `)
+        .select("*")
         .eq("board_id", boardId);
 
-      if (membersError) throw membersError;
+      if (membersError) {
+        console.error("Members fetch error:", membersError);
+      }
 
       setBoard(boardData);
       setAgendas(agendasData || []);
       setMembers(membersData || []);
     } catch (error: any) {
       console.error("Error fetching board data:", error);
+      const errorMessage = getUserFriendlyError(error);
       toast({
         title: "Error",
-        description: "Failed to load board details",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -382,27 +395,27 @@ const BoardDetail = () => {
             <h2 className="text-2xl font-semibold mb-4">Board Access</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {members.map((member) => (
-                <Card key={member.id}>
+              <Card key={member.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">
-                        {member.profiles?.name || "Unknown"}
+                        Board Member
                       </CardTitle>
                       <Badge variant="outline">{member.role}</Badge>
                     </div>
-                    <CardDescription>{member.profiles?.email}</CardDescription>
+                    <CardDescription>Member ID: {member.user_id}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       {member.accepted_at ? (
                         <>
                           <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          <span>Active</span>
+                          <span>Active since {format(new Date(member.accepted_at), "PP")}</span>
                         </>
                       ) : (
                         <>
                           <Calendar className="h-4 w-4" />
-                          <span>Invited</span>
+                          <span>Invited {format(new Date(member.invited_at), "PP")}</span>
                         </>
                       )}
                     </div>
