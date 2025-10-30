@@ -19,7 +19,7 @@ import AdminManagement from "@/components/settings/AdminManagement";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCircle, Plus, X, Shield } from "lucide-react";
+import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCircle, Plus, X, Shield, LayoutDashboard } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import BoardManagement from "@/components/settings/BoardManagement";
 import { BOARD_POSITIONS, EXECUTIVE_POSITIONS, KEY_STAFF_POSITIONS } from "@/config/positions";
@@ -1699,6 +1699,31 @@ const Settings = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Dashboard Templates Menu */}
+              <Card 
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => window.location.href = '/dashboard/builder'}
+              >
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2">
+                    <LayoutDashboard className="h-5 w-5" />
+                    Dashboard Templates
+                  </CardTitle>
+                  <CardDescription>
+                    Build custom executive dashboards for directors
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Create configurable dashboards with KPIs, charts, and real-time metrics
+                  </p>
+                  <Button className="w-full" variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Build Dashboard
+                  </Button>
                 </CardContent>
               </Card>
             </div>
