@@ -190,7 +190,10 @@ const BoardPapers = () => {
 
       const { data, error } = await supabase
         .from('board_papers')
-        .select('*')
+        .select(`
+          *,
+          creator:profiles!board_papers_created_by_fkey(name)
+        `)
         .eq('org_id', profile.org_id)
         .order('created_at', { ascending: false });
 
@@ -245,6 +248,7 @@ const BoardPapers = () => {
           created_by: user.id,
           company_name: newPaperData.companyName,
           period_covered: periodCovered,
+          period_end_date: selectedDate.toISOString().split('T')[0],
           template_id: template?.id || null,
           status: 'draft'
         });
@@ -787,10 +791,11 @@ const BoardPapers = () => {
           <TabsContent value="papers" className="space-y-4">
             {boardPapers.length > 0 && (
               <div className="space-y-3">
-                <div className="grid grid-cols-5 gap-4 px-4 text-sm font-medium text-muted-foreground">
-                  <div>Date</div>
+                <div className="grid grid-cols-6 gap-4 px-4 text-sm font-medium text-muted-foreground">
+                  <div>Period End</div>
                   <div>Company Name</div>
                   <div>Period</div>
+                  <div>Created By</div>
                   <div>Status</div>
                   <div></div>
                 </div>
@@ -799,15 +804,20 @@ const BoardPapers = () => {
                     key={paper.id} 
                     className="px-4 py-1 border rounded-lg hover:border-primary transition-all cursor-pointer group bg-slate-50"
                   >
-                    <div className="grid grid-cols-5 gap-4 items-center">
+                    <div className="grid grid-cols-6 gap-4 items-center">
                       <div>
-                        <p className="text-sm font-medium text-black">{new Date(paper.created_at).toLocaleDateString()}</p>
+                        <p className="text-sm font-medium text-black">
+                          {paper.period_end_date ? new Date(paper.period_end_date).toLocaleDateString() : 'N/A'}
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-black">{paper.company_name}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-black">{paper.period_covered}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-black">{(paper as any).creator?.name || 'Unknown'}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-black">{paper.status}</p>

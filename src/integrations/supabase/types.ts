@@ -679,6 +679,7 @@ export type Database = {
           id: string
           org_id: string
           period_covered: string
+          period_end_date: string | null
           status: string
           template_id: string | null
           updated_at: string
@@ -692,6 +693,7 @@ export type Database = {
           id?: string
           org_id: string
           period_covered: string
+          period_end_date?: string | null
           status?: string
           template_id?: string | null
           updated_at?: string
@@ -705,6 +707,7 @@ export type Database = {
           id?: string
           org_id?: string
           period_covered?: string
+          period_end_date?: string | null
           status?: string
           template_id?: string | null
           updated_at?: string
