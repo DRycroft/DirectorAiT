@@ -883,6 +883,51 @@ export type Database = {
           },
         ]
       }
+      committee_memberships: {
+        Row: {
+          assigned_at: string
+          committee_id: string
+          committee_role: string
+          created_at: string
+          id: string
+          member_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_at?: string
+          committee_id: string
+          committee_role: string
+          created_at?: string
+          id?: string
+          member_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_at?: string
+          committee_id?: string
+          committee_role?: string
+          created_at?: string
+          id?: string
+          member_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "committee_memberships_committee_id_fkey"
+            columns: ["committee_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "committee_memberships_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "board_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_categories: {
         Row: {
           created_at: string

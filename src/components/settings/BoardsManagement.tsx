@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Archive, ArchiveRestore, Edit, Users, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import CommitteeMembersDialog from "./CommitteeMembersDialog";
 
 interface Board {
   id: string;
@@ -53,6 +54,8 @@ export default function BoardsManagement() {
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
+  const [membersDialogOpen, setMembersDialogOpen] = useState(false);
+  const [selectedCommittee, setSelectedCommittee] = useState<Board | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const { toast } = useToast();
 
@@ -700,6 +703,16 @@ export default function BoardsManagement() {
                             variant="ghost"
                             size="sm"
                             onClick={() => {
+                              setSelectedCommittee(childBoard);
+                              setMembersDialogOpen(true);
+                            }}
+                          >
+                            <Users className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
                               setSelectedBoard(childBoard);
                               setDeleteDialogOpen(true);
                             }}
@@ -741,25 +754,28 @@ export default function BoardsManagement() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Board?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Board/Committee</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to permanently delete "{selectedBoard?.title}"? 
-              This action cannot be undone. The board will only be deleted if it has no members, papers, or sub-committees.
-              {selectedBoard?.status === 'active' && (
-                <span className="block mt-2 text-amber-600">
-                  Consider archiving instead if this board has been in use.
-                </span>
-              )}
+              Are you sure you want to delete "{selectedBoard?.title}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {selectedCommittee && (
+        <CommitteeMembersDialog
+          open={membersDialogOpen}
+          onOpenChange={setMembersDialogOpen}
+          committeeId={selectedCommittee.id}
+          committeeName={selectedCommittee.title}
+        />
+      )}
     </Card>
   );
 }
