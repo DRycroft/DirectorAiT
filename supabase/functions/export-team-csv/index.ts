@@ -24,11 +24,98 @@ serve(async (req) => {
       );
     }
 
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log("Fetching team members for CSV export:", boardId);
+    // Get authenticated user
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Get user's org_id
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('org_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile?.org_id) {
+      return new Response(
+        JSON.stringify({ error: "User profile not found" }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Verify board belongs to user's organization
+    const { data: board, error: boardError } = await supabase
+      .from("boards")
+      .select("org_id")
+      .eq("id", boardId)
+      .single();
+
+    if (boardError || !board) {
+      return new Response(
+        JSON.stringify({ error: "Board not found" }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (board.org_id !== profile.org_id) {
+      return new Response(
+        JSON.stringify({ error: "Access denied" }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // For confidential exports, require admin role
+    if (includeConfidential) {
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .in('role', ['org_admin', 'super_admin']);
+        
+      if (!roles || roles.length === 0) {
+        return new Response(
+          JSON.stringify({ error: "Insufficient permissions for confidential export" }),
+          {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
 
     // Fetch all members for this board
     const { data: members, error } = await supabase
@@ -94,11 +181,15 @@ serve(async (req) => {
     ).join('\n');
 
     // Create audit log for export
-    await supabase.from("board_member_audit").insert({
-      member_id: members?.[0]?.id,
-      field_name: "team_export",
-      new_value: `CSV export for board ${boardId} (${includeConfidential ? "with" : "without"} confidential data)`,
-      change_type: "updated",
+    await supabase.rpc('log_audit_entry', {
+      _entity_type: 'board_export',
+      _entity_id: boardId,
+      _action: 'csv_export',
+      _detail_json: {
+        member_count: members?.length || 0,
+        included_confidential: includeConfidential,
+        member_ids: members?.map(m => m.id) || []
+      }
     });
 
     return new Response(

@@ -24,23 +24,81 @@ serve(async (req) => {
       );
     }
 
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log("Fetching member data for PDF export:", memberId);
+    // Get authenticated user
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
-    // Fetch member details
+    // Get user's org_id
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('org_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile?.org_id) {
+      return new Response(
+        JSON.stringify({ error: "User profile not found" }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Fetch member details with org verification
     const { data: member, error } = await supabase
       .from("board_members")
-      .select("*")
+      .select("*, boards!inner(org_id)")
       .eq("id", memberId)
       .single();
 
     if (error) {
-      console.error("Error fetching member:", error);
-      throw error;
+      return new Response(
+        JSON.stringify({ error: "Member not found" }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
+
+    // Verify member belongs to user's organization
+    if (member.boards.org_id !== profile.org_id) {
+      return new Response(
+        JSON.stringify({ error: "Access denied" }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
 
     const publishPrefs = member.publish_preferences || {};
 
