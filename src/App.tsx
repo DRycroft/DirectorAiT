@@ -5,12 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Eagerly load landing and auth pages for fast initial load
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
+import Health from "./pages/Health";
 
 // Lazy load heavy/authenticated routes
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -41,13 +43,14 @@ const PageLoader = () => (
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/signup" element={<SignUp />} />
@@ -68,6 +71,7 @@ const App = () => (
             <Route path="/member-invite" element={<MemberInvite />} />
             <Route path="/member-approval/:memberId" element={<MemberApproval />} />
             <Route path="/export-team/:boardId" element={<ExportTeam />} />
+            <Route path="/health" element={<Health />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -75,6 +79,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
