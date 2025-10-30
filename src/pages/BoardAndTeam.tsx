@@ -68,7 +68,7 @@ const BoardAndTeam = () => {
         .from("boards")
         .select("*, organizations(name)")
         .eq("id", boardId)
-        .single();
+        .maybeSingle();
 
       if (boardError) throw boardError;
       setBoard(boardData);

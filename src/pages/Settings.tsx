@@ -483,14 +483,14 @@ const Settings = () => {
         .from("profiles")
         .select("org_id")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (profile?.org_id) {
         const { data: org } = await supabase
           .from("organizations")
           .select("*")
           .eq("id", profile.org_id)
-          .single();
+          .maybeSingle();
 
         if (org) {
           // Detect country code from any phone number that has one
