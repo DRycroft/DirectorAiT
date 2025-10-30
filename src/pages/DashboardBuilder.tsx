@@ -178,13 +178,13 @@ const DashboardBuilder = () => {
     try {
       const { data: template, error: templateError } = await supabase
         .from("dashboard_templates")
-        .insert({
+        .insert([{
           name: templateName,
           description: description,
           org_id: orgId,
           created_by: userId,
-          layout_json: { metrics: selectedMetrics }
-        })
+          layout_json: { metrics: selectedMetrics } as any
+        }])
         .select()
         .single();
 
