@@ -9,8 +9,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, Upload, Filter } from "lucide-react";
+import { Download, Upload, Filter, CalendarIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import type { BoardPaper } from "@/types/database";
 
 interface ExecutiveReport {
@@ -76,10 +80,15 @@ const BoardPapers = () => {
   const [specialPaperCategory, setSpecialPaperCategory] = useState("");
   const [specialPaperDescription, setSpecialPaperDescription] = useState("");
   const [specialPaperDeadline, setSpecialPaperDeadline] = useState("");
+  const getMonthEnd = () => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  };
+
+  const [selectedDate, setSelectedDate] = useState<Date>(getMonthEnd());
+  const [selectedFrequency, setSelectedFrequency] = useState<'monthly' | 'bi-monthly' | 'quarterly'>('quarterly');
   const [newPaperData, setNewPaperData] = useState({
-    date: new Date().toISOString().split('T')[0],
     companyName: "",
-    periodCovered: "",
   });
 
   useEffect(() => {
@@ -126,29 +135,28 @@ const BoardPapers = () => {
       // Auto-populate company name
       setNewPaperData(prev => ({
         ...prev,
-        companyName: org.name || "",
-        periodCovered: getCurrentPeriod(org.reporting_frequency)
+        companyName: org.name || ""
       }));
     } catch (error) {
       console.error('Error in fetchOrganizationData:', error);
     }
   };
 
-  const getCurrentPeriod = (frequency: string | null) => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
+  const getPeriodFromDate = (date: Date, frequency: 'monthly' | 'bi-monthly' | 'quarterly') => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
     
     if (frequency === 'quarterly') {
       const quarter = Math.floor(month / 3) + 1;
       return `Q${quarter} ${year}`;
     } else if (frequency === 'monthly') {
-      return now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    } else if (frequency === 'annually') {
-      return `FY ${year}`;
+      return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    } else if (frequency === 'bi-monthly') {
+      const period = Math.floor(month / 2) + 1;
+      return `Period ${period} ${year}`;
     }
     
-    return `Q${Math.floor(month / 3) + 1} ${year}`; // Default to quarterly
+    return `Q${Math.floor(month / 3) + 1} ${year}`;
   };
 
   // Update dialog data when organization changes or dialog opens
@@ -156,9 +164,14 @@ const BoardPapers = () => {
     if (createPaperDialogOpen && organization) {
       setNewPaperData(prev => ({
         ...prev,
-        companyName: organization.name || "",
-        periodCovered: getCurrentPeriod(organization.reporting_frequency)
+        companyName: organization.name || ""
       }));
+      // Set frequency based on org settings
+      if (organization.reporting_frequency === 'monthly') {
+        setSelectedFrequency('monthly');
+      } else if (organization.reporting_frequency === 'quarterly') {
+        setSelectedFrequency('quarterly');
+      }
     }
   }, [createPaperDialogOpen, organization]);
 
@@ -193,7 +206,7 @@ const BoardPapers = () => {
   };
 
   const handleCreateBoardPaper = async () => {
-    if (!newPaperData.companyName || !newPaperData.periodCovered) {
+    if (!newPaperData.companyName || !selectedDate) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -201,6 +214,8 @@ const BoardPapers = () => {
       });
       return;
     }
+
+    const periodCovered = getPeriodFromDate(selectedDate, selectedFrequency);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -229,7 +244,7 @@ const BoardPapers = () => {
           org_id: profile.org_id,
           created_by: user.id,
           company_name: newPaperData.companyName,
-          period_covered: newPaperData.periodCovered,
+          period_covered: periodCovered,
           template_id: template?.id || null,
           status: 'draft'
         });
@@ -237,10 +252,10 @@ const BoardPapers = () => {
       if (insertError) throw insertError;
       
       setCreatePaperDialogOpen(false);
+      setSelectedDate(getMonthEnd());
+      setSelectedFrequency('quarterly');
       setNewPaperData({
-        date: new Date().toISOString().split('T')[0],
         companyName: "",
-        periodCovered: "",
       });
       
       // Refresh the list
@@ -250,7 +265,7 @@ const BoardPapers = () => {
         title: "Board Paper Created",
         description: template 
           ? `Board paper created using your saved template with ${(template.sections as any[])?.length || 0} sections.`
-          : `Board paper created for ${newPaperData.companyName} (${newPaperData.periodCovered}).`,
+          : `Board paper created for ${newPaperData.companyName} (${periodCovered}).`,
       });
     } catch (error) {
       console.error('Error creating board paper:', error);
@@ -704,12 +719,29 @@ const BoardPapers = () => {
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
                     <Label htmlFor="date">Date</Label>
-                    <Input
-                      id="date"
-                      type="date"
-                      value={newPaperData.date}
-                      onChange={(e) => setNewPaperData({ ...newPaperData, date: e.target.value })}
-                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !selectedDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={(date) => date && setSelectedDate(date)}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="companyName">Company Name</Label>
@@ -721,13 +753,23 @@ const BoardPapers = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="periodCovered">Period Covered</Label>
-                    <Input
-                      id="periodCovered"
-                      placeholder="e.g., Q1 2024, January 2024"
-                      value={newPaperData.periodCovered}
-                      onChange={(e) => setNewPaperData({ ...newPaperData, periodCovered: e.target.value })}
-                    />
+                    <Label htmlFor="frequency">Reporting Frequency</Label>
+                    <Select value={selectedFrequency} onValueChange={(value: any) => setSelectedFrequency(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select frequency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="bi-monthly">Bi-Monthly</SelectItem>
+                        <SelectItem value="quarterly">Quarterly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Period Covered (Auto-generated)</Label>
+                    <div className="px-3 py-2 border rounded-md bg-muted text-sm">
+                      {getPeriodFromDate(selectedDate, selectedFrequency)}
+                    </div>
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
