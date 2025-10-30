@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Archive, ArchiveRestore, Edit, Users } from "lucide-react";
+import { Plus, Archive, ArchiveRestore, Edit, Users, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface Board {
@@ -51,6 +51,7 @@ export default function BoardsManagement() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const { toast } = useToast();
@@ -314,6 +315,82 @@ export default function BoardsManagement() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!selectedBoard) return;
+
+    try {
+      // Check if board has any associated data (members, papers, etc.)
+      const { count: memberCount } = await supabase
+        .from("board_memberships")
+        .select("*", { count: 'exact', head: true })
+        .eq("board_id", selectedBoard.id);
+
+      const { count: paperCount } = await supabase
+        .from("board_papers")
+        .select("*", { count: 'exact', head: true })
+        .eq("board_id", selectedBoard.id);
+
+      if (memberCount && memberCount > 0) {
+        toast({
+          title: "Cannot Delete",
+          description: "This board has members. Please remove all members before deleting, or archive the board instead.",
+          variant: "destructive",
+        });
+        setDeleteDialogOpen(false);
+        return;
+      }
+
+      if (paperCount && paperCount > 0) {
+        toast({
+          title: "Cannot Delete",
+          description: "This board has board papers or reports. Please archive the board instead of deleting it.",
+          variant: "destructive",
+        });
+        setDeleteDialogOpen(false);
+        return;
+      }
+
+      // Check if board has children
+      const { count: childCount } = await supabase
+        .from("boards")
+        .select("*", { count: 'exact', head: true })
+        .eq("parent_board_id", selectedBoard.id);
+
+      if (childCount && childCount > 0) {
+        toast({
+          title: "Cannot Delete",
+          description: "This board has sub-committees. Please delete or reassign them first.",
+          variant: "destructive",
+        });
+        setDeleteDialogOpen(false);
+        return;
+      }
+
+      // If no associated data, delete the board
+      const { error } = await supabase
+        .from("boards")
+        .delete()
+        .eq("id", selectedBoard.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Board deleted successfully",
+      });
+
+      setDeleteDialogOpen(false);
+      setSelectedBoard(null);
+      fetchBoards();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       title: "",
@@ -560,6 +637,16 @@ export default function BoardsManagement() {
                             <ArchiveRestore className="h-4 w-4" />
                           )}
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedBoard(parentBoard);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -609,6 +696,16 @@ export default function BoardsManagement() {
                               <ArchiveRestore className="h-4 w-4" />
                             )}
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedBoard(childBoard);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -636,6 +733,29 @@ export default function BoardsManagement() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleArchive}>
               {selectedBoard?.status === 'active' ? 'Archive' : 'Restore'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Board?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete "{selectedBoard?.title}"? 
+              This action cannot be undone. The board will only be deleted if it has no members, papers, or sub-committees.
+              {selectedBoard?.status === 'active' && (
+                <span className="block mt-2 text-amber-600">
+                  Consider archiving instead if this board has been in use.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
