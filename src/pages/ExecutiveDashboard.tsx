@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ const ExecutiveDashboard = () => {
 
   const handleSnapshotExport = () => {
     // TODO: Implement PDF export functionality
-    console.log('Exporting dashboard snapshot...');
+    logger.info('Exporting dashboard snapshot');
   };
 
   return (

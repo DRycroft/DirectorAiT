@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
+import { phoneSchema } from "@/lib/phoneValidation";
 
 const signUpSchema = z.object({
   // User details
@@ -23,10 +25,7 @@ const signUpSchema = z.object({
       (pwd) => /[A-Z]/.test(pwd) && /[a-z]/.test(pwd) && /[0-9]/.test(pwd),
       "Password must contain uppercase, lowercase, and numbers"
     ),
-  phone: z.string().trim()
-    .regex(/^(\+64|0)\d{8,10}$/, "Invalid NZ phone number format")
-    .optional()
-    .or(z.literal('')),
+  phone: phoneSchema,
   
   // Company details
   companyName: z.string().trim().min(2, "Company name required").max(200)
@@ -40,19 +39,13 @@ const signUpSchema = z.object({
   primaryContactName: z.string().trim().min(2, "Primary contact name required").max(200),
   primaryContactRole: z.string().trim().min(2, "Role required").max(100),
   primaryContactEmail: z.string().trim().email("Invalid email").max(255).toLowerCase(),
-  primaryContactPhone: z.string().trim()
-    .regex(/^(\+64|0)\d{8,10}$/, "Invalid NZ phone number format")
-    .optional()
-    .or(z.literal('')),
+  primaryContactPhone: phoneSchema,
   
   // Admin details
   adminName: z.string().trim().min(2, "Admin name required").max(200),
   adminRole: z.string().trim().min(2, "Admin role required").max(100),
   adminEmail: z.string().trim().email("Invalid email").max(255).toLowerCase(),
-  adminPhone: z.string().trim()
-    .regex(/^(\+64|0)\d{8,10}$/, "Invalid NZ phone number format")
-    .optional()
-    .or(z.literal('')),
+  adminPhone: phoneSchema,
   
   // Board reporting
   reportingFrequency: z.enum(['monthly', 'bi-monthly', 'quarterly', 'biannually']),
@@ -235,12 +228,10 @@ const SignUp = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone (Optional)</Label>
-                    <Input 
-                      id="phone" 
-                      type="tel"
-                      placeholder="+1 234 567 8900"
+                    <PhoneInput 
+                      id="phone"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, phone: value })}
                     />
                   </div>
                   
@@ -323,11 +314,10 @@ const SignUp = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="primaryContactPhone">Phone (Optional)</Label>
-                    <Input 
-                      id="primaryContactPhone" 
-                      type="tel"
+                    <PhoneInput 
+                      id="primaryContactPhone"
                       value={formData.primaryContactPhone}
-                      onChange={(e) => setFormData({ ...formData, primaryContactPhone: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, primaryContactPhone: value })}
                     />
                   </div>
 
@@ -368,11 +358,10 @@ const SignUp = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="adminPhone">Phone (Optional)</Label>
-                    <Input 
-                      id="adminPhone" 
-                      type="tel"
+                    <PhoneInput 
+                      id="adminPhone"
                       value={formData.adminPhone}
-                      onChange={(e) => setFormData({ ...formData, adminPhone: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, adminPhone: value })}
                     />
                   </div>
                 </>
