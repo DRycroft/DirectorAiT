@@ -1,4 +1,6 @@
 name: Lighthouse CI
+# Temporarily disabled
+on: []
 
 on:
   push:
