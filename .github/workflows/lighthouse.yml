@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [main, master, develop]
   schedule:
-    # Run weekly on Mondays at 9am UTC
     - cron: '0 9 * * 1'
 
 jobs:
@@ -27,13 +26,21 @@ jobs:
       - name: Build project
         run: npm run build
       
+      - name: Start preview server
+        run: npm run preview &
+        env:
+          CI: true
+      
+      - name: Wait for server
+        run: npx wait-on https://12fedd0d94-4173.preview.abacusai.app -t 30000
+      
       - name: Audit URLs with Lighthouse
         uses: treosh/lighthouse-ci-action@v10
         with:
           urls: |
-            http://localhost:8080/
-            http://localhost:8080/auth
-            http://localhost:8080/dashboard
+            https://12fedd0d94-4173.preview.abacusai.app
+            https://12fedd0d94-4173.preview.abacusai.app
+            https://12fedd0d94-4173.preview.abacusai.app
           uploadArtifacts: true
           temporaryPublicStorage: true
           configPath: './lighthouserc.json'
