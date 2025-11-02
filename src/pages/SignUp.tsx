@@ -184,12 +184,16 @@ const SignUp = () => {
       if (authData.user && authData.session) {
         console.log("✅ Session established");
         
-        // Explicitly set the session to ensure it's used for subsequent requests
-        await supabase.auth.setSession({
-          access_token: authData.session.access_token,
-          refresh_token: authData.session.refresh_token,
-        });
-        console.log("✅ Session explicitly set in client");
+        // Wait a moment for session to propagate, then verify it
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !currentSession) {
+          console.error("❌ Failed to verify session:", sessionError);
+          throw new Error("Session verification failed. Please try again.");
+        }
+        
+        console.log("✅ Session verified, user role:", currentSession.user.role);
         
         // Create organization with all details
         console.log("Creating organization...");
