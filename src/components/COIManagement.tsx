@@ -1,15 +1,11 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 
 interface COIManagementProps {
   memberId?: string;
   isEditable?: boolean;
 }
 
-export default function COIManagement({ memberId, isEditable = true }: COIManagementProps) {
-  const { toast } = useToast();
+export default function COIManagement({ memberId: _memberId, isEditable: _isEditable = true }: COIManagementProps) {
 
   return (
     <div className="space-y-4">

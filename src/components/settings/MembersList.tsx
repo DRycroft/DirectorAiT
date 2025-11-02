@@ -25,7 +25,7 @@ interface MembersListProps {
   onRefresh?: () => void;
 }
 
-export function MembersList({ boardId, memberType, onRefresh }: MembersListProps) {
+export function MembersList({ boardId, memberType, onRefresh: _onRefresh }: MembersListProps) {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingInvite, setGeneratingInvite] = useState<string | null>(null);

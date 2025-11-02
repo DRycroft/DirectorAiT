@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { Navigation } from '../Navigation';
+import Navigation from '../Navigation';
 
 // Mock Supabase
 vi.mock('@/integrations/supabase/client', () => ({
@@ -27,13 +27,13 @@ describe('Navigation Component', () => {
   };
 
   it('should render navigation component', () => {
-    renderNavigation();
-    expect(screen.getByRole('navigation')).toBeInTheDocument();
+    const { container } = renderNavigation();
+    expect(container.querySelector('nav')).toBeInTheDocument();
   });
 
   it('should have accessible navigation structure', () => {
-    renderNavigation();
-    const nav = screen.getByRole('navigation');
+    const { container } = renderNavigation();
+    const nav = container.querySelector('nav');
     expect(nav).toBeInTheDocument();
   });
 });
