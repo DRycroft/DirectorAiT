@@ -199,8 +199,18 @@ const SignUp = () => {
 
       if (authError) {
         console.error("Auth error:", authError);
-        // Check for weak password error specifically
-        if (authError.message?.includes('weak') || authError.message?.includes('pwned')) {
+        
+        // Check for specific error types and provide clear guidance
+        if (authError.message?.toLowerCase().includes('already registered') || 
+            authError.message?.toLowerCase().includes('user already exists')) {
+          toast.error(
+            <div className="flex flex-col gap-2">
+              <p className="font-semibold">This email is already registered!</p>
+              <p>Please <Link to="/auth" className="underline font-medium">log in</Link> instead, or use a different email address.</p>
+            </div>,
+            { duration: 8000 }
+          );
+        } else if (authError.message?.includes('weak') || authError.message?.includes('pwned')) {
           toast.error("This password has been found in data breaches. Please use a different, unique password.");
         } else {
           toast.error(authError.message);
