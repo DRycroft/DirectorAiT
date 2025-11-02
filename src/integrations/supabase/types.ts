@@ -2262,6 +2262,7 @@ export type Database = {
         Args: { check_org_id: string }
         Returns: boolean
       }
+      user_can_create_org: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role:
