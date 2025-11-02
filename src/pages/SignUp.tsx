@@ -95,9 +95,12 @@ const SignUp = () => {
     setLoading(true);
 
     try {
+      console.log("Starting signup...");
       const validatedData = signUpSchema.parse(formData);
+      console.log("Validation passed");
 
       // Sign up the user
+      console.log("Calling auth.signUp...");
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: validatedData.email,
         password: validatedData.password,
@@ -109,10 +112,15 @@ const SignUp = () => {
         },
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error("Auth error:", authError);
+        throw authError;
+      }
+      console.log("User created:", authData.user?.id);
 
       if (authData.user) {
         // Create organization with all details
+        console.log("Creating organization...");
         const { data: org, error: orgError } = await supabase
           .from("organizations")
           .insert({
@@ -133,9 +141,14 @@ const SignUp = () => {
           .select()
           .single();
 
-        if (orgError) throw orgError;
+        if (orgError) {
+          console.error("Organization error:", orgError);
+          throw orgError;
+        }
+        console.log("Organization created:", org.id);
 
         // Update profile with org_id and phone
+        console.log("Updating profile...");
         const { error: profileError } = await supabase
           .from("profiles")
           .update({
@@ -144,9 +157,14 @@ const SignUp = () => {
           })
           .eq("id", authData.user.id);
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error("Profile error:", profileError);
+          throw profileError;
+        }
+        console.log("Profile updated");
 
         // Assign org_admin role
+        console.log("Assigning org_admin role...");
         const { error: roleError } = await supabase
           .from("user_roles")
           .insert({
@@ -154,7 +172,11 @@ const SignUp = () => {
             role: "org_admin",
           });
 
-        if (roleError) throw roleError;
+        if (roleError) {
+          console.error("Role error:", roleError);
+          throw roleError;
+        }
+        console.log("Role assigned successfully");
 
         toast.success("Account created successfully!");
         navigate("/dashboard");
@@ -164,6 +186,9 @@ const SignUp = () => {
         toast.error(error.errors[0].message);
       } else {
         logError("SignUp", error);
+        // Show more detailed error in development
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error("Signup error details:", { error, errorMessage });
         toast.error(getUserFriendlyError(error));
       }
     } finally {
