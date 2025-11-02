@@ -9,7 +9,6 @@ import { Users, FileText, CheckCircle2, AlertCircle, TrendingUp, Calendar } from
 import { Skeleton } from "@/components/ui/skeleton";
 import { logError } from "@/lib/errorHandling";
 import { LucideIcon } from "lucide-react";
-import { BoardWithOrg } from "@/types/database";
 
 interface DashboardStats {
   totalBoards: number;
@@ -30,7 +29,6 @@ const Dashboard = () => {
     documentCount: 0,
     pendingApprovals: 0,
   });
-  const [user, setUser] = useState<any>(null);
   const [boards, setBoards] = useState<any[]>([]);
 
   useEffect(() => {
@@ -45,7 +43,6 @@ const Dashboard = () => {
       return;
     }
     
-    setUser(user);
     await fetchDashboardData();
   };
 

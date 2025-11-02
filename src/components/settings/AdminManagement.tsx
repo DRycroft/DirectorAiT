@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
-import { Shield, User, Crown, AlertCircle } from "lucide-react";
+import { Shield, Crown, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 

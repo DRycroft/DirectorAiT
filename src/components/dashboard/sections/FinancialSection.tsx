@@ -190,7 +190,7 @@ export const FinancialSection = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {agedDebtorsData.map((item, idx) => (
+                    {agedDebtorsData.map((item) => (
                       <TableRow key={item.range}>
                         <TableCell className="font-medium">{item.range} days</TableCell>
                         <TableCell className="text-right">${item.amount}K</TableCell>

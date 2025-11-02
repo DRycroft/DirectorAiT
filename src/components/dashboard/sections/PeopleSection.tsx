@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardGrid, DashboardSection } from "../DashboardLayout";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, TrendingUp, TrendingDown, UserMinus, UserPlus, Clock } from "lucide-react";
+import { TrendingUp, TrendingDown, UserMinus, UserPlus, Clock } from "lucide-react";
 
 export const PeopleSection = () => {
   // Headcount trend

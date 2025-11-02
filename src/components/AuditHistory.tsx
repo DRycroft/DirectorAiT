@@ -1,14 +1,10 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 
 interface AuditHistoryProps {
   memberId?: string;
 }
 
-export default function AuditHistory({ memberId }: AuditHistoryProps) {
-  const { toast } = useToast();
+export default function AuditHistory({ memberId: _memberId }: AuditHistoryProps) {
 
   return (
     <div className="space-y-4">

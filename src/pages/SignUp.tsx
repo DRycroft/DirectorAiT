@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
+import { phoneSchema } from "@/lib/phoneValidation";
 
 const signUpSchema = z.object({
   // User details
@@ -23,10 +25,7 @@ const signUpSchema = z.object({
       (pwd) => /[A-Z]/.test(pwd) && /[a-z]/.test(pwd) && /[0-9]/.test(pwd),
       "Password must contain uppercase, lowercase, and numbers"
     ),
-  phone: z.string().trim()
-    .regex(/^(\+64|0)\d{8,10}$/, "Invalid NZ phone number format")
-    .optional()
-    .or(z.literal('')),
+  phone: phoneSchema,
   
   // Company details
   companyName: z.string().trim().min(2, "Company name required").max(200)
@@ -40,19 +39,13 @@ const signUpSchema = z.object({
   primaryContactName: z.string().trim().min(2, "Primary contact name required").max(200),
   primaryContactRole: z.string().trim().min(2, "Role required").max(100),
   primaryContactEmail: z.string().trim().email("Invalid email").max(255).toLowerCase(),
-  primaryContactPhone: z.string().trim()
-    .regex(/^(\+64|0)\d{8,10}$/, "Invalid NZ phone number format")
-    .optional()
-    .or(z.literal('')),
+  primaryContactPhone: phoneSchema,
   
   // Admin details
   adminName: z.string().trim().min(2, "Admin name required").max(200),
   adminRole: z.string().trim().min(2, "Admin role required").max(100),
   adminEmail: z.string().trim().email("Invalid email").max(255).toLowerCase(),
-  adminPhone: z.string().trim()
-    .regex(/^(\+64|0)\d{8,10}$/, "Invalid NZ phone number format")
-    .optional()
-    .or(z.literal('')),
+  adminPhone: phoneSchema,
   
   // Board reporting
   reportingFrequency: z.enum(['monthly', 'bi-monthly', 'quarterly', 'biannually']),
@@ -64,6 +57,7 @@ const SignUp = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     // User
     name: "",
@@ -89,8 +83,70 @@ const SignUp = () => {
     agmDate: "",
   });
 
+  const validateField = (fieldName: string, value: any) => {
+    try {
+      const fieldSchema = (signUpSchema.shape as any)[fieldName];
+      if (fieldSchema) {
+        fieldSchema.parse(value);
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[fieldName];
+          return newErrors;
+        });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setErrors(prev => ({ ...prev, [fieldName]: error.errors[0].message }));
+      }
+    }
+  };
+
   const handleNext = () => {
-    if (step < 4) setStep(step + 1);
+    // Validate current step before moving forward
+    try {
+      if (step === 1) {
+        const stepSchema = z.object({
+          name: signUpSchema.shape.name,
+          email: signUpSchema.shape.email,
+          password: signUpSchema.shape.password,
+          phone: signUpSchema.shape.phone,
+        });
+        stepSchema.parse(formData);
+        setErrors({});
+      } else if (step === 2) {
+        const stepSchema = z.object({
+          companyName: signUpSchema.shape.companyName,
+          businessNumber: signUpSchema.shape.businessNumber,
+        });
+        stepSchema.parse(formData);
+        setErrors({});
+      } else if (step === 3) {
+        const stepSchema = z.object({
+          primaryContactName: signUpSchema.shape.primaryContactName,
+          primaryContactRole: signUpSchema.shape.primaryContactRole,
+          primaryContactEmail: signUpSchema.shape.primaryContactEmail,
+          primaryContactPhone: signUpSchema.shape.primaryContactPhone,
+          adminName: signUpSchema.shape.adminName,
+          adminRole: signUpSchema.shape.adminRole,
+          adminEmail: signUpSchema.shape.adminEmail,
+          adminPhone: signUpSchema.shape.adminPhone,
+        });
+        stepSchema.parse(formData);
+        setErrors({});
+      }
+      if (step < 4) setStep(step + 1);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach(err => {
+          if (err.path[0]) {
+            newErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(newErrors);
+        toast.error(error.errors[0].message);
+      }
+    }
   };
 
   const handleBack = () => {
@@ -102,9 +158,12 @@ const SignUp = () => {
     setLoading(true);
 
     try {
+      console.log("Starting signup...");
       const validatedData = signUpSchema.parse(formData);
+      console.log("Validation passed");
 
       // Sign up the user
+      console.log("Calling auth.signUp...");
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: validatedData.email,
         password: validatedData.password,
@@ -116,10 +175,28 @@ const SignUp = () => {
         },
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error("Auth error:", authError);
+        throw authError;
+      }
+      console.log("✅ User created:", authData.user?.id);
 
-      if (authData.user) {
+      if (authData.user && authData.session) {
+        console.log("✅ Session established");
+        
+        // Wait a moment for session to propagate, then verify it
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !currentSession) {
+          console.error("❌ Failed to verify session:", sessionError);
+          throw new Error("Session verification failed. Please try again.");
+        }
+        
+        console.log("✅ Session verified, user role:", currentSession.user.role);
+        
         // Create organization with all details
+        console.log("Creating organization...");
         const { data: org, error: orgError } = await supabase
           .from("organizations")
           .insert({
@@ -140,9 +217,14 @@ const SignUp = () => {
           .select()
           .single();
 
-        if (orgError) throw orgError;
+        if (orgError) {
+          console.error("❌ Organization creation failed:", orgError);
+          throw new Error(`Failed to create organization: ${orgError.message}`);
+        }
+        console.log("✅ Organization created:", org.id);
 
         // Update profile with org_id and phone
+        console.log("Updating profile with org_id...");
         const { error: profileError } = await supabase
           .from("profiles")
           .update({
@@ -151,9 +233,17 @@ const SignUp = () => {
           })
           .eq("id", authData.user.id);
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error("❌ Profile update failed:", profileError);
+          throw new Error(`Failed to update profile: ${profileError.message}`);
+        }
+        console.log("✅ Profile updated with org_id");
+
+        // Wait a moment to ensure profile update is committed
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         // Assign org_admin role
+        console.log("Assigning org_admin role...");
         const { error: roleError } = await supabase
           .from("user_roles")
           .insert({
@@ -161,7 +251,11 @@ const SignUp = () => {
             role: "org_admin",
           });
 
-        if (roleError) throw roleError;
+        if (roleError) {
+          console.error("❌ Role assignment failed:", roleError);
+          throw new Error(`Failed to assign role: ${roleError.message}`);
+        }
+        console.log("✅ Role assigned successfully");
 
         toast.success("Account created successfully!");
         navigate("/dashboard");
@@ -171,6 +265,9 @@ const SignUp = () => {
         toast.error(error.errors[0].message);
       } else {
         logError("SignUp", error);
+        // Show more detailed error in development
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error("Signup error details:", { error, errorMessage });
         toast.error(getUserFriendlyError(error));
       }
     } finally {
@@ -215,33 +312,40 @@ const SignUp = () => {
                       id="name" 
                       type="text"
                       placeholder="John Doe"
-                      required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onBlur={(e) => validateField('name', e.target.value)}
+                      className={errors.name ? 'border-destructive' : ''}
                     />
+                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input 
                       id="email" 
-                      type="email" 
+                      type="text" 
                       placeholder="name@company.com"
-                      required
+                      autoComplete="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onBlur={(e) => validateField('email', e.target.value)}
+                      className={errors.email ? 'border-destructive' : ''}
                     />
+                    {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone (Optional)</Label>
-                    <Input 
-                      id="phone" 
-                      type="tel"
-                      placeholder="+1 234 567 8900"
+                    <PhoneInput 
+                      id="phone"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(value) => {
+                        setFormData({ ...formData, phone: value });
+                        validateField('phone', value);
+                      }}
                     />
+                    {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                   </div>
                   
                   <div className="space-y-2">
@@ -249,10 +353,15 @@ const SignUp = () => {
                     <Input 
                       id="password" 
                       type="password"
-                      required
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      onBlur={(e) => validateField('password', e.target.value)}
+                      className={errors.password ? 'border-destructive' : ''}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Must be 8+ characters with uppercase, lowercase, and numbers
+                    </p>
+                    {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
                   </div>
                 </>
               )}
@@ -265,7 +374,6 @@ const SignUp = () => {
                       id="companyName" 
                       type="text"
                       placeholder="Acme Corporation"
-                      required
                       value={formData.companyName}
                       onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                     />
@@ -292,7 +400,6 @@ const SignUp = () => {
                     <Input 
                       id="primaryContactName" 
                       type="text"
-                      required
                       value={formData.primaryContactName}
                       onChange={(e) => setFormData({ ...formData, primaryContactName: e.target.value })}
                     />
@@ -304,7 +411,6 @@ const SignUp = () => {
                       id="primaryContactRole" 
                       type="text"
                       placeholder="CEO"
-                      required
                       value={formData.primaryContactRole}
                       onChange={(e) => setFormData({ ...formData, primaryContactRole: e.target.value })}
                     />
@@ -314,8 +420,8 @@ const SignUp = () => {
                     <Label htmlFor="primaryContactEmail">Email</Label>
                     <Input 
                       id="primaryContactEmail" 
-                      type="email"
-                      required
+                      type="text"
+                      autoComplete="email"
                       value={formData.primaryContactEmail}
                       onChange={(e) => setFormData({ ...formData, primaryContactEmail: e.target.value })}
                     />
@@ -323,11 +429,10 @@ const SignUp = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="primaryContactPhone">Phone (Optional)</Label>
-                    <Input 
-                      id="primaryContactPhone" 
-                      type="tel"
+                    <PhoneInput 
+                      id="primaryContactPhone"
                       value={formData.primaryContactPhone}
-                      onChange={(e) => setFormData({ ...formData, primaryContactPhone: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, primaryContactPhone: value })}
                     />
                   </div>
 
@@ -337,7 +442,6 @@ const SignUp = () => {
                     <Input 
                       id="adminName" 
                       type="text"
-                      required
                       value={formData.adminName}
                       onChange={(e) => setFormData({ ...formData, adminName: e.target.value })}
                     />
@@ -349,7 +453,6 @@ const SignUp = () => {
                       id="adminRole" 
                       type="text"
                       placeholder="Administrator"
-                      required
                       value={formData.adminRole}
                       onChange={(e) => setFormData({ ...formData, adminRole: e.target.value })}
                     />
@@ -359,8 +462,8 @@ const SignUp = () => {
                     <Label htmlFor="adminEmail">Email</Label>
                     <Input 
                       id="adminEmail" 
-                      type="email"
-                      required
+                      type="text"
+                      autoComplete="email"
                       value={formData.adminEmail}
                       onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
                     />
@@ -368,11 +471,10 @@ const SignUp = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="adminPhone">Phone (Optional)</Label>
-                    <Input 
-                      id="adminPhone" 
-                      type="tel"
+                    <PhoneInput 
+                      id="adminPhone"
                       value={formData.adminPhone}
-                      onChange={(e) => setFormData({ ...formData, adminPhone: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, adminPhone: value })}
                     />
                   </div>
                 </>

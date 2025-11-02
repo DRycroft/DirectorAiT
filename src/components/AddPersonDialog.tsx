@@ -114,7 +114,7 @@ interface AddPersonDialogProps {
 export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger, defaultMemberType }: AddPersonDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [existingMembers, setExistingMembers] = useState<Array<{ id: string; full_name: string; position: string }>>([]);
+  const [existingMembers, setExistingMembers] = useState<Array<{ id: string; full_name: string; position: string | null }>>([]);
   const [formTemplate, setFormTemplate] = useState<TemplateField[]>([]);
   const [loadingTemplate, setLoadingTemplate] = useState(false);
   const { toast } = useToast();

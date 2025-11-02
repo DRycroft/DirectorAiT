@@ -12,11 +12,11 @@ interface Member {
   id: string;
   full_name: string;
   preferred_title: string | null;
-  position: string;
+  position: string | null;
   appointment_date: string | null;
   term_expiry: string | null;
-  created_at: string;
-  status: string;
+  created_at: string | null;
+  status: string | null;
 }
 
 interface MembersListProps {
@@ -25,7 +25,7 @@ interface MembersListProps {
   onRefresh?: () => void;
 }
 
-export function MembersList({ boardId, memberType, onRefresh }: MembersListProps) {
+export function MembersList({ boardId, memberType, onRefresh: _onRefresh }: MembersListProps) {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingInvite, setGeneratingInvite] = useState<string | null>(null);
@@ -170,8 +170,8 @@ export function MembersList({ boardId, memberType, onRefresh }: MembersListProps
                 >
                   <TableCell>{member.preferred_title || "-"}</TableCell>
                   <TableCell className="font-medium">{member.full_name}</TableCell>
-                  <TableCell>{member.position}</TableCell>
-                  <TableCell>{format(new Date(member.created_at), "dd/MM/yyyy")}</TableCell>
+                  <TableCell>{member.position || "-"}</TableCell>
+                  <TableCell>{member.created_at ? format(new Date(member.created_at), "dd/MM/yyyy") : "-"}</TableCell>
                   <TableCell>
                     {member.appointment_date ? format(new Date(member.appointment_date), "dd/MM/yyyy") : "-"}
                   </TableCell>

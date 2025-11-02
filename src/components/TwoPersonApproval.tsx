@@ -1,10 +1,6 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 
 export default function TwoPersonApproval() {
-  const { toast } = useToast();
 
   return (
     <div className="space-y-4">

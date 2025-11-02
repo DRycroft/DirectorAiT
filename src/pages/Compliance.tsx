@@ -20,16 +20,16 @@ import { format } from "date-fns";
 interface ComplianceItem {
   id: string;
   title: string;
-  description: string;
-  authority: string;
+  description: string | null;
+  authority: string | null;
   frequency: string;
   next_due_date: string | null;
   last_completed_date: string | null;
-  responsible_person: string;
+  responsible_person: string | null;
   status: string;
-  category_id: string;
-  notes: string;
-  industry_sector: string;
+  category_id: string | null;
+  notes: string | null;
+  industry_sector: string | null;
   is_active: boolean;
   reference_url: string | null;
 }
@@ -37,7 +37,7 @@ interface ComplianceItem {
 interface ComplianceCategory {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
 }
 
 interface NewComplianceItem {
@@ -54,8 +54,8 @@ interface NewComplianceItem {
 interface ComplianceTemplate {
   id: string;
   title: string;
-  description: string;
-  authority: string;
+  description: string | null;
+  authority: string | null;
   frequency: "daily" | "weekly" | "monthly" | "quarterly" | "semi_annual" | "annual" | "biennial" | "as_required";
   industry_sector: string;
 }

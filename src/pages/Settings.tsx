@@ -9,8 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { TemplateSectionEditor, TemplateSection } from "@/components/TemplateSectionEditor";
 import { StaffFormTemplateEditor, FormField } from "@/components/StaffFormTemplateEditor";
-import { MembersList } from "@/components/settings/MembersList";
-import { AddPersonDialog } from "@/components/AddPersonDialog";
 import RoleManagement from "@/components/settings/RoleManagement";
 import TwoPersonApproval from "@/components/TwoPersonApproval";
 import COIManagement from "@/components/COIManagement";
@@ -23,7 +21,7 @@ import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCi
 import { toast as sonnerToast } from "sonner";
 import BoardManagement from "@/components/settings/BoardManagement";
 import { BOARD_POSITIONS, EXECUTIVE_POSITIONS, KEY_STAFF_POSITIONS } from "@/config/positions";
-import { Combobox } from "@/components/ui/combobox";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
@@ -311,10 +309,6 @@ const Settings = () => {
   const [selectedStaffFormType, setSelectedStaffFormType] = useState<string>("");
   const [staffFormFields, setStaffFormFields] = useState<any[]>([]);
   const [loadingStaffForm, setLoadingStaffForm] = useState(false);
-  const [selectedBoard, setSelectedBoard] = useState<string>("");
-  const [boards, setBoards] = useState<any[]>([]);
-  const [refreshMembers, setRefreshMembers] = useState(0);
-  const [organizationName, setOrganizationName] = useState("");
   const [activeTab, setActiveTab] = useState("company");
   const [businessDescription, setBusinessDescription] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
@@ -451,24 +445,13 @@ const Settings = () => {
 
       if (!profile?.org_id) return;
 
-      const { data: org } = await supabase
+      const { data: _org } = await supabase
         .from("organizations")
         .select("name")
         .eq("id", profile.org_id)
         .single();
 
-      setOrganizationName(org?.name || "");
-
-      const { data: boardsData } = await supabase
-        .from("boards")
-        .select("*")
-        .eq("org_id", profile.org_id)
-        .order("title");
-
-      setBoards(boardsData || []);
-      if (boardsData && boardsData.length > 0) {
-        setSelectedBoard(boardsData[0].id);
-      }
+      // Organization and boards data loaded
     } catch (error) {
       console.error("Error fetching boards:", error);
     }
@@ -863,7 +846,7 @@ const Settings = () => {
         setStaffFormFields(existingTemplate.fields as unknown as FormField[]);
       } else {
         // Create default template if it doesn't exist
-        const { data, error } = await supabase.rpc("create_default_staff_form_templates", {
+        const { error } = await supabase.rpc("create_default_staff_form_templates", {
           p_org_id: profile.org_id
         });
 

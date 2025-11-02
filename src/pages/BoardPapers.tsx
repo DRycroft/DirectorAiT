@@ -308,7 +308,7 @@ const BoardPapers = () => {
         .eq('id', user.id)
         .single();
 
-      if (!profile?.org_id) return;
+      if (!profile?.org_id || !selectedReportType) return;
 
       const { data, error } = await supabase
         .from('executive_reports')
