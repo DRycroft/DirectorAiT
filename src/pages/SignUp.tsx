@@ -270,7 +270,6 @@ const SignUp = () => {
                       id="name" 
                       type="text"
                       placeholder="John Doe"
-                      required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
@@ -282,7 +281,7 @@ const SignUp = () => {
                       id="email" 
                       type="text" 
                       placeholder="name@company.com"
-                      required
+                      autoComplete="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />
@@ -302,7 +301,6 @@ const SignUp = () => {
                     <Input 
                       id="password" 
                       type="password"
-                      required
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     />
@@ -318,7 +316,6 @@ const SignUp = () => {
                       id="companyName" 
                       type="text"
                       placeholder="Acme Corporation"
-                      required
                       value={formData.companyName}
                       onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                     />
@@ -345,7 +342,6 @@ const SignUp = () => {
                     <Input 
                       id="primaryContactName" 
                       type="text"
-                      required
                       value={formData.primaryContactName}
                       onChange={(e) => setFormData({ ...formData, primaryContactName: e.target.value })}
                     />
@@ -357,7 +353,6 @@ const SignUp = () => {
                       id="primaryContactRole" 
                       type="text"
                       placeholder="CEO"
-                      required
                       value={formData.primaryContactRole}
                       onChange={(e) => setFormData({ ...formData, primaryContactRole: e.target.value })}
                     />
@@ -368,7 +363,7 @@ const SignUp = () => {
                     <Input 
                       id="primaryContactEmail" 
                       type="text"
-                      required
+                      autoComplete="email"
                       value={formData.primaryContactEmail}
                       onChange={(e) => setFormData({ ...formData, primaryContactEmail: e.target.value })}
                     />
@@ -389,7 +384,6 @@ const SignUp = () => {
                     <Input 
                       id="adminName" 
                       type="text"
-                      required
                       value={formData.adminName}
                       onChange={(e) => setFormData({ ...formData, adminName: e.target.value })}
                     />
@@ -401,7 +395,6 @@ const SignUp = () => {
                       id="adminRole" 
                       type="text"
                       placeholder="Administrator"
-                      required
                       value={formData.adminRole}
                       onChange={(e) => setFormData({ ...formData, adminRole: e.target.value })}
                     />
@@ -412,7 +405,7 @@ const SignUp = () => {
                     <Input 
                       id="adminEmail" 
                       type="text"
-                      required
+                      autoComplete="email"
                       value={formData.adminEmail}
                       onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
                     />
