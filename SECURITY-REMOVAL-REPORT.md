@@ -16,3 +16,8 @@
 - New keys created: (timestamp / admin)
 - Old keys revoked: (timestamp / admin)
 
+
+- New SUPABASE_SERVICE_ROLE created: 2025-11-02 14:31 (Asia/Bangkok) — actor: Dave
+- Old secret keys revoked: 2025-11-02 14:31 (Asia/Bangkok) — actor: Dave
+- Deployment secrets updated (GitHub Actions, Vercel): 2025-11-02 14:31 (Asia/Bangkok) — actor: Dave
+- Evidence: screenshot(s) uploaded to PR #8 (or attach in PR comment)
