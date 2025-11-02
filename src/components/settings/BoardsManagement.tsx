@@ -258,7 +258,7 @@ export default function BoardsManagement() {
           description: "Board updated successfully",
         });
       } else {
-        const { data: newBoard, error } = await supabase
+        const { error } = await supabase
           .from("boards")
           .insert(boardData)
           .select()
@@ -455,11 +455,6 @@ export default function BoardsManagement() {
     }
   };
 
-  const getParentBoardTitle = (parentId: string | null) => {
-    if (!parentId) return '-';
-    const parent = parentBoards.find(b => b.id === parentId);
-    return parent?.title || 'Unknown';
-  };
 
   if (loading) {
     return <div className="flex items-center justify-center p-8">Loading...</div>;

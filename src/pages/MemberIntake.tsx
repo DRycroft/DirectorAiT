@@ -65,7 +65,7 @@ const MemberIntake = () => {
 
     try {
       // This would call an edge function to initiate member scanning
-      const { data, error } = await supabase.functions.invoke("member-intake", {
+      const { error } = await supabase.functions.invoke("member-intake", {
         body: {
           name: formData.name.trim(),
           email: formData.email.trim(),

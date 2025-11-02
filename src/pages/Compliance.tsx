@@ -29,7 +29,7 @@ interface ComplianceItem {
   status: string;
   category_id: string | null;
   notes: string | null;
-  industry_sector: string;
+  industry_sector: string | null;
   is_active: boolean;
   reference_url: string | null;
 }

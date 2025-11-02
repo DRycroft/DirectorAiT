@@ -146,8 +146,8 @@ export function useTemplateManagement(orgId?: string) {
 
       if (templateError) throw templateError;
 
-      // Create sections
-      const sections = templateData.sections.map((section, index) => ({
+      // Create sections (currently not used but prepared for future implementation)
+      templateData.sections.map((section, index) => ({
         template_id: template.id,
         section_name: section.section_name,
         section_order: section.section_order ?? index,

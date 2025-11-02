@@ -13,11 +13,9 @@ const ExportTeam = () => {
   const { boardId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [exporting, setExporting] = useState(false);
   const [includeConfidential, setIncludeConfidential] = useState(false);
 
   const handleExportCSV = async () => {
-    setExporting(true);
     try {
       const { data, error } = await supabase.functions.invoke("export-team-csv", {
         body: { boardId, includeConfidential },
@@ -25,7 +23,6 @@ const ExportTeam = () => {
 
       if (error) throw error;
 
-      // Create download link
       const blob = new Blob([data.csv], { type: "text/csv" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -39,46 +36,11 @@ const ExportTeam = () => {
         description: `Exported ${data.memberCount} members to CSV`,
       });
     } catch (error: any) {
-      console.error("Error exporting CSV:", error);
       toast({
         title: "Export failed",
         description: error.message || "Failed to export team data",
         variant: "destructive",
       });
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const handleExportPDF = async (memberId: string) => {
-    setExporting(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("export-member-pdf", {
-        body: { memberId },
-      });
-
-      if (error) throw error;
-
-      // Open HTML in new window for print-to-PDF
-      const printWindow = window.open("", "_blank");
-      if (printWindow) {
-        printWindow.document.write(data.html);
-        printWindow.document.close();
-        
-        toast({
-          title: "PDF ready",
-          description: "Use Print > Save as PDF to download",
-        });
-      }
-    } catch (error: any) {
-      console.error("Error exporting PDF:", error);
-      toast({
-        title: "Export failed",
-        description: error.message || "Failed to export member profile",
-        variant: "destructive",
-      });
-    } finally {
-      setExporting(false);
     }
   };
 
@@ -118,11 +80,10 @@ const ExportTeam = () => {
 
               <Button
                 onClick={handleExportCSV}
-                disabled={exporting}
                 className="w-full"
               >
                 <Download className="mr-2 h-4 w-4" />
-                {exporting ? "Exporting..." : "Export to CSV"}
+                Export to CSV
               </Button>
 
               <p className="text-xs text-muted-foreground">

@@ -4,7 +4,7 @@ import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, Settings } from "lucide-react";
-import { TemporalFilter, TemporalPeriod, BaselineType, getDateRangeFromPeriod } from "@/components/dashboard/TemporalFilter";
+import { TemporalFilter, TemporalPeriod, BaselineType } from "@/components/dashboard/TemporalFilter";
 import { BoardPulseSection } from "@/components/dashboard/sections/BoardPulseSection";
 import { FinancialSection } from "@/components/dashboard/sections/FinancialSection";
 import { PeopleSection } from "@/components/dashboard/sections/PeopleSection";

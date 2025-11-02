@@ -217,7 +217,7 @@ export function detectPinch(
  * @returns Optimized image URL
  */
 export function getOptimizedImageUrl(
-  baseUrl: string,
+  _baseUrl: string,
   sizes: { mobile: string; tablet: string; desktop: string }
 ): string {
   const { width } = getViewportDimensions();

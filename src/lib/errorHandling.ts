@@ -1,5 +1,3 @@
-import { PostgrestError } from '@supabase/supabase-js';
-
 /**
  * Maps internal errors to user-friendly messages
  * Prevents exposure of database structure and internal logic

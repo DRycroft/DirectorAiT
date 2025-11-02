@@ -6,7 +6,7 @@
  * across BoardPaperTemplateBuilder, TemplatePicker, and TemplateSectionEditor.
  */
 
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
