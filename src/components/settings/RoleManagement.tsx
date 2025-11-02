@@ -73,7 +73,7 @@ export const RoleManagement = () => {
             
             return {
               ...role,
-              profile: profileData
+              profile: profileData || undefined
             };
           })
         );

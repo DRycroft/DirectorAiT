@@ -21,9 +21,9 @@ VITE_SUPABASE_PROJECT_ID=[project-id]
 ### Setting Environment Variables
 
 #### Local Development
-1. Copy `.env.example` to `.env`
-2. Fill in the actual values (NEVER commit `.env` to git)
-3. Values are auto-provided by Lovable Cloud integration
+1. **In Lovable:** The `.env` file is auto-generated and managed by Lovable Cloud
+2. **Self-hosting:** Copy `.env.example` to `.env` and fill in values
+3. **IMPORTANT:** NEVER commit `.env` to git (add to `.gitignore`)
 
 #### Vercel Production
 1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
