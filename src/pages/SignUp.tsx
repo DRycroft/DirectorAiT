@@ -184,6 +184,13 @@ const SignUp = () => {
       if (authData.user && authData.session) {
         console.log("✅ Session established");
         
+        // Explicitly set the session to ensure it's used for subsequent requests
+        await supabase.auth.setSession({
+          access_token: authData.session.access_token,
+          refresh_token: authData.session.refresh_token,
+        });
+        console.log("✅ Session explicitly set in client");
+        
         // Create organization with all details
         console.log("Creating organization...");
         const { data: org, error: orgError } = await supabase
