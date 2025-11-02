@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardGrid, DashboardSection } from "../DashboardLayout";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TrendingUp, Users, AlertCircle, FileText, Target } from "lucide-react";
+import { TrendingUp, AlertCircle, Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export const CustomersSalesSection = () => {
@@ -41,8 +41,6 @@ export const CustomersSalesSection = () => {
     { category: 'Awarded', count: 5, value: 2100 },
     { category: 'Lost', count: 3, value: 1200 }
   ];
-
-  const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
 
   const nrr = 112; // Net Revenue Retention
   const churnRate = 4.2;
@@ -212,7 +210,7 @@ export const CustomersSalesSection = () => {
             <CardContent>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  {tenderData.map((item, idx) => (
+                  {tenderData.map((item) => (
                     <div key={item.category} className="p-3 border rounded">
                       <div className="text-sm font-medium text-muted-foreground">{item.category}</div>
                       <div className="text-2xl font-bold mt-1">{item.count}</div>

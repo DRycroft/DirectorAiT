@@ -20,7 +20,7 @@ import { format } from "date-fns";
 interface ComplianceItem {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   authority: string;
   frequency: string;
   next_due_date: string | null;
@@ -37,7 +37,7 @@ interface ComplianceItem {
 interface ComplianceCategory {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
 }
 
 interface NewComplianceItem {
@@ -54,7 +54,7 @@ interface NewComplianceItem {
 interface ComplianceTemplate {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   authority: string;
   frequency: "daily" | "weekly" | "monthly" | "quarterly" | "semi_annual" | "annual" | "biennial" | "as_required";
   industry_sector: string;

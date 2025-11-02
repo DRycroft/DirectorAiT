@@ -23,7 +23,11 @@ const MemberApproval = () => {
   const [comments, setComments] = useState("");
 
   useEffect(() => {
-    checkAuth();
+    if (memberId) {
+      checkAuth();
+    } else {
+      navigate(-1);
+    }
   }, [memberId]);
 
   const checkAuth = async () => {
@@ -38,6 +42,8 @@ const MemberApproval = () => {
   };
 
   const fetchMember = async () => {
+    if (!memberId) return;
+    
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -61,6 +67,8 @@ const MemberApproval = () => {
   };
 
   const handleApprove = async () => {
+    if (!memberId) return;
+    
     setProcessing(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -76,14 +84,16 @@ const MemberApproval = () => {
       if (updateError) throw updateError;
 
       // Create audit log
-      await supabase.from("board_member_audit").insert({
-        member_id: memberId,
-        changed_by: user?.id,
-        field_name: "status",
-        old_value: member.status,
-        new_value: "active",
-        change_type: "published",
-      });
+      if (user?.id) {
+        await supabase.from("board_member_audit").insert({
+          member_id: memberId,
+          changed_by: user.id,
+          field_name: "status",
+          old_value: member.status,
+          new_value: "active",
+          change_type: "published",
+        });
+      }
 
       toast({
         title: "Member approved",
@@ -104,6 +114,8 @@ const MemberApproval = () => {
   };
 
   const handleReject = async () => {
+    if (!memberId) return;
+    
     if (!comments.trim()) {
       toast({
         title: "Comments required",
@@ -129,14 +141,16 @@ const MemberApproval = () => {
       if (updateError) throw updateError;
 
       // Create audit log
-      await supabase.from("board_member_audit").insert({
-        member_id: memberId,
-        changed_by: user?.id,
-        field_name: "status",
-        old_value: member.status,
-        new_value: "invited",
-        change_type: "updated",
-      });
+      if (user?.id) {
+        await supabase.from("board_member_audit").insert({
+          member_id: memberId,
+          changed_by: user.id,
+          field_name: "status",
+          old_value: member.status,
+          new_value: "invited",
+          change_type: "updated",
+        });
+      }
 
       toast({
         title: "Profile rejected",

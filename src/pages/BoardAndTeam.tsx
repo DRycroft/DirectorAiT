@@ -29,6 +29,8 @@ const BoardAndTeam = () => {
   useEffect(() => {
     if (boardId) {
       checkAuth();
+    } else {
+      navigate("/boards");
     }
   }, [boardId]);
 
@@ -43,6 +45,8 @@ const BoardAndTeam = () => {
     }
 
     // Check if user is board member or admin
+    if (!boardId) return;
+    
     const { data: membership } = await supabase
       .from("board_memberships")
       .select("role")
@@ -60,6 +64,8 @@ const BoardAndTeam = () => {
   };
 
   const fetchBoardData = async () => {
+    if (!boardId) return;
+    
     try {
       setLoading(true);
 
