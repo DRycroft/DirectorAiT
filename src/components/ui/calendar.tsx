@@ -118,6 +118,7 @@ function Calendar({
       }}
       {...props}
     />
+    </div>
   );
 }
 Calendar.displayName = "Calendar";

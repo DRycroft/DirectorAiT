@@ -82,7 +82,7 @@ describe('Mobile Utilities', () => {
 
     it('should handle missing vibrate API gracefully', () => {
       const originalVibrate = navigator.vibrate;
-      // @ts-ignore
+      // @ts-expect-error - Testing missing vibrate API
       delete navigator.vibrate;
       
       expect(() => hapticFeedback(10)).not.toThrow();
