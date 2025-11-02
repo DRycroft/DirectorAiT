@@ -105,23 +105,72 @@ vercel --prod
 
 ## Security Considerations
 
-### Secret Rotation
+### Secrets & Rotation
 
-If you need to rotate Supabase keys:
+#### Where Secrets Are Stored
+
+- **Production:** Vercel → Project Settings → Environment Variables
+- **Backend/Edge Functions:** Lovable Cloud → Project Settings → Secrets
+- **Local Development:** `.env` file (gitignored, never committed)
+- **CI/CD:** GitHub Actions → Repository Secrets
+
+#### Rotating Supabase Keys
+
+**When to Rotate:**
+- Immediately if keys are exposed in repo history or logs
+- Quarterly as part of regular security maintenance
+- After team member departures with admin access
+
+**Rotation Process:**
 
 1. **Generate New Keys:**
    - Open Lovable Cloud backend
    - Navigate to Settings → API
-   - Generate new anon key
+   - Click "Rotate" for both `anon` and `service_role` keys
+   - **Record timestamp and keep screenshot for audit trail**
 
-2. **Update Vercel:**
+2. **Update Vercel Environment Variables:**
    - Go to Vercel → Settings → Environment Variables
-   - Update `VITE_SUPABASE_PUBLISHABLE_KEY`
+   - Update `VITE_SUPABASE_URL` (if changed)
+   - Update `VITE_SUPABASE_PUBLISHABLE_KEY` (new anon key)
+   - ⚠️ **CRITICAL:** `SUPABASE_SERVICE_ROLE_KEY` is for server/edge functions ONLY - never expose to client
+   - Apply to: Production, Preview, Development
    - Redeploy application
 
-3. **Update Local Development:**
-   - Update `.env` file (don't commit!)
-   - Restart development server
+3. **Update Lovable Cloud Secrets:**
+   - Navigate to Project Settings → Secrets
+   - Update `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`
+   - Edge functions will use new keys on next deployment
+
+4. **Update Local Development:**
+   - Copy `.env.example` to `.env` (if not exists)
+   - Update with new keys (NEVER commit this file!)
+   - Restart development server: `npm run dev`
+
+5. **Verify Rotation:**
+   - Test authentication flow in production
+   - Verify edge functions work correctly
+   - Check for any 401/403 errors in logs
+
+#### Quick Rollback Plan
+
+If rotation causes issues:
+
+- **Temporary:** Retain previous keys in a secure password manager for 1 hour ONLY while testing
+- **Emergency rollback:** Restore previous keys to Vercel/Lovable (max 1 hour window)
+- **After verification:** Permanently delete old keys from all storage (password managers, notes, etc.)
+- **Never:** Keep old keys beyond the 1-hour testing window
+
+#### Secret Management Best Practices
+
+- ✅ Use `.env.example` with `__REDACTED__` placeholders only
+- ✅ Keep `.env` in `.gitignore`
+- ✅ Store production secrets in Vercel/Lovable secret stores
+- ✅ Use different keys for development, staging, production
+- ❌ Never commit `.env` to git
+- ❌ Never hardcode keys in source code
+- ❌ Never share keys via Slack/email
+- ❌ Never use production keys in development
 
 ### Storage Security (ACTION REQUIRED)
 

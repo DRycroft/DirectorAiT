@@ -309,7 +309,6 @@ const Settings = () => {
   const [selectedStaffFormType, setSelectedStaffFormType] = useState<string>("");
   const [staffFormFields, setStaffFormFields] = useState<any[]>([]);
   const [loadingStaffForm, setLoadingStaffForm] = useState(false);
-  const [refreshMembers, setRefreshMembers] = useState(0);
   const [activeTab, setActiveTab] = useState("company");
   const [businessDescription, setBusinessDescription] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
@@ -446,7 +445,7 @@ const Settings = () => {
 
       if (!profile?.org_id) return;
 
-      const { data: org } = await supabase
+      const { data: _org } = await supabase
         .from("organizations")
         .select("name")
         .eq("id", profile.org_id)
