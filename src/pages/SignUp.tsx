@@ -150,9 +150,11 @@ const SignUp = () => {
         console.error("Auth error:", authError);
         throw authError;
       }
-      console.log("User created:", authData.user?.id);
+      console.log("✅ User created:", authData.user?.id);
 
-      if (authData.user) {
+      if (authData.user && authData.session) {
+        console.log("✅ Session established");
+        
         // Create organization with all details
         console.log("Creating organization...");
         const { data: org, error: orgError } = await supabase
