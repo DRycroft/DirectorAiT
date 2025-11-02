@@ -172,12 +172,23 @@ If rotation causes issues:
 - ❌ Never share keys via Slack/email
 - ❌ Never use production keys in development
 
-### Storage Security (ACTION REQUIRED)
+### Storage Security (REQUIRES MANUAL CONFIGURATION)
 
-⚠️ **CRITICAL**: Storage buckets currently lack RLS policies. Before production use:
+⚠️ **CRITICAL**: Storage buckets have weak isolation policies that allow cross-organization access. Before production:
 
+**Status:** Policies exist but lack proper org-based filtering. Any authenticated user can currently access files from other organizations.
+
+**Action Required:** Follow the detailed migration guide in `STORAGE_POLICY_MIGRATION.md` to replace policies via the Lovable Cloud dashboard.
+
+**Quick Steps:**
 1. Open Lovable Cloud backend → Storage → Policies
 2. For each bucket (board-documents, executive-reports, meeting-minutes, special-papers):
+   - Delete insecure SELECT and INSERT policies
+   - Create new policies with org_id filtering (see STORAGE_POLICY_MIGRATION.md)
+3. Run isolation test: `node tools/test-storage-isolation.js`
+4. Verify exit code 0 (all tests passed)
+
+**Testing:** After applying policies, create two test accounts in different organizations and verify User A cannot access User B's files.
    - Add SELECT, INSERT, UPDATE, DELETE policies
    - Ensure org-based isolation: `(storage.foldername(name))[1] = (SELECT org_id::text FROM profiles WHERE id = auth.uid())`
 
