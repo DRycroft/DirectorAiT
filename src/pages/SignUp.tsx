@@ -83,7 +83,41 @@ const SignUp = () => {
   });
 
   const handleNext = () => {
-    if (step < 4) setStep(step + 1);
+    // Validate current step before moving forward
+    try {
+      if (step === 1) {
+        const stepSchema = z.object({
+          name: signUpSchema.shape.name,
+          email: signUpSchema.shape.email,
+          password: signUpSchema.shape.password,
+          phone: signUpSchema.shape.phone,
+        });
+        stepSchema.parse(formData);
+      } else if (step === 2) {
+        const stepSchema = z.object({
+          companyName: signUpSchema.shape.companyName,
+          businessNumber: signUpSchema.shape.businessNumber,
+        });
+        stepSchema.parse(formData);
+      } else if (step === 3) {
+        const stepSchema = z.object({
+          primaryContactName: signUpSchema.shape.primaryContactName,
+          primaryContactRole: signUpSchema.shape.primaryContactRole,
+          primaryContactEmail: signUpSchema.shape.primaryContactEmail,
+          primaryContactPhone: signUpSchema.shape.primaryContactPhone,
+          adminName: signUpSchema.shape.adminName,
+          adminRole: signUpSchema.shape.adminRole,
+          adminEmail: signUpSchema.shape.adminEmail,
+          adminPhone: signUpSchema.shape.adminPhone,
+        });
+        stepSchema.parse(formData);
+      }
+      if (step < 4) setStep(step + 1);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      }
+    }
   };
 
   const handleBack = () => {
@@ -246,7 +280,7 @@ const SignUp = () => {
                     <Label htmlFor="email">Email</Label>
                     <Input 
                       id="email" 
-                      type="email" 
+                      type="text" 
                       placeholder="name@company.com"
                       required
                       value={formData.email}
@@ -333,7 +367,7 @@ const SignUp = () => {
                     <Label htmlFor="primaryContactEmail">Email</Label>
                     <Input 
                       id="primaryContactEmail" 
-                      type="email"
+                      type="text"
                       required
                       value={formData.primaryContactEmail}
                       onChange={(e) => setFormData({ ...formData, primaryContactEmail: e.target.value })}
@@ -377,7 +411,7 @@ const SignUp = () => {
                     <Label htmlFor="adminEmail">Email</Label>
                     <Input 
                       id="adminEmail" 
-                      type="email"
+                      type="text"
                       required
                       value={formData.adminEmail}
                       onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
