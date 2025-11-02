@@ -1,17 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 import { phoneSchema } from "@/lib/phoneValidation";
+import zxcvbn from "zxcvbn";
 
 const signUpSchema = z.object({
   // User details
@@ -58,6 +59,11 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [passwordStrength, setPasswordStrength] = useState<{
+    score: number;
+    feedback: string;
+    warning: string;
+  } | null>(null);
   const [formData, setFormData] = useState({
     // User
     name: "",
@@ -82,6 +88,22 @@ const SignUp = () => {
     financialYearEnd: "",
     agmDate: "",
   });
+
+  useEffect(() => {
+    if (formData.password) {
+      const result = zxcvbn(formData.password);
+      const strengthLabels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
+      
+      setPasswordStrength({
+        score: result.score,
+        feedback: strengthLabels[result.score],
+        warning: result.feedback.warning || 
+          (result.score < 3 ? 'This password may be too common or easily guessed' : '')
+      });
+    } else {
+      setPasswordStrength(null);
+    }
+  }, [formData.password]);
 
   const validateField = (fieldName: string, value: any) => {
     try {
@@ -362,11 +384,31 @@ const SignUp = () => {
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       onBlur={(e) => validateField('password', e.target.value)}
-                      className={errors.password ? 'border-destructive' : ''}
+                      className={errors.password || (passwordStrength && passwordStrength.score < 3) ? 'border-destructive' : ''}
                     />
                     <p className="text-xs text-muted-foreground">
                       Must be 8+ characters with uppercase, lowercase, and numbers
                     </p>
+                    {passwordStrength && formData.password && (
+                      <div className={`flex items-start gap-2 text-sm ${
+                        passwordStrength.score < 3 ? 'text-destructive' : 'text-green-600'
+                      }`}>
+                        {passwordStrength.score < 3 ? (
+                          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        ) : (
+                          <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        )}
+                        <div>
+                          <p className="font-medium">Strength: {passwordStrength.feedback}</p>
+                          {passwordStrength.warning && (
+                            <p className="text-xs mt-0.5">{passwordStrength.warning}</p>
+                          )}
+                          {passwordStrength.score < 3 && (
+                            <p className="text-xs mt-0.5">Use a unique password that hasn't been compromised in data breaches</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                     {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
                   </div>
                 </>
