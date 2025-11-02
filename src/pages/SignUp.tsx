@@ -57,6 +57,7 @@ const SignUp = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     // User
     name: "",
@@ -82,6 +83,24 @@ const SignUp = () => {
     agmDate: "",
   });
 
+  const validateField = (fieldName: string, value: any) => {
+    try {
+      const fieldSchema = (signUpSchema.shape as any)[fieldName];
+      if (fieldSchema) {
+        fieldSchema.parse(value);
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[fieldName];
+          return newErrors;
+        });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setErrors(prev => ({ ...prev, [fieldName]: error.errors[0].message }));
+      }
+    }
+  };
+
   const handleNext = () => {
     // Validate current step before moving forward
     try {
@@ -93,12 +112,14 @@ const SignUp = () => {
           phone: signUpSchema.shape.phone,
         });
         stepSchema.parse(formData);
+        setErrors({});
       } else if (step === 2) {
         const stepSchema = z.object({
           companyName: signUpSchema.shape.companyName,
           businessNumber: signUpSchema.shape.businessNumber,
         });
         stepSchema.parse(formData);
+        setErrors({});
       } else if (step === 3) {
         const stepSchema = z.object({
           primaryContactName: signUpSchema.shape.primaryContactName,
@@ -111,10 +132,18 @@ const SignUp = () => {
           adminPhone: signUpSchema.shape.adminPhone,
         });
         stepSchema.parse(formData);
+        setErrors({});
       }
       if (step < 4) setStep(step + 1);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach(err => {
+          if (err.path[0]) {
+            newErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(newErrors);
         toast.error(error.errors[0].message);
       }
     }
@@ -274,7 +303,10 @@ const SignUp = () => {
                       placeholder="John Doe"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onBlur={(e) => validateField('name', e.target.value)}
+                      className={errors.name ? 'border-destructive' : ''}
                     />
+                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                   </div>
                   
                   <div className="space-y-2">
@@ -286,7 +318,10 @@ const SignUp = () => {
                       autoComplete="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onBlur={(e) => validateField('email', e.target.value)}
+                      className={errors.email ? 'border-destructive' : ''}
                     />
+                    {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -294,8 +329,12 @@ const SignUp = () => {
                     <PhoneInput 
                       id="phone"
                       value={formData.phone}
-                      onChange={(value) => setFormData({ ...formData, phone: value })}
+                      onChange={(value) => {
+                        setFormData({ ...formData, phone: value });
+                        validateField('phone', value);
+                      }}
                     />
+                    {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                   </div>
                   
                   <div className="space-y-2">
@@ -305,7 +344,13 @@ const SignUp = () => {
                       type="password"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      onBlur={(e) => validateField('password', e.target.value)}
+                      className={errors.password ? 'border-destructive' : ''}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Must be 8+ characters with uppercase, lowercase, and numbers
+                    </p>
+                    {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
                   </div>
                 </>
               )}
