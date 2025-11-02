@@ -142,13 +142,13 @@ const SignUp = () => {
           .single();
 
         if (orgError) {
-          console.error("Organization error:", orgError);
-          throw orgError;
+          console.error("❌ Organization creation failed:", orgError);
+          throw new Error(`Failed to create organization: ${orgError.message}`);
         }
-        console.log("Organization created:", org.id);
+        console.log("✅ Organization created:", org.id);
 
         // Update profile with org_id and phone
-        console.log("Updating profile...");
+        console.log("Updating profile with org_id...");
         const { error: profileError } = await supabase
           .from("profiles")
           .update({
@@ -158,10 +158,13 @@ const SignUp = () => {
           .eq("id", authData.user.id);
 
         if (profileError) {
-          console.error("Profile error:", profileError);
-          throw profileError;
+          console.error("❌ Profile update failed:", profileError);
+          throw new Error(`Failed to update profile: ${profileError.message}`);
         }
-        console.log("Profile updated");
+        console.log("✅ Profile updated with org_id");
+
+        // Wait a moment to ensure profile update is committed
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         // Assign org_admin role
         console.log("Assigning org_admin role...");
@@ -173,10 +176,10 @@ const SignUp = () => {
           });
 
         if (roleError) {
-          console.error("Role error:", roleError);
-          throw roleError;
+          console.error("❌ Role assignment failed:", roleError);
+          throw new Error(`Failed to assign role: ${roleError.message}`);
         }
-        console.log("Role assigned successfully");
+        console.log("✅ Role assigned successfully");
 
         toast.success("Account created successfully!");
         navigate("/dashboard");
