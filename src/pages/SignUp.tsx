@@ -177,6 +177,12 @@ const SignUp = () => {
 
       if (authError) {
         console.error("Auth error:", authError);
+        // Check for weak password error specifically
+        if (authError.message?.includes('weak') || authError.message?.includes('pwned')) {
+          toast.error("This password has been found in data breaches. Please use a different, unique password.");
+        } else {
+          toast.error(authError.message);
+        }
         throw authError;
       }
       console.log("✅ User created:", authData.user?.id);
