@@ -181,7 +181,7 @@ const TeamOverview = () => {
                     <h4 className="font-medium mb-1">Skills & Competencies</h4>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {selectedMember.skills_competencies && Array.isArray(selectedMember.skills_competencies) && selectedMember.skills_competencies.length > 0 ? (
-                        selectedMember.skills_competencies.map((skill: string) => (
+                        (selectedMember.skills_competencies as string[]).map((skill) => (
                           <Badge key={`${selectedMember.id}-skill-${skill}`} variant="secondary">{skill}</Badge>
                         ))
                       ) : (
@@ -302,13 +302,14 @@ const TeamOverview = () => {
       }
     });
 
-    // Build display rows: default positions with actual members where they exist
-    const displayRows = defaultPositions.map((position, index) => {
-      const member = positionMap.get(position) || members.find(m => !defaultPositions.includes(m.position));
+    //Build display rows: default positions with actual members where they exist
+    let displayIndex = 0;
+    const displayRows = defaultPositions.map((position) => {
+      const member = positionMap.get(position) || members.find(m => m.position && !defaultPositions.includes(m.position));
       if (member && positionMap.has(member.position)) {
         positionMap.delete(member.position);
       }
-      return { position, member, index };
+      return { position, member, index: displayIndex++ };
     });
 
     // Add any members with non-standard positions that weren't matched

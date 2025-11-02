@@ -21,14 +21,14 @@ interface ComplianceItem {
   id: string;
   title: string;
   description: string | null;
-  authority: string;
+  authority: string | null;
   frequency: string;
   next_due_date: string | null;
   last_completed_date: string | null;
-  responsible_person: string;
+  responsible_person: string | null;
   status: string;
-  category_id: string;
-  notes: string;
+  category_id: string | null;
+  notes: string | null;
   industry_sector: string;
   is_active: boolean;
   reference_url: string | null;
@@ -55,7 +55,7 @@ interface ComplianceTemplate {
   id: string;
   title: string;
   description: string | null;
-  authority: string;
+  authority: string | null;
   frequency: "daily" | "weekly" | "monthly" | "quarterly" | "semi_annual" | "annual" | "biennial" | "as_required";
   industry_sector: string;
 }

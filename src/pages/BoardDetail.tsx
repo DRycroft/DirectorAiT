@@ -45,10 +45,15 @@ const BoardDetail = () => {
   };
 
   const fetchBoardData = async () => {
+    if (!boardId) {
+      navigate("/boards");
+      return;
+    }
+    
     try {
       setLoading(true);
 
-      const { data: boardData, error: boardError } = await supabase
+      const { data: boardData, error: boardError} = await supabase
         .from("boards")
         .select(`
           *,
