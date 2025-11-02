@@ -1,11 +1,14 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { createQueryClient } from "@/lib/queryClient";
+import { initWebVitals } from "@/lib/performance";
+import { initCacheCleanup } from "@/lib/cache";
 
 // Eagerly load landing and auth pages for fast initial load
 import Index from "./pages/Index";
@@ -40,17 +43,33 @@ const PageLoader = () => (
   </div>
 );
 
-const queryClient = new QueryClient();
+// Create enhanced query client with optimized caching
+const queryClient = createQueryClient();
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+const App = () => {
+  // Initialize performance monitoring and cache cleanup
+  useEffect(() => {
+    // Initialize Web Vitals tracking
+    initWebVitals();
+    
+    // Initialize cache cleanup (runs every 5 minutes)
+    const cleanupCache = initCacheCleanup();
+    
+    // Cleanup on unmount
+    return () => {
+      cleanupCache();
+    };
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/signup" element={<SignUp />} />
@@ -74,12 +93,13 @@ const App = () => (
             <Route path="/health" element={<Health />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-  </ErrorBoundary>
-);
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;
