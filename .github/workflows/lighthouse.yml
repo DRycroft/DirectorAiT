@@ -1,6 +1,4 @@
 name: Lighthouse CI
-# Temporarily disabled
-on: []
 
 on:
   push:
@@ -34,15 +32,16 @@ jobs:
           CI: true
       
       - name: Wait for server
-        run: npx wait-on https://12fedd0d94-4173.preview.abacusai.app -t 30000
+        run: npx wait-on http://localhost:4173 -t 30000
       
       - name: Audit URLs with Lighthouse
         uses: treosh/lighthouse-ci-action@v10
         with:
           urls: |
-            https://12fedd0d94-4173.preview.abacusai.app
-            https://12fedd0d94-4173.preview.abacusai.app
-            https://12fedd0d94-4173.preview.abacusai.app
+            http://localhost:4173/
+            http://localhost:4173/dashboard
+            http://localhost:4173/board-papers
           uploadArtifacts: true
           temporaryPublicStorage: true
           configPath: './lighthouserc.json'
+          runs: 3
