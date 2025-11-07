@@ -20,11 +20,23 @@ const signUpSchema = z.object({
     .refine(s => s.length > 0, "Name cannot be empty"),
   email: z.string().trim().email("Invalid email address").max(255).toLowerCase(),
   password: z.string()
-    .min(8, "Password must be at least 8 characters")
+    .min(10, "Password must be at least 10 characters")
     .max(128, "Password is too long")
     .refine(
       (pwd) => /[A-Z]/.test(pwd) && /[a-z]/.test(pwd) && /[0-9]/.test(pwd),
       "Password must contain uppercase, lowercase, and numbers"
+    )
+    .refine(
+      (pwd) => /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
+      "Password must contain at least one special character"
+    )
+    .refine(
+      (pwd) => !/^(.)\1+$/.test(pwd),
+      "Password cannot be all the same character"
+    )
+    .refine(
+      (pwd) => !/^(123|abc|qwe|password|admin)/i.test(pwd),
+      "Password is too common or predictable"
     ),
   phone: phoneSchema,
   
@@ -180,12 +192,14 @@ const SignUp = () => {
     setLoading(true);
 
     try {
-      console.log("Starting signup...");
+      console.log("🔄 Starting signup process...");
       const validatedData = signUpSchema.parse(formData);
-      console.log("Validation passed");
+      console.log("✅ Form validation passed");
+      console.log("📧 Email:", validatedData.email);
+      console.log("🏢 Company:", validatedData.companyName);
 
       // Sign up the user
-      console.log("Calling auth.signUp...");
+      console.log("🔐 Creating user account in auth system...");
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: validatedData.email,
         password: validatedData.password,
@@ -202,7 +216,8 @@ const SignUp = () => {
         
         // Check for specific error types and provide clear guidance
         if (authError.message?.toLowerCase().includes('already registered') || 
-            authError.message?.toLowerCase().includes('user already exists')) {
+            authError.message?.toLowerCase().includes('user already exists') ||
+            authError.message?.toLowerCase().includes('already been registered')) {
           toast.error(
             <div className="flex flex-col gap-2">
               <p className="font-semibold">This email is already registered!</p>
@@ -210,17 +225,48 @@ const SignUp = () => {
             </div>,
             { duration: 8000 }
           );
-        } else if (authError.message?.includes('weak') || authError.message?.includes('pwned')) {
-          toast.error("This password has been found in data breaches. Please use a different, unique password.");
+        } else if (authError.message?.includes('weak') || 
+                   authError.message?.includes('pwned') ||
+                   authError.message?.toLowerCase().includes('password is too weak') ||
+                   authError.message?.toLowerCase().includes('found in data breach')) {
+          toast.error(
+            <div className="flex flex-col gap-2">
+              <p className="font-semibold">Password Rejected!</p>
+              <p>This password has been found in data breaches or is too common. Please use a unique, strong password that hasn't been compromised.</p>
+              <p className="text-xs">Tip: Use a mix of random words, numbers, and symbols.</p>
+            </div>,
+            { duration: 10000 }
+          );
+        } else if (authError.message?.toLowerCase().includes('invalid email') ||
+                   authError.message?.toLowerCase().includes('email validation')) {
+          toast.error("Invalid email address. Please check and try again.");
+        } else if (authError.status === 422 || authError.code === '422') {
+          // Generic 422 - likely password issue
+          toast.error(
+            <div className="flex flex-col gap-2">
+              <p className="font-semibold">Signup Failed</p>
+              <p>Your password may have been found in data breaches. Please try a completely unique password that you haven't used elsewhere.</p>
+              <p className="text-xs mt-1">Use at least 12 characters with a mix of letters, numbers, and symbols.</p>
+            </div>,
+            { duration: 10000 }
+          );
         } else {
-          toast.error(authError.message);
+          toast.error(
+            <div className="flex flex-col gap-2">
+              <p className="font-semibold">Signup Error</p>
+              <p>{authError.message || 'An error occurred during signup. Please try again.'}</p>
+            </div>,
+            { duration: 8000 }
+          );
         }
         throw authError;
       }
-      console.log("✅ User created:", authData.user?.id);
+      console.log("✅ User account created successfully!");
+      console.log("   User ID:", authData.user?.id);
+      console.log("   Email:", authData.user?.email);
 
       if (authData.user && authData.session) {
-        console.log("✅ Session established");
+        console.log("✅ Authentication session established");
         
         // Wait a moment for session to propagate, then verify it
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -397,7 +443,7 @@ const SignUp = () => {
                       className={errors.password || (passwordStrength && passwordStrength.score < 3) ? 'border-destructive' : ''}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Must be 8+ characters with uppercase, lowercase, and numbers
+                      Must be 10+ characters with uppercase, lowercase, numbers, and special characters. Use a unique password not found in data breaches.
                     </p>
                     {passwordStrength && formData.password && (
                       <div className={`flex items-start gap-2 text-sm ${
@@ -413,8 +459,11 @@ const SignUp = () => {
                           {passwordStrength.warning && (
                             <p className="text-xs mt-0.5">{passwordStrength.warning}</p>
                           )}
-                          {passwordStrength.score < 3 && (
-                            <p className="text-xs mt-0.5">Use a unique password that hasn't been compromised in data breaches</p>
+                           {passwordStrength.score < 3 && (
+                            <p className="text-xs mt-0.5">
+                              ⚠️ Weak passwords are rejected. Use a unique password you've never used before. 
+                              Try combining 3-4 random words with numbers and symbols (e.g., "BlueElephant$89Mountain!").
+                            </p>
                           )}
                         </div>
                       </div>
