@@ -11,6 +11,26 @@ export function getUserFriendlyError(error: unknown): string {
   if (typeof error === 'object' && error !== null) {
     const err = error as any;
     
+    // Auth-specific errors
+    if (err.message?.includes('Invalid login credentials') || 
+        err.message?.includes('invalid_credentials') ||
+        err.code === 'invalid_credentials') {
+      return "Invalid email or password. Please check your credentials and try again.";
+    }
+    
+    if (err.message?.includes('Email not confirmed')) {
+      return "Please confirm your email address before signing in.";
+    }
+    
+    if (err.message?.includes('User not found') || 
+        err.message?.includes('user_not_found')) {
+      return "No account found with this email. Please sign up first.";
+    }
+    
+    if (err.message?.includes('Email rate limit exceeded')) {
+      return "Too many attempts. Please wait a few minutes and try again.";
+    }
+    
     // JWT/Auth errors
     if (err.message?.includes('JWT') || err.message?.includes('token')) {
       return "Your session has expired. Please sign in again.";
