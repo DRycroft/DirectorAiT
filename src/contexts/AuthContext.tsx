@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
+import { runBootstrapFromLocalStorage } from '@/lib/bootstrap';
 
 interface AuthContextType {
   user: User | null;
@@ -30,11 +31,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
       logger.info('Auth state changed', { event: _event, userId: session?.user?.id });
+      
+      // Run bootstrap on sign-in to complete any pending org setup
+      if (_event === 'SIGNED_IN') {
+        try {
+          await runBootstrapFromLocalStorage();
+        } catch (error) {
+          logger.error('Bootstrap failed on SIGNED_IN', error);
+        }
+      }
     });
 
     return () => subscription.unsubscribe();

@@ -198,6 +198,28 @@ const SignUp = () => {
       console.log("📧 Email:", validatedData.email);
       console.log("🏢 Company:", validatedData.companyName);
 
+      // Cache form data before signup for callback bootstrap
+      console.log("💾 Caching form data for callback bootstrap...");
+      const cache = {
+        email: validatedData.email,
+        name: validatedData.name,
+        phone: validatedData.phone || "",
+        companyName: validatedData.companyName,
+        businessNumber: validatedData.businessNumber || "",
+        primaryContactName: validatedData.primaryContactName,
+        primaryContactRole: validatedData.primaryContactRole,
+        primaryContactEmail: validatedData.primaryContactEmail,
+        primaryContactPhone: validatedData.primaryContactPhone,
+        adminName: validatedData.adminName,
+        adminRole: validatedData.adminRole,
+        adminEmail: validatedData.adminEmail,
+        adminPhone: validatedData.adminPhone,
+        reportingFrequency: validatedData.reportingFrequency,
+        financialYearEnd: validatedData.financialYearEnd || "",
+        agmDate: validatedData.agmDate || "",
+      };
+      localStorage.setItem("pendingSignUpV1", JSON.stringify(cache));
+
       // Sign up the user
       console.log("🔐 Creating user account in auth system...");
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -207,7 +229,7 @@ const SignUp = () => {
           data: {
             name: validatedData.name,
           },
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
@@ -266,7 +288,7 @@ const SignUp = () => {
       console.log("   Email:", authData.user?.email);
 
       if (authData.user && authData.session) {
-        console.log("✅ Authentication session established");
+        console.log("✅ Authentication session established - completing signup immediately");
         
         // Wait a moment for session to propagate, then verify it
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -341,8 +363,18 @@ const SignUp = () => {
         }
         console.log("✅ Role assigned successfully");
 
+        // Clean up cache and navigate to dashboard
+        localStorage.removeItem("pendingSignUpV1");
         toast.success("Account created successfully!");
         navigate("/dashboard");
+      } else if (authData.user && !authData.session) {
+        // Email confirmation required: show success message and let callback handle bootstrap
+        console.log("📧 Email confirmation required - user will complete signup via callback");
+        toast.success("Check your email to confirm your account, then you'll be redirected to finish setup.");
+        setLoading(false);
+        return;
+      } else {
+        throw new Error('Signup failed; please try again.');
       }
     } catch (error) {
       if (error instanceof z.ZodError) {

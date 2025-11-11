@@ -1,4 +1,7 @@
-﻿-- Consolidated Lovable -> Supabase migrations (idempotent drop+create)
+-- DO NOT APPLY IN PROD OR STAGING.
+-- Consolidated script kept for reference only; use timestamped migrations under /supabase/migrations.
+
+-- Consolidated Lovable -> Supabase migrations (idempotent drop+create)
 -- Generated on: 2025-11-01 13:37:09Z
 -- Caution: Run in staging first. This script will DROP policies and triggers if they exist.
 

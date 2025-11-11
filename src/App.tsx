@@ -14,6 +14,7 @@ import { initCacheCleanup } from "@/lib/cache";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import SignUp from "./pages/SignUp";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 import Health from "./pages/Health";
 
@@ -73,6 +74,7 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/builder" element={<DashboardBuilder />} />
             <Route path="/dashboard/executive" element={<ExecutiveDashboard />} />
