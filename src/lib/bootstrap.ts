@@ -25,23 +25,14 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
 
   const pending = JSON.parse(raw);
 
-  // 1) Create organization (idempotent by unique natural key if you add one later)
+  // 1) Create organization with simplified data
   const { data: org, error: orgError } = await supabase
     .from("organizations")
     .insert({
       name: pending.companyName,
-      business_number: pending.businessNumber || null,
-      primary_contact_name: pending.primaryContactName,
-      primary_contact_role: pending.primaryContactRole,
-      primary_contact_email: pending.primaryContactEmail,
-      primary_contact_phone: pending.primaryContactPhone,
-      admin_name: pending.adminName,
-      admin_role: pending.adminRole,
-      admin_email: pending.adminEmail,
-      admin_phone: pending.adminPhone,
-      reporting_frequency: pending.reportingFrequency,
-      financial_year_end: pending.financialYearEnd || null,
-      agm_date: pending.agmDate || null,
+      primary_contact_name: pending.name,
+      primary_contact_email: pending.email,
+      primary_contact_phone: pending.phone || null,
     })
     .select()
     .single();
@@ -51,14 +42,18 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
   // 2) Update profile with org_id and phone
   const { error: profileError } = await supabase
     .from("profiles")
-    .update({ org_id: org.id, phone: pending.phone || null })
+    .update({ 
+      org_id: org.id, 
+      phone: pending.phone || null,
+      name: pending.name 
+    })
     .eq("id", user.id);
   if (profileError) throw profileError;
 
-  // 3) Assign org_admin (policy already allows first self-assignment)
+  // 3) Assign org_admin role
   const { error: roleError } = await supabase
     .from("user_roles")
-    .insert({ user_id: user.id, role: "org_admin", org_id: org.id });
+    .insert({ user_id: user.id, role: "org_admin" });
   if (roleError && !/duplicate key/i.test(roleError.message)) throw roleError;
 
   localStorage.removeItem("pendingSignUpV1");
