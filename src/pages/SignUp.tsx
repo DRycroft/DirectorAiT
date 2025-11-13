@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, RefreshCw, Copy, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -69,6 +69,7 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [copied, setCopied] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<{
     score: number;
     feedback: string;
@@ -231,6 +232,27 @@ const SignUp = () => {
     return colors[passwordStrength.score];
   };
 
+  const generateStrongPassword = () => {
+    const length = 16;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    const array = new Uint8Array(length);
+    crypto.getRandomValues(array);
+    const password = Array.from(array, byte => charset[byte % charset.length]).join('');
+    
+    setFormData(prev => ({ ...prev, password }));
+    setShowPassword(true);
+    toast.success("Strong password generated");
+  };
+
+  const copyPasswordToClipboard = async () => {
+    if (formData.password) {
+      await navigator.clipboard.writeText(formData.password);
+      setCopied(true);
+      toast.success("Password copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-accent/5 to-background p-4">
       <div className="w-full max-w-md">
@@ -305,29 +327,53 @@ const SignUp = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter a strong password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      onBlur={(e) => validateField('password', e.target.value)}
-                      className={errors.password ? 'border-destructive' : ''}
-                    />
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter a strong password"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        onBlur={(e) => validateField('password', e.target.value)}
+                        className={errors.password ? 'border-destructive' : ''}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
+                      variant="outline"
+                      size="icon"
+                      onClick={generateStrongPassword}
+                      disabled={loading}
+                      title="Generate strong password"
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
+                      <RefreshCw className="h-4 w-4" />
                     </Button>
+                    {formData.password && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={copyPasswordToClipboard}
+                        disabled={loading}
+                        title="Copy password"
+                      >
+                        {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    )}
                   </div>
                   {passwordStrength && (
                     <div className="space-y-1">
