@@ -156,30 +156,22 @@ const SignUp = () => {
         
         if (authError.message?.toLowerCase().includes('already registered') || 
             authError.message?.toLowerCase().includes('user already exists')) {
-          toast.error(
-            <div>
-              <p className="font-semibold">This email is already registered!</p>
-              <p>Please <Link to="/auth" className="underline">log in</Link> instead.</p>
-            </div>,
-            { duration: 8000 }
-          );
+          toast.error("This email is already registered! Please log in instead.", { 
+            duration: 8000,
+            action: {
+              label: "Go to Login",
+              onClick: () => navigate("/auth")
+            }
+          });
         } else if (authError.message?.includes('pwned') ||
                    authError.message?.toLowerCase().includes('found in data breach')) {
-          toast.error(
-            <div>
-              <p className="font-semibold">Password Rejected!</p>
-              <p>This password has been found in data breaches. Please use a unique password.</p>
-            </div>,
-            { duration: 10000 }
-          );
+          toast.error("Password Rejected! This password has been found in data breaches. Please use a unique password.", { 
+            duration: 10000 
+          });
         } else if (authError.status === 422) {
-          toast.error(
-            <div>
-              <p className="font-semibold">Signup Failed</p>
-              <p>Your password may be compromised. Please try a completely unique password.</p>
-            </div>,
-            { duration: 10000 }
-          );
+          toast.error("Signup Failed - Your password may be compromised. Please try a completely unique password.", { 
+            duration: 10000 
+          });
         } else {
           toast.error(getUserFriendlyError(authError));
         }
