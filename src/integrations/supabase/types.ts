@@ -877,28 +877,34 @@ export type Database = {
       board_templates: {
         Row: {
           board_id: string | null
+          company_name: string | null
           created_at: string | null
           created_by: string
           description: string | null
           id: string
+          logo_url: string | null
           name: string
           updated_at: string | null
         }
         Insert: {
           board_id?: string | null
+          company_name?: string | null
           created_at?: string | null
           created_by: string
           description?: string | null
           id?: string
+          logo_url?: string | null
           name: string
           updated_at?: string | null
         }
         Update: {
           board_id?: string | null
+          company_name?: string | null
           created_at?: string | null
           created_by?: string
           description?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
           updated_at?: string | null
         }

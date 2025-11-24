@@ -106,6 +106,8 @@ export function useBoardPacks(boardId?: string) {
       board_id: string;
       name: string;
       description?: string;
+      company_name?: string;
+      logo_url?: string;
       sections: Omit<TemplateSection, 'id' | 'template_id'>[];
     }) => {
       const user = await supabase.auth.getUser();
@@ -118,6 +120,8 @@ export function useBoardPacks(boardId?: string) {
           board_id: templateData.board_id,
           name: templateData.name,
           description: templateData.description,
+          company_name: templateData.company_name,
+          logo_url: templateData.logo_url,
           created_by: user.data.user.id,
         })
         .select()

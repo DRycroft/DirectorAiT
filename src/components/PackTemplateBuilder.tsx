@@ -46,6 +46,8 @@ export function PackTemplateBuilder({ boardId, onTemplateSaved }: PackTemplateBu
   
   const [templateName, setTemplateName] = useState('Default Board Pack Template');
   const [description, setDescription] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
   const [sections, setSections] = useState<Section[]>(defaultSections);
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
 
@@ -129,6 +131,8 @@ export function PackTemplateBuilder({ boardId, onTemplateSaved }: PackTemplateBu
       board_id: boardId,
       name: templateName,
       description: description || undefined,
+      company_name: companyName || undefined,
+      logo_url: logoUrl || undefined,
       sections: sections.map(({ id, ...rest }) => rest),
     });
 
@@ -162,6 +166,24 @@ export function PackTemplateBuilder({ boardId, onTemplateSaved }: PackTemplateBu
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe this template..."
               rows={3}
+            />
+          </div>
+          <div>
+            <Label htmlFor="companyName">Company Name (Optional)</Label>
+            <Input
+              id="companyName"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="e.g., Acme Corporation"
+            />
+          </div>
+          <div>
+            <Label htmlFor="logoUrl">Logo URL (Optional)</Label>
+            <Input
+              id="logoUrl"
+              value={logoUrl}
+              onChange={(e) => setLogoUrl(e.target.value)}
+              placeholder="https://example.com/logo.png"
             />
           </div>
         </div>
