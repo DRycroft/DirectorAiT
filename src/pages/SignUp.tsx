@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
+import { runBootstrapFromLocalStorage } from "@/lib/bootstrap";
 import zxcvbn from "zxcvbn";
 
 const signUpSchema = z.object({
@@ -181,10 +182,17 @@ const SignUp = () => {
       console.log("✅ User account created successfully!");
 
       if (authData.user && authData.session) {
-        console.log("✅ User created with session, bootstrap will run automatically");
-        toast.success("Account created successfully!");
-        localStorage.removeItem("pendingSignUpV1");
-        navigate("/dashboard");
+        console.log("✅ User created with session, running bootstrap...");
+        try {
+          await runBootstrapFromLocalStorage();
+          console.log("✅ Bootstrap completed - org created and role assigned");
+          toast.success("Account created successfully!");
+          navigate("/dashboard");
+        } catch (bootstrapError) {
+          console.error("❌ Bootstrap error:", bootstrapError);
+          logError("SignUp - Bootstrap", bootstrapError);
+          toast.error("Account created but setup incomplete. Please contact support.");
+        }
       } else if (authData.user && !authData.session) {
         console.log("✅ User created, email confirmation required");
         toast.success("Check your email to confirm your account, then you'll be redirected to finish setup.");
