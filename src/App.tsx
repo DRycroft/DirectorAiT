@@ -36,6 +36,9 @@ const BoardsAndCommittees = lazy(() => import("./pages/BoardsAndCommittees"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Compliance = lazy(() => import("./pages/Compliance"));
 const BoardLibrary = lazy(() => import("./pages/BoardLibrary"));
+const PackManagement = lazy(() => import("./pages/PackManagement"));
+const PackSections = lazy(() => import("./pages/PackSections"));
+const ReportSubmission = lazy(() => import("./pages/ReportSubmission"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -92,6 +95,9 @@ const App = () => {
             <Route path="/member-invite" element={<MemberInvite />} />
             <Route path="/member-approval/:memberId" element={<MemberApproval />} />
             <Route path="/export-team/:boardId" element={<ExportTeam />} />
+            <Route path="/pack-management" element={<PackManagement />} />
+            <Route path="/pack/:packId/sections" element={<PackSections />} />
+            <Route path="/report-submission/:sectionId" element={<ReportSubmission />} />
             <Route path="/health" element={<Health />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
