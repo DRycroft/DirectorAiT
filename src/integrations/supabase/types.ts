@@ -619,6 +619,57 @@ export type Database = {
           },
         ]
       }
+      board_packs: {
+        Row: {
+          board_id: string
+          created_at: string | null
+          created_by: string
+          id: string
+          meeting_date: string
+          status: string | null
+          template_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          board_id: string
+          created_at?: string | null
+          created_by: string
+          id?: string
+          meeting_date: string
+          status?: string | null
+          template_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          board_id?: string
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          meeting_date?: string
+          status?: string | null
+          template_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_packs_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_packs_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "board_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       board_paper_templates: {
         Row: {
           company_name: string | null
@@ -818,6 +869,44 @@ export type Database = {
             foreignKeyName: "board_settings_board_id_fkey"
             columns: ["board_id"]
             isOneToOne: true
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_templates: {
+        Row: {
+          board_id: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          board_id?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          board_id?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_templates_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
             referencedRelation: "boards"
             referencedColumns: ["id"]
           },
@@ -1883,6 +1972,54 @@ export type Database = {
         }
         Relationships: []
       }
+      pack_sections: {
+        Row: {
+          created_at: string | null
+          document_id: string | null
+          id: string
+          order_index: number
+          pack_id: string
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          order_index?: number
+          pack_id: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          order_index?: number
+          pack_id?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pack_sections_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "section_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pack_sections_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "board_packs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -1944,6 +2081,44 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      section_documents: {
+        Row: {
+          content: Json
+          created_at: string | null
+          created_by: string
+          id: string
+          section_id: string
+          updated_at: string | null
+          version_number: number | null
+        }
+        Insert: {
+          content?: Json
+          created_at?: string | null
+          created_by: string
+          id?: string
+          section_id: string
+          updated_at?: string | null
+          version_number?: number | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          section_id?: string
+          updated_at?: string | null
+          version_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "section_documents_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "pack_sections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       special_papers: {
         Row: {
@@ -2081,6 +2256,47 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_sections: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_enabled: boolean | null
+          is_required: boolean | null
+          order_index: number
+          template_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          is_required?: boolean | null
+          order_index?: number
+          template_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          is_required?: boolean | null
+          order_index?: number
+          template_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_sections_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "board_templates"
             referencedColumns: ["id"]
           },
         ]
