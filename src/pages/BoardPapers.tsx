@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { logError } from "@/lib/errorHandling";
 import type { BoardPaper } from "@/types/database";
 
 interface ExecutiveReport {
@@ -126,7 +127,7 @@ const BoardPapers = () => {
         .single();
 
       if (error) {
-        console.error('Error fetching organization:', error);
+        logError('fetchOrganizationData', error);
         return;
       }
 
@@ -138,7 +139,7 @@ const BoardPapers = () => {
         companyName: org.name || ""
       }));
     } catch (error) {
-      console.error('Error in fetchOrganizationData:', error);
+      logError('fetchOrganizationData', error);
     }
   };
 
@@ -195,7 +196,7 @@ const BoardPapers = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching board papers:', error);
+        logError('fetchBoardPapers', error);
         return;
       }
 
@@ -220,7 +221,7 @@ const BoardPapers = () => {
       }
 
     } catch (error) {
-      console.error('Error in fetchBoardPapers:', error);
+      logError('fetchBoardPapers', error);
     }
   };
 
@@ -288,7 +289,7 @@ const BoardPapers = () => {
           : `Board paper created for ${newPaperData.companyName} (${periodCovered}).`,
       });
     } catch (error) {
-      console.error('Error creating board paper:', error);
+      logError('createBoardPaper', error);
       toast({
         title: "Error",
         description: "Failed to create board paper. Please try again.",
@@ -318,13 +319,13 @@ const BoardPapers = () => {
         .order('uploaded_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching reports:', error);
+        logError('fetchExecutiveReports', error);
         return;
       }
 
       setExecutiveReports(data || []);
     } catch (error) {
-      console.error('Error in fetchExecutiveReports:', error);
+      logError('fetchExecutiveReports', error);
     }
   };
 
@@ -389,7 +390,7 @@ const BoardPapers = () => {
       setUploadPeriod("");
       fetchExecutiveReports();
     } catch (error) {
-      console.error('Error uploading report:', error);
+      logError('uploadReport', error);
       toast({
         title: "Upload Failed",
         description: "Failed to upload report. Please try again.",
@@ -423,7 +424,7 @@ const BoardPapers = () => {
         description: `Downloading ${report.file_name}`,
       });
     } catch (error) {
-      console.error('Error downloading report:', error);
+      logError('downloadReport', error);
       toast({
         title: "Download Failed",
         description: "Failed to download report. Please try again.",
@@ -452,13 +453,13 @@ const BoardPapers = () => {
         .order('meeting_date', { ascending: false });
 
       if (error) {
-        console.error('Error fetching minutes:', error);
+        logError('fetchMeetingMinutes', error);
         return;
       }
 
       setMeetingMinutes(data || []);
     } catch (error) {
-      console.error('Error in fetchMeetingMinutes:', error);
+      logError('fetchMeetingMinutes', error);
     }
   };
 
@@ -482,13 +483,13 @@ const BoardPapers = () => {
         .order('uploaded_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching special papers:', error);
+        logError('fetchSpecialPapers', error);
         return;
       }
 
       setSpecialPapers(data || []);
     } catch (error) {
-      console.error('Error in fetchSpecialPapers:', error);
+      logError('fetchSpecialPapers', error);
     }
   };
 
@@ -552,7 +553,7 @@ const BoardPapers = () => {
       setMinutesMeetingType("Regular Board Meeting");
       fetchMeetingMinutes();
     } catch (error) {
-      console.error('Error uploading minutes:', error);
+      logError('uploadMinutes', error);
       toast({
         title: "Upload Failed",
         description: "Failed to upload minutes. Please try again.",
@@ -627,7 +628,7 @@ const BoardPapers = () => {
       setSpecialPaperDeadline("");
       fetchSpecialPapers();
     } catch (error) {
-      console.error('Error uploading special paper:', error);
+      logError('uploadSpecialPaper', error);
       toast({
         title: "Upload Failed",
         description: "Failed to upload special paper. Please try again.",
@@ -660,7 +661,7 @@ const BoardPapers = () => {
         description: `Downloading ${minute.file_name}`,
       });
     } catch (error) {
-      console.error('Error downloading minutes:', error);
+      logError('downloadMinutes', error);
       toast({
         title: "Download Failed",
         description: "Failed to download minutes. Please try again.",
@@ -691,7 +692,7 @@ const BoardPapers = () => {
         description: `Downloading ${paper.file_name}`,
       });
     } catch (error) {
-      console.error('Error downloading special paper:', error);
+      logError('downloadSpecialPaper', error);
       toast({
         title: "Download Failed",
         description: "Failed to download special paper. Please try again.",

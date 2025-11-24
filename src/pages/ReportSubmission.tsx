@@ -35,6 +35,7 @@ export default function ReportSubmission() {
   const [section, setSection] = useState<SectionDetails | null>(null);
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [currentVersion, setCurrentVersion] = useState<number>(0);
 
   useEffect(() => {
     loadSectionDetails();
@@ -63,15 +64,16 @@ export default function ReportSubmission() {
       // Load existing document if available
       const { data: docData } = await supabase
         .from('section_documents')
-        .select('content')
+        .select('content, version_number')
         .eq('section_id', sectionId)
         .order('version_number', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (docData && docData.content) {
+      if (docData) {
         const contentData = docData.content as any;
         setContent(contentData.text || '');
+        setCurrentVersion(docData.version_number || 0);
       }
     } catch (error: any) {
       toast({
@@ -94,18 +96,30 @@ export default function ReportSubmission() {
       return;
     }
 
-    submitReport({
-      section_id: sectionId,
-      content: {
-        text: content,
-        submittedAt: new Date().toISOString(),
-      },
-    });
+    try {
+      submitReport({
+        section_id: sectionId,
+        content: {
+          text: content,
+          submittedAt: new Date().toISOString(),
+        },
+      });
 
-    // Navigate back after a short delay
-    setTimeout(() => {
-      navigate(-1);
-    }, 1500);
+      // Wait for the mutation to complete, then navigate back
+      setTimeout(() => {
+        toast({
+          title: 'Success',
+          description: 'Report submitted and pack updated.',
+        });
+        navigate(-1);
+      }, 1500);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to submit report.',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (isLoading) {
@@ -150,15 +164,25 @@ export default function ReportSubmission() {
         </Button>
 
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">{section.title}</h1>
-          <p className="text-muted-foreground">
+          <div className="mb-4 p-4 bg-primary/5 border-l-4 border-primary rounded">
+            <p className="text-sm font-medium text-muted-foreground mb-1">Submitting content for:</p>
+            <h1 className="text-3xl font-bold">{section.title}</h1>
+          </div>
+          <p className="text-muted-foreground mb-2">
             {section.pack.title} • {new Date(section.pack.meeting_date).toLocaleDateString()}
           </p>
-          {section.status === 'submitted' && (
-            <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm bg-success/10 text-success">
-              Previously Submitted
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {section.status === 'submitted' && (
+              <div className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-success/10 text-success">
+                Previously Submitted
+              </div>
+            )}
+            {currentVersion > 0 && (
+              <div className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-muted">
+                Current Version: v{currentVersion}
+              </div>
+            )}
+          </div>
         </div>
 
         <Card className="p-6">

@@ -34,6 +34,31 @@ export default function PackSections() {
     loadPackData();
   }, [packId]);
 
+  // Set up realtime subscription for section updates
+  useEffect(() => {
+    if (!packId) return;
+
+    const channel = supabase
+      .channel('pack-sections-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'pack_sections',
+          filter: `pack_id=eq.${packId}`
+        },
+        () => {
+          loadPackData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [packId]);
+
   const loadPackData = async () => {
     if (!packId) return;
     
@@ -130,29 +155,47 @@ export default function PackSections() {
             </div>
           ) : (
             <div className="space-y-3">
-              {sections.map((section) => (
-                <Card
-                  key={section.id}
-                  className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
-                  onClick={() => handleSectionClick(section.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {getStatusIcon(section.status)}
-                      <div>
-                        <h3 className="font-semibold">{section.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {section.status === 'submitted' ? 'Report submitted' : 'Awaiting submission'}
-                        </p>
+              {sections.map((section) => {
+                const document = section.document?.[0];
+                const versionNumber = document?.version_number || null;
+                const updatedAt = section.updated_at ? new Date(section.updated_at) : null;
+                
+                return (
+                  <Card
+                    key={section.id}
+                    className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => handleSectionClick(section.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {getStatusIcon(section.status)}
+                        <div>
+                          <h3 className="font-semibold">{section.title}</h3>
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              section.status === 'submitted' 
+                                ? 'bg-success/10 text-success' 
+                                : 'bg-warning/10 text-warning'
+                            }`}>
+                              {section.status === 'submitted' ? 'Submitted' : 'Pending'}
+                            </span>
+                            {versionNumber && (
+                              <span>v{versionNumber}</span>
+                            )}
+                            {updatedAt && (
+                              <span>Updated {updatedAt.toLocaleDateString()}</span>
+                            )}
+                          </div>
+                        </div>
                       </div>
+                      <Button variant="ghost" size="sm">
+                        <Edit className="h-4 w-4 mr-2" />
+                        {section.status === 'submitted' ? 'Edit' : 'Add Report'}
+                      </Button>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      <Edit className="h-4 w-4 mr-2" />
-                      {section.status === 'submitted' ? 'Edit' : 'Add Report'}
-                    </Button>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
             </div>
           )}
         </Card>
