@@ -248,12 +248,12 @@ const BoardPapers = () => {
 
       if (!profile?.org_id) throw new Error("No organization found");
 
-      // Fetch the saved Board Paper template
+      // Fetch the saved Board Pack template (using new schema)
       const { data: template } = await supabase
-        .from('board_paper_templates')
-        .select('*')
-        .eq('org_id', profile.org_id)
-        .eq('is_default', true)
+        .from('board_templates')
+        .select('id, name')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       // Save to database
@@ -284,7 +284,7 @@ const BoardPapers = () => {
       toast({
         title: "Board Paper Created",
         description: template 
-          ? `Board paper created using your saved template with ${(template.sections as any[])?.length || 0} sections.`
+          ? `Board paper created using template "${template.name}".`
           : `Board paper created for ${newPaperData.companyName} (${periodCovered}).`,
       });
     } catch (error) {
