@@ -1,3 +1,13 @@
+/**
+ * BoardPaperTemplateBuilder Component
+ * 
+ * ⚠️ DEPRECATED: This component is being phased out in favor of PackTemplateBuilder
+ * which uses the new board_templates and template_sections schema.
+ * 
+ * This component still uses the old board_paper_templates table.
+ * For new implementations, use PackTemplateBuilder from @/components/PackTemplateBuilder
+ */
+
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
