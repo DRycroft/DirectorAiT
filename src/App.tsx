@@ -15,6 +15,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import SignUp from "./pages/SignUp";
 import AuthCallback from "./pages/AuthCallback";
+import ActionLink from "./pages/ActionLink";
 import NotFound from "./pages/NotFound";
 import Health from "./pages/Health";
 
@@ -98,6 +99,7 @@ const App = () => {
             <Route path="/pack-management" element={<PackManagement />} />
             <Route path="/pack/:packId/sections" element={<PackSections />} />
             <Route path="/report-submission/:sectionId" element={<ReportSubmission />} />
+            <Route path="/action/:token" element={<ActionLink />} />
             <Route path="/health" element={<Health />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

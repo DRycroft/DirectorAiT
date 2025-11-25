@@ -1413,6 +1413,36 @@ export type Database = {
           },
         ]
       }
+      document_acknowledgements: {
+        Row: {
+          ack_type: string
+          created_at: string
+          document_id: string | null
+          id: string
+          org_id: string
+          pack_id: string | null
+          user_id: string
+        }
+        Insert: {
+          ack_type: string
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          org_id: string
+          pack_id?: string | null
+          user_id: string
+        }
+        Update: {
+          ack_type?: string
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          org_id?: string
+          pack_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       document_drafts: {
         Row: {
           board_id: string | null
@@ -1511,6 +1541,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      document_invites: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          invite_type: string
+          org_id: string
+          recipient_email: string | null
+          recipient_name: string | null
+          status: string
+          target_id: string
+          target_type: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          invite_type: string
+          org_id: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          invite_type?: string
+          org_id?: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       document_links: {
         Row: {
@@ -2122,6 +2203,47 @@ export type Database = {
             columns: ["section_id"]
             isOneToOne: false
             referencedRelation: "pack_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signon_responses: {
+        Row: {
+          created_at: string
+          id: string
+          invite_id: string
+          org_id: string
+          payload: Json
+          respondent_email: string | null
+          respondent_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invite_id: string
+          org_id: string
+          payload?: Json
+          respondent_email?: string | null
+          respondent_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invite_id?: string
+          org_id?: string
+          payload?: Json
+          respondent_email?: string | null
+          respondent_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signon_responses_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "document_invites"
             referencedColumns: ["id"]
           },
         ]
