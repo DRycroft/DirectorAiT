@@ -65,24 +65,35 @@ export function MembersList({ boardId, memberType, onRefresh: _onRefresh }: Memb
   const handleGenerateInvite = async (memberId: string) => {
     setGeneratingInvite(memberId);
     try {
-      const token = crypto.randomUUID();
+      // Use cryptographically secure server-side token generation
+      const { data: token, error: tokenError } = await supabase.rpc(
+        "generate_member_invite_token"
+      );
+
+      if (tokenError) throw tokenError;
+
+      // Set token expiration to 7 days from now
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
       const { error } = await supabase
         .from("board_members")
         .update({ 
           invite_token: token,
           invite_sent_at: new Date().toISOString(),
+          invite_expires_at: expiresAt.toISOString(),
           status: "invited"
         })
         .eq("id", memberId);
 
       if (error) throw error;
 
-      const inviteUrl = `${window.location.origin}/member-intake?token=${token}`;
+      const inviteUrl = `${window.location.origin}/member-intake?token=${encodeURIComponent(token)}`;
       await navigator.clipboard.writeText(inviteUrl);
 
       toast({
         title: "Invite Link Copied",
-        description: "The invite link has been copied to your clipboard",
+        description: "The invite link has been copied to your clipboard. It expires in 7 days.",
       });
 
       loadMembers();

@@ -448,6 +448,7 @@ export type Database = {
           health_notes: string | null
           home_address: string | null
           id: string
+          invite_expires_at: string | null
           invite_sent_at: string | null
           invite_token: string | null
           legal_name: string | null
@@ -493,6 +494,7 @@ export type Database = {
           health_notes?: string | null
           home_address?: string | null
           id?: string
+          invite_expires_at?: string | null
           invite_sent_at?: string | null
           invite_token?: string | null
           legal_name?: string | null
@@ -538,6 +540,7 @@ export type Database = {
           health_notes?: string | null
           home_address?: string | null
           id?: string
+          invite_expires_at?: string | null
           invite_sent_at?: string | null
           invite_token?: string | null
           legal_name?: string | null
@@ -579,6 +582,53 @@ export type Database = {
             foreignKeyName: "board_members_reports_to_fkey"
             columns: ["reports_to"]
             isOneToOne: false
+            referencedRelation: "board_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_members_sensitive: {
+        Row: {
+          created_at: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          health_notes: string | null
+          home_address: string | null
+          id: string
+          member_id: string
+          national_id: string | null
+          sensitive_notes: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          health_notes?: string | null
+          home_address?: string | null
+          id?: string
+          member_id: string
+          national_id?: string | null
+          sensitive_notes?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          health_notes?: string | null
+          home_address?: string | null
+          id?: string
+          member_id?: string
+          national_id?: string | null
+          sensitive_notes?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_members_sensitive_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
             referencedRelation: "board_members"
             referencedColumns: ["id"]
           },

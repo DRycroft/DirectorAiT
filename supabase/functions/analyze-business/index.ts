@@ -96,6 +96,21 @@ serve(async (req) => {
       );
     }
 
+    // Verify user has an organization - authorization check
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('org_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile?.org_id) {
+      console.error('Profile lookup error:', profileError);
+      return new Response(
+        JSON.stringify({ error: 'User not associated with an organization' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const requestSchema = z.object({
       description: z.string()
         .trim()
