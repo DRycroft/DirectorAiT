@@ -129,6 +129,7 @@ const SignUp = () => {
       console.log("✅ Form validation passed");
 
       // Cache form data before signup for callback bootstrap
+      // Using sessionStorage with expiration for security (auto-clears on browser close + 15min expiry)
       console.log("💾 Caching form data for callback bootstrap...");
       const cache = {
         email: validatedData.email,
@@ -136,8 +137,9 @@ const SignUp = () => {
         phone: validatedData.phone || "",
         companyName: validatedData.companyName,
         userRole: validatedData.userRole,
+        expiresAt: Date.now() + (15 * 60 * 1000), // 15 minutes expiration
       };
-      localStorage.setItem("pendingSignUpV1", JSON.stringify(cache));
+      sessionStorage.setItem("pendingSignUpV1", JSON.stringify(cache));
 
       // Sign up the user
       console.log("🔐 Creating user account...");

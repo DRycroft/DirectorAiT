@@ -2,7 +2,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Idempotently attach an org, update profile, and grant org_admin.
- * Uses data saved under 'pendingSignUpV1'.
+ * Uses data saved under 'pendingSignUpV1' in sessionStorage.
+ * Data expires after 15 minutes for security.
  */
 export async function runBootstrapFromLocalStorage(): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
@@ -16,14 +17,30 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
     .maybeSingle();
 
   if (existingProfile?.org_id) {
-    localStorage.removeItem("pendingSignUpV1");
+    sessionStorage.removeItem("pendingSignUpV1");
     return;
   }
 
-  const raw = localStorage.getItem("pendingSignUpV1");
+  // Try sessionStorage first (new secure method), fall back to localStorage for migration
+  let raw = sessionStorage.getItem("pendingSignUpV1");
+  if (!raw) {
+    raw = localStorage.getItem("pendingSignUpV1");
+    if (raw) {
+      // Migrate from localStorage to sessionStorage and clear old storage
+      localStorage.removeItem("pendingSignUpV1");
+    }
+  }
+  
   if (!raw) return; // allow re-entry even without the form cache
 
   const pending = JSON.parse(raw);
+  
+  // Check expiration if present (new format includes expiresAt)
+  if (pending.expiresAt && pending.expiresAt < Date.now()) {
+    sessionStorage.removeItem("pendingSignUpV1");
+    console.warn("Signup data expired, please sign up again");
+    return;
+  }
 
   // 1) Create organization with simplified data
   const { data: org, error: orgError } = await supabase
@@ -56,5 +73,5 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
     .insert({ user_id: user.id, role: "org_admin" });
   if (roleError && !/duplicate key/i.test(roleError.message)) throw roleError;
 
-  localStorage.removeItem("pendingSignUpV1");
+  sessionStorage.removeItem("pendingSignUpV1");
 }
