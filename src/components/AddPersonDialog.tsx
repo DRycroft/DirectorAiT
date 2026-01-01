@@ -43,15 +43,45 @@ import { logError } from "@/lib/errorHandling";
 import { TemplateField, BoardMemberInsert } from "@/types/database";
 
 // Fields that should always be optional (for new additions, not terminations)
-const ALWAYS_OPTIONAL_FIELDS = ['finishing_date', 'term_expiry', 'end_date', 'public_social_links', 'linkedin_profile'];
+const ALWAYS_OPTIONAL_FIELDS = [
+  "finishing_date",
+  "term_expiry",
+  "end_date",
+  "public_social_links",
+  "linkedin_profile",
+];
 
-// Predefined "Reports To" options
-const REPORTS_TO_OPTIONS = [
-  { label: 'CEO', value: 'CEO' },
-  { label: 'MD (Managing Director)', value: 'MD' },
-  { label: 'Chair', value: 'Chair' },
-  { label: 'Deputy Chair', value: 'Deputy Chair' },
-  { label: 'Other', value: '__other__' },
+const isUuid = (value: unknown) =>
+  typeof value === "string" &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+const dateFromFormValue = (value: unknown) => {
+  if (value === "" || value === null || value === undefined) return undefined;
+  if (value instanceof Date) return value;
+  if (typeof value === "string") {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? undefined : d;
+  }
+  return undefined;
+};
+
+const requiredDate = (label: string) =>
+  z.preprocess(
+    (v) => dateFromFormValue(v),
+    z.date({ required_error: `${label} is required` })
+  );
+
+const optionalDate = () => z.preprocess((v) => dateFromFormValue(v), z.date().optional());
+
+// Predefined "Reports To" options.
+// NOTE: The database column `board_members.reports_to` is a UUID (reference). These presets are NOT UUIDs,
+// so we store them in custom_fields and keep `reports_to` null.
+const REPORTS_TO_PRESETS = [
+  { label: "CEO", value: "preset:CEO" },
+  { label: "MD (Managing Director)", value: "preset:MD" },
+  { label: "Chair", value: "preset:Chair" },
+  { label: "Deputy Chair", value: "preset:Deputy Chair" },
+  { label: "Other", value: "__other__" },
 ];
 
 // Create dynamic schema based on template
@@ -59,40 +89,41 @@ const createFormSchema = (template: TemplateField[]) => {
   const schemaFields: Record<string, z.ZodTypeAny> = {
     member_type: z.enum(["board", "executive", "key_staff"]),
   };
-  
+
   template.forEach((field) => {
     if (!field.enabled) return;
-    
-    const fieldId = field.id || field.label?.toLowerCase().replace(/\s+/g, '_');
+
+    const fieldId = field.id || field.label?.toLowerCase().replace(/\s+/g, "_");
     const fieldType = field.field_type || field.type;
-    
+
     // Force finishing_date and term_expiry to always be optional
     const isRequired = ALWAYS_OPTIONAL_FIELDS.includes(fieldId) ? false : field.required;
-    
-    if (fieldType === 'email') {
-      schemaFields[fieldId] = isRequired 
+
+    if (fieldType === "email") {
+      schemaFields[fieldId] = isRequired
         ? z.string().email("Invalid email address").min(1, `${field.label} is required`)
-        : z.string().email("Invalid email address").optional().or(z.literal(''));
-    } else if (fieldType === 'date') {
-      schemaFields[fieldId] = isRequired 
-        ? z.date({ required_error: `${field.label} is required` })
-        : z.date().optional();
-    } else if (fieldType === 'tel' || fieldType === 'phone') {
+        : z.string().email("Invalid email address").optional().or(z.literal(""));
+    } else if (fieldType === "date") {
+      schemaFields[fieldId] = isRequired ? requiredDate(field.label) : optionalDate();
+    } else if (fieldType === "tel" || fieldType === "phone") {
       schemaFields[fieldId] = isRequired
         ? z.string().min(1, `${field.label} is required`)
-        : z.string().optional();
-    } else if (fieldType === 'url') {
+        : z.string().optional().or(z.literal(""));
+    } else if (fieldType === "url") {
       // LinkedIn/URL fields: accept any string (loose validation)
       schemaFields[fieldId] = isRequired
         ? z.string().min(1, `${field.label} is required`)
-        : z.string().optional().or(z.literal(''));
+        : z.string().optional().or(z.literal(""));
     } else {
       schemaFields[fieldId] = isRequired
         ? z.string().min(1, `${field.label} is required`)
-        : z.string().optional();
+        : z.string().optional().or(z.literal(""));
     }
   });
-  
+
+  // Support the conditional "Reports To → Other" text input
+  schemaFields.reports_to_custom = z.string().optional().or(z.literal(""));
+
   return z.object(schemaFields);
 };
 
@@ -101,15 +132,16 @@ const baseFormSchema = z.object({
   full_name: z.string().min(2, "Name must be at least 2 characters"),
   preferred_title: z.string().optional(),
   position: z.string().min(1, "Position is required"),
-  starting_date: z.date({ required_error: "Starting date is required" }),
-  finishing_date: z.date().optional(),
+  starting_date: requiredDate("Starting date"),
+  finishing_date: optionalDate(),
   home_address: z.string().optional(),
-  date_of_birth: z.date().optional(),
+  date_of_birth: optionalDate(),
   personal_email: z.string().email("Invalid email address").min(1, "Email is required"),
   personal_mobile: z.string().optional(),
   public_social_links: z.string().optional(),
   reports_responsible_for: z.string().optional(),
   reports_to: z.string().optional(),
+  reports_to_custom: z.string().optional(),
   professional_qualifications: z.string().optional(),
   personal_interests: z.string().optional(),
   health_notes: z.string().optional(),
@@ -211,11 +243,13 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
           setFormSchema(dynamicSchema);
           
           // Reset form with new schema
-          const defaultValues: Record<string, string> = { member_type: memberType };
-          sortedFields.forEach(field => {
-            const fieldId = field.id || field.label?.toLowerCase().replace(/\s+/g, '_');
-            defaultValues[fieldId] = '';
+          const defaultValues: Record<string, any> = { member_type: memberType };
+          sortedFields.forEach((field) => {
+            const fieldId = field.id || field.label?.toLowerCase().replace(/\s+/g, "_");
+            const fieldType = field.field_type || field.type;
+            defaultValues[fieldId] = fieldType === "date" ? undefined : "";
           });
+          defaultValues.reports_to_custom = "";
           form.reset(defaultValues);
         }
       } catch (error) {
@@ -285,21 +319,41 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
         }
       });
 
+      // Handle reports_to (UUID reference) vs preset labels
+      const selectedReportsTo = values.reports_to || "";
+      const selectedPreset = REPORTS_TO_PRESETS.find((p) => p.value === selectedReportsTo);
+
+      if (selectedPreset && selectedPreset.value !== "__other__") {
+        customFields.reports_to_title = selectedPreset.label;
+      }
+
+      if (selectedReportsTo === "__other__") {
+        const otherName = (values.reports_to_custom || "").trim();
+        if (otherName) customFields.reports_to_custom = otherName;
+      }
+
       const insertData: BoardMemberInsert = {
         board_id: boardId,
         member_type: values.member_type,
         full_name: values.full_name,
         preferred_title: values.preferred_title || null,
         position: values.position,
-        appointment_date: values.starting_date ? values.starting_date.toISOString().split('T')[0] : null,
-        term_expiry: values.finishing_date ? values.finishing_date.toISOString().split('T')[0] : null,
+        appointment_date: values.starting_date instanceof Date
+          ? values.starting_date.toISOString().split("T")[0]
+          : null,
+        term_expiry: values.finishing_date instanceof Date
+          ? values.finishing_date.toISOString().split("T")[0]
+          : null,
         home_address: values.home_address || null,
-        date_of_birth: values.date_of_birth ? values.date_of_birth.toISOString().split('T')[0] : null,
+        date_of_birth: values.date_of_birth instanceof Date
+          ? values.date_of_birth.toISOString().split("T")[0]
+          : null,
         personal_email: values.personal_email,
         personal_mobile: values.personal_mobile || null,
         public_social_links: Object.keys(socialLinks).length > 0 ? socialLinks : null,
         reports_responsible_for: reportsArray.length > 0 ? reportsArray : null,
-        reports_to: values.reports_to && values.reports_to !== '__other__' ? values.reports_to : null,
+        // Only store a UUID in the DB column. Presets/custom names go into custom_fields.
+        reports_to: isUuid(selectedReportsTo) ? selectedReportsTo : null,
         professional_qualifications: values.professional_qualifications || null,
         personal_interests: values.personal_interests || null,
         health_notes: values.health_notes || null,
@@ -452,19 +506,17 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
 
     if (fieldId === 'reports_to') {
       const reportsToValue = form.watch('reports_to') || '';
-      const isOtherSelected = reportsToValue === '__other__' || 
-        (reportsToValue && !REPORTS_TO_OPTIONS.some(opt => opt.value === reportsToValue) && 
-         !existingMembers.some(m => m.id === reportsToValue || m.full_name === reportsToValue));
-      
-      // Build combined options: predefined + existing members
+      const isOtherSelected = reportsToValue === '__other__';
+
+      // Build combined options: presets + existing members (UUID)
       const combinedOptions = [
-        ...REPORTS_TO_OPTIONS,
-        ...existingMembers.map(m => ({ 
-          label: `${m.full_name}${m.position ? ` - ${m.position}` : ''}`, 
-          value: m.full_name 
-        }))
+        ...REPORTS_TO_PRESETS,
+        ...existingMembers.map((m) => ({
+          label: `${m.full_name}${m.position ? ` - ${m.position}` : ''}`,
+          value: m.id,
+        })),
       ];
-      
+
       return (
         <div key={fieldId} className="space-y-2">
           <FormField
@@ -473,16 +525,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
             render={({ field: formField }) => (
               <FormItem>
                 <FormLabel>{fieldLabel}</FormLabel>
-                <Select 
-                  onValueChange={(val) => {
-                    if (val === '__other__') {
-                      formField.onChange('__other__');
-                    } else {
-                      formField.onChange(val);
-                    }
-                  }} 
-                  value={isOtherSelected ? '__other__' : formField.value}
-                >
+                <Select onValueChange={formField.onChange} value={formField.value || ''}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select who this person reports to" />
@@ -501,6 +544,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
               </FormItem>
             )}
           />
+
           {isOtherSelected && (
             <FormField
               control={form.control}
@@ -509,14 +553,10 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
                 <FormItem>
                   <FormLabel>Specify name</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Enter name of reporting manager" 
-                      value={customField.value || (reportsToValue !== '__other__' ? reportsToValue : '')}
-                      onChange={(e) => {
-                        customField.onChange(e.target.value);
-                        // Also update the main reports_to field with the custom value
-                        form.setValue('reports_to', e.target.value || '__other__');
-                      }}
+                    <Input
+                      placeholder="Enter name of reporting manager"
+                      value={customField.value || ''}
+                      onChange={(e) => customField.onChange(e.target.value)}
                     />
                   </FormControl>
                   <FormMessage />
