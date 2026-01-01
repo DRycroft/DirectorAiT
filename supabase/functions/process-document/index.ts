@@ -25,6 +25,41 @@ serve(async (req) => {
       );
     }
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+    // Create client with user's auth context for user lookup
+    const supabaseAuth = createClient(supabaseUrl, supabaseServiceKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify user and get their org_id
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    if (authError || !user) {
+      console.error("Authentication error:", authError);
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Get user's organization
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
+    
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("org_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile?.org_id) {
+      console.error("Profile lookup error:", profileError);
+      return new Response(
+        JSON.stringify({ error: "User not associated with an organization" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const requestSchema = z.object({
       documentId: z.string().uuid("Invalid document ID format")
     });
@@ -46,18 +81,21 @@ serve(async (req) => {
     }
     
     const { documentId } = validationResult.data;
-    
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
 
-    // Get document
+    // Get document - CRITICAL: verify it belongs to user's organization
     const { data: document, error: docError } = await supabaseClient
       .from("archived_documents")
       .select("*, document_snapshots(*)")
       .eq("id", documentId)
+      .eq("org_id", profile.org_id)
       .single();
+    
+    if (!document) {
+      return new Response(
+        JSON.stringify({ error: "Document not found or access denied" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (docError) throw docError;
 
