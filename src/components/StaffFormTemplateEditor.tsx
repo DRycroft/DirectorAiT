@@ -85,6 +85,15 @@ export const StaffFormTemplateEditor = ({
     onFieldsChange(updatedFields);
   };
 
+  const handleToggleRequired = (fieldId: string) => {
+    const updatedFields = fields.map(field => 
+      field.id === fieldId && !field.locked
+        ? { ...field, required: !field.required }
+        : field
+    );
+    onFieldsChange(updatedFields);
+  };
+
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
     
@@ -221,13 +230,22 @@ export const StaffFormTemplateEditor = ({
                 </Label>
               </div>
               <div className="flex items-center gap-2">
-                {field.required && (
-                  <Badge variant="destructive" className="text-xs">
+                {field.required ? (
+                  <Badge 
+                    variant="destructive" 
+                    className={`text-xs ${!field.locked ? 'cursor-pointer hover:opacity-80' : ''}`}
+                    onClick={() => !field.locked && handleToggleRequired(field.id)}
+                    title={field.locked ? 'This field is locked' : 'Click to make optional'}
+                  >
                     Required
                   </Badge>
-                )}
-                {!field.required && (
-                  <Badge variant="outline" className="text-xs">
+                ) : (
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs ${!field.locked ? 'cursor-pointer hover:opacity-80' : ''}`}
+                    onClick={() => !field.locked && handleToggleRequired(field.id)}
+                    title={field.locked ? 'This field is locked' : 'Click to make required'}
+                  >
                     Optional
                   </Badge>
                 )}
