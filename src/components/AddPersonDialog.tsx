@@ -42,6 +42,9 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { logError } from "@/lib/errorHandling";
 import { TemplateField, BoardMemberInsert } from "@/types/database";
 
+// Fields that should always be optional (for new additions, not terminations)
+const ALWAYS_OPTIONAL_FIELDS = ['finishing_date', 'term_expiry'];
+
 // Create dynamic schema based on template
 const createFormSchema = (template: TemplateField[]) => {
   const schemaFields: Record<string, z.ZodTypeAny> = {
@@ -54,24 +57,27 @@ const createFormSchema = (template: TemplateField[]) => {
     const fieldId = field.id || field.label?.toLowerCase().replace(/\s+/g, '_');
     const fieldType = field.field_type || field.type;
     
+    // Force finishing_date and term_expiry to always be optional
+    const isRequired = ALWAYS_OPTIONAL_FIELDS.includes(fieldId) ? false : field.required;
+    
     if (fieldType === 'email') {
-      schemaFields[fieldId] = field.required 
+      schemaFields[fieldId] = isRequired 
         ? z.string().email("Invalid email address").min(1, `${field.label} is required`)
         : z.string().email("Invalid email address").optional().or(z.literal(''));
     } else if (fieldType === 'date') {
-      schemaFields[fieldId] = field.required 
+      schemaFields[fieldId] = isRequired 
         ? z.date({ required_error: `${field.label} is required` })
         : z.date().optional();
     } else if (fieldType === 'tel' || fieldType === 'phone') {
-      schemaFields[fieldId] = field.required
+      schemaFields[fieldId] = isRequired
         ? z.string().min(1, `${field.label} is required`)
         : z.string().optional();
     } else if (fieldType === 'url') {
-      schemaFields[fieldId] = field.required
+      schemaFields[fieldId] = isRequired
         ? z.string().url("Invalid URL").min(1, `${field.label} is required`)
         : z.string().url("Invalid URL").optional().or(z.literal(''));
     } else {
-      schemaFields[fieldId] = field.required
+      schemaFields[fieldId] = isRequired
         ? z.string().min(1, `${field.label} is required`)
         : z.string().optional();
     }
@@ -391,6 +397,8 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
     // Handle date fields with calendar
     const fieldType = field.field_type || field.type;
     if (fieldId === 'starting_date' || fieldId === 'finishing_date' || fieldId === 'date_of_birth' || fieldType === 'date') {
+      // finishing_date/term_expiry should never show asterisk (always optional for new additions)
+      const showRequired = ALWAYS_OPTIONAL_FIELDS.includes(fieldId) ? false : field.required;
       return (
         <FormField
           key={fieldId}
@@ -398,7 +406,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
           name={fieldId}
           render={({ field: formField }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>{fieldLabel}{field.required && ' *'}</FormLabel>
+              <FormLabel>{fieldLabel}{showRequired && ' *'}</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
