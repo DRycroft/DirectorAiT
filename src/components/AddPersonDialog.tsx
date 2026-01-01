@@ -43,7 +43,7 @@ import { logError } from "@/lib/errorHandling";
 import { TemplateField, BoardMemberInsert } from "@/types/database";
 
 // Fields that should always be optional (for new additions, not terminations)
-const ALWAYS_OPTIONAL_FIELDS = ['finishing_date', 'term_expiry', 'public_social_links', 'linkedin_profile'];
+const ALWAYS_OPTIONAL_FIELDS = ['finishing_date', 'term_expiry', 'end_date', 'public_social_links', 'linkedin_profile'];
 
 // Predefined "Reports To" options
 const REPORTS_TO_OPTIONS = [
