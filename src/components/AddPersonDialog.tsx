@@ -43,7 +43,16 @@ import { logError } from "@/lib/errorHandling";
 import { TemplateField, BoardMemberInsert } from "@/types/database";
 
 // Fields that should always be optional (for new additions, not terminations)
-const ALWAYS_OPTIONAL_FIELDS = ['finishing_date', 'term_expiry'];
+const ALWAYS_OPTIONAL_FIELDS = ['finishing_date', 'term_expiry', 'public_social_links', 'linkedin_profile'];
+
+// Predefined "Reports To" options
+const REPORTS_TO_OPTIONS = [
+  { label: 'CEO', value: 'CEO' },
+  { label: 'MD (Managing Director)', value: 'MD' },
+  { label: 'Chair', value: 'Chair' },
+  { label: 'Deputy Chair', value: 'Deputy Chair' },
+  { label: 'Other', value: '__other__' },
+];
 
 // Create dynamic schema based on template
 const createFormSchema = (template: TemplateField[]) => {
@@ -73,9 +82,10 @@ const createFormSchema = (template: TemplateField[]) => {
         ? z.string().min(1, `${field.label} is required`)
         : z.string().optional();
     } else if (fieldType === 'url') {
+      // LinkedIn/URL fields: accept any string (loose validation)
       schemaFields[fieldId] = isRequired
-        ? z.string().url("Invalid URL").min(1, `${field.label} is required`)
-        : z.string().url("Invalid URL").optional().or(z.literal(''));
+        ? z.string().min(1, `${field.label} is required`)
+        : z.string().optional().or(z.literal(''));
     } else {
       schemaFields[fieldId] = isRequired
         ? z.string().min(1, `${field.label} is required`)
@@ -289,7 +299,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
         personal_mobile: values.personal_mobile || null,
         public_social_links: Object.keys(socialLinks).length > 0 ? socialLinks : null,
         reports_responsible_for: reportsArray.length > 0 ? reportsArray : null,
-        reports_to: values.reports_to || null,
+        reports_to: values.reports_to && values.reports_to !== '__other__' ? values.reports_to : null,
         professional_qualifications: values.professional_qualifications || null,
         personal_interests: values.personal_interests || null,
         health_notes: values.health_notes || null,
@@ -441,33 +451,80 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
     }
 
     if (fieldId === 'reports_to') {
+      const reportsToValue = form.watch('reports_to') || '';
+      const isOtherSelected = reportsToValue === '__other__' || 
+        (reportsToValue && !REPORTS_TO_OPTIONS.some(opt => opt.value === reportsToValue) && 
+         !existingMembers.some(m => m.id === reportsToValue || m.full_name === reportsToValue));
+      
+      // Build combined options: predefined + existing members
+      const combinedOptions = [
+        ...REPORTS_TO_OPTIONS,
+        ...existingMembers.map(m => ({ 
+          label: `${m.full_name}${m.position ? ` - ${m.position}` : ''}`, 
+          value: m.full_name 
+        }))
+      ];
+      
       return (
-        <FormField
-          key={fieldId}
-          control={form.control}
-          name={fieldId}
-          render={({ field: formField }) => (
-            <FormItem>
-              <FormLabel>{fieldLabel}{field.required && ' *'}</FormLabel>
-              <Select onValueChange={formField.onChange} value={formField.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select reporting manager" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {existingMembers.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.full_name} - {member.position}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>Who does this person report to?</FormDescription>
-              <FormMessage />
-            </FormItem>
+        <div key={fieldId} className="space-y-2">
+          <FormField
+            control={form.control}
+            name={fieldId}
+            render={({ field: formField }) => (
+              <FormItem>
+                <FormLabel>{fieldLabel}</FormLabel>
+                <Select 
+                  onValueChange={(val) => {
+                    if (val === '__other__') {
+                      formField.onChange('__other__');
+                    } else {
+                      formField.onChange(val);
+                    }
+                  }} 
+                  value={isOtherSelected ? '__other__' : formField.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select who this person reports to" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {combinedOptions.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>Who does this person report to?</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {isOtherSelected && (
+            <FormField
+              control={form.control}
+              name="reports_to_custom"
+              render={({ field: customField }) => (
+                <FormItem>
+                  <FormLabel>Specify name</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Enter name of reporting manager" 
+                      value={customField.value || (reportsToValue !== '__other__' ? reportsToValue : '')}
+                      onChange={(e) => {
+                        customField.onChange(e.target.value);
+                        // Also update the main reports_to field with the custom value
+                        form.setValue('reports_to', e.target.value || '__other__');
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           )}
-        />
+        </div>
       );
     }
 
