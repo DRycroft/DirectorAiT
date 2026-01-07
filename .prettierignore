@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+bun.lockb
+package-lock.json
+
+# Build outputs
+dist
+build
+.next
+out
+
+# Supabase
+supabase/migrations
+src/integrations/supabase/types.ts
+
+# Config
+.env
+.env.*
+
+# IDE
+.vscode
+.idea
+
+# Misc
+coverage
+*.log
+.DS_Store

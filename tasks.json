@@ -1,0 +1,5 @@
+﻿[
+  { ""id"": 1, ""title"": ""Rotate Supabase keys"", ""priority"": ""critical"" },
+  { ""id"": 2, ""title"": ""Run git-filter-repo to purge .env from history (maintenance window)"", ""priority"": ""high"" },
+  { ""id"": 3, ""title"": ""Confirm CI secret-scan and lint pass on PR"", ""priority"": ""high"" }
+]

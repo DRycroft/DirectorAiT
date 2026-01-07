@@ -1,0 +1,12 @@
+{
+  "name": "board-spark-tools",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Testing and utility scripts for Board Spark AI",
+  "scripts": {
+    "test:isolation": "node test-storage-isolation.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.75.1"
+  }
+}
