@@ -1,14 +1,21 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Idempotently bootstrap a first-time user with org, board, and membership.
- * Detection: user has no org_id in profile AND no board_memberships.
+ * Idempotently bootstrap a first-time user with:
+ * - organization
+ * - default board
+ * - board_membership (owner)
+ * - profile.org_id
+ * - org_admin role
+ *
+ * Detection rule:
+ *   User has NO profiles.org_id AND NO board_memberships
  */
 export async function runBootstrapFromLocalStorage(): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  // Check if user already has an organization
+  // 1) Check if profile already has org
   const { data: existingProfile } = await supabase
     .from("profiles")
     .select("org_id")
@@ -16,12 +23,11 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
     .maybeSingle();
 
   if (existingProfile?.org_id) {
-    // Already bootstrapped, clean up any pending data
     sessionStorage.removeItem("pendingSignUpV1");
     return;
   }
 
-  // Check if user has any board_memberships
+  // 2) Check if user already has board membership
   const { data: existingMemberships } = await supabase
     .from("board_memberships")
     .select("id")
@@ -29,21 +35,18 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
     .limit(1);
 
   if (existingMemberships && existingMemberships.length > 0) {
-    // User has membership but no org - unusual state, skip bootstrap
     sessionStorage.removeItem("pendingSignUpV1");
     return;
   }
 
-  // First-time user: no org AND no board_membership
-  // Try to get signup form data if available
+  // 3) Load signup cache (sessionStorage first, localStorage fallback)
   let raw = sessionStorage.getItem("pendingSignUpV1");
   if (!raw) {
     raw = localStorage.getItem("pendingSignUpV1");
-    if (raw) {
-      localStorage.removeItem("pendingSignUpV1");
-    }
+    if (raw) localStorage.removeItem("pendingSignUpV1");
   }
 
+  // Sensible defaults
   let orgName = "My First Organization";
   let contactName = user.email?.split("@")[0] || "User";
   let contactEmail = user.email || "";
@@ -52,7 +55,6 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
   if (raw) {
     try {
       const pending = JSON.parse(raw);
-      // Check expiration
       if (!pending.expiresAt || pending.expiresAt >= Date.now()) {
         orgName = pending.companyName || orgName;
         contactName = pending.name || contactName;
@@ -60,11 +62,11 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
         contactPhone = pending.phone || null;
       }
     } catch {
-      // Invalid JSON, use defaults
+      // ignore malformed cache
     }
   }
 
-  // 1) Create organization
+  // 4) Create organization
   const { data: org, error: orgError } = await supabase
     .from("organizations")
     .insert({
@@ -78,7 +80,7 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
 
   if (orgError) throw orgError;
 
-  // 2) Create a default board for the organization
+  // 5) Create default board
   const { data: board, error: boardError } = await supabase
     .from("boards")
     .insert({
@@ -92,7 +94,7 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
 
   if (boardError) throw boardError;
 
-  // 3) Create board_membership with role "owner"
+  // 6) Create board membership (owner)
   const { error: membershipError } = await supabase
     .from("board_memberships")
     .insert({
@@ -103,7 +105,7 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
 
   if (membershipError) throw membershipError;
 
-  // 4) Update profile with org_id
+  // 7) Update profile with org
   const { error: profileError } = await supabase
     .from("profiles")
     .update({
@@ -115,12 +117,14 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
 
   if (profileError) throw profileError;
 
-  // 5) Assign org_admin role
+  // 8) Assign org_admin role (idempotent)
   const { error: roleError } = await supabase
     .from("user_roles")
     .insert({ user_id: user.id, role: "org_admin" });
 
-  if (roleError && !/duplicate key/i.test(roleError.message)) throw roleError;
+  if (roleError && !/duplicate key/i.test(roleError.message)) {
+    throw roleError;
+  }
 
   sessionStorage.removeItem("pendingSignUpV1");
 }
