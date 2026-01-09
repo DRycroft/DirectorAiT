@@ -119,6 +119,7 @@ const SignUp = () => {
   };
 
 const handleSignUp = async (e: React.FormEvent) => {
+  console.count("[SIGNUP] handleSignUp invoked");
   e.preventDefault();
   setLoading(true);
 
