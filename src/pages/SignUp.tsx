@@ -127,6 +127,16 @@ const handleSignUp = async (e: React.FormEvent) => {
     const validatedData = signUpSchema.parse(formData);
     console.log("✅ Form validation passed");
 
+    // Store signup data for bootstrap (15-minute expiry)
+    const pendingData = {
+      companyName: validatedData.companyName,
+      name: validatedData.name,
+      email: validatedData.email,
+      phone: validatedData.phone || null,
+      expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutes
+    };
+    sessionStorage.setItem("pendingSignUpV1", JSON.stringify(pendingData));
+
     console.log("🔐 Creating user account...");
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: validatedData.email,
