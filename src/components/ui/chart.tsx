@@ -58,6 +58,56 @@ const ChartContainer = React.forwardRef<
 });
 ChartContainer.displayName = "Chart";
 
+// Sanitize color values to prevent CSS injection
+// Valid formats: hex (#fff, #ffffff), hsl(xxx), hsla(xxx), rgb(xxx), rgba(xxx), CSS color names
+const sanitizeColor = (color: string): string | null => {
+  if (!color || typeof color !== 'string') return null;
+  
+  const trimmed = color.trim();
+  
+  // Allow hex colors
+  if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/.test(trimmed)) {
+    return trimmed;
+  }
+  
+  // Allow hsl/hsla colors
+  if (/^hsla?\(\s*[\d.]+\s*,?\s*[\d.]+%?\s*,?\s*[\d.]+%?\s*(,?\s*[\d.]+)?\s*\)$/.test(trimmed)) {
+    return trimmed;
+  }
+  
+  // Allow rgb/rgba colors
+  if (/^rgba?\(\s*[\d.]+\s*,?\s*[\d.]+\s*,?\s*[\d.]+\s*(,?\s*[\d.]+)?\s*\)$/.test(trimmed)) {
+    return trimmed;
+  }
+  
+  // Allow CSS custom properties (var(--xxx))
+  if (/^var\(--[\w-]+\)$/.test(trimmed)) {
+    return trimmed;
+  }
+  
+  // Allow known CSS color names (limited set for safety)
+  const safeColorNames = [
+    'transparent', 'currentColor', 'inherit',
+    'black', 'white', 'red', 'green', 'blue', 'yellow', 'orange', 'purple', 'pink', 'gray', 'grey'
+  ];
+  if (safeColorNames.includes(trimmed.toLowerCase())) {
+    return trimmed;
+  }
+  
+  // Reject anything else
+  return null;
+};
+
+// Sanitize CSS key names to prevent injection
+const sanitizeKey = (key: string): string | null => {
+  if (!key || typeof key !== 'string') return null;
+  // Only allow alphanumeric and hyphens
+  if (/^[a-zA-Z][a-zA-Z0-9-]*$/.test(key)) {
+    return key;
+  }
+  return null;
+};
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(([_, config]) => config.theme || config.color);
 
@@ -74,9 +124,14 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
-    const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    const sanitizedKey = sanitizeKey(key);
+    if (!sanitizedKey) return null;
+    
+    const rawColor = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
+    const color = rawColor ? sanitizeColor(rawColor) : null;
+    return color ? `  --color-${sanitizedKey}: ${color};` : null;
   })
+  .filter(Boolean)
   .join("\n")}
 }
 `,

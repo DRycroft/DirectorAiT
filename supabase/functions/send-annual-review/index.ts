@@ -6,28 +6,78 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Rate limiting: track requests per minute
+const requestCounts = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 10; // max requests per minute
+const RATE_WINDOW_MS = 60 * 1000; // 1 minute
+
+function checkRateLimit(identifier: string): boolean {
+  const now = Date.now();
+  const record = requestCounts.get(identifier);
+  
+  if (!record || now > record.resetAt) {
+    requestCounts.set(identifier, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+  
+  if (record.count >= RATE_LIMIT) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const requestId = crypto.randomUUID();
+  const requestTimestamp = new Date().toISOString();
+  
   try {
     // Verify cron secret for security (since JWT verification is disabled)
     const cronSecret = req.headers.get("x-cron-secret");
     const expectedSecret = Deno.env.get("CRON_SECRET");
     
     if (!expectedSecret) {
-      console.error("CRON_SECRET environment variable not configured");
+      console.error(`[${requestId}] [${requestTimestamp}] CRON_SECRET environment variable not configured`);
       return new Response(JSON.stringify({ error: "Server configuration error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     
-    if (cronSecret !== expectedSecret) {
-      console.error("Unauthorized: Invalid cron secret");
+    // Use timing-safe comparison to prevent timing attacks
+    const encoder = new TextEncoder();
+    const secretBytes = encoder.encode(expectedSecret);
+    const providedBytes = encoder.encode(cronSecret || "");
+    
+    // Ensure both have same length for constant-time comparison
+    let isValid = secretBytes.length === providedBytes.length;
+    
+    // Compare byte by byte (constant time regardless of where mismatch occurs)
+    const maxLen = Math.max(secretBytes.length, providedBytes.length);
+    for (let i = 0; i < maxLen; i++) {
+      const a = secretBytes[i] ?? 0;
+      const b = providedBytes[i] ?? 0;
+      if (a !== b) isValid = false;
+    }
+    
+    if (!isValid) {
+      console.error(`[${requestId}] [${requestTimestamp}] Unauthorized: Invalid cron secret`);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Apply rate limiting based on the function name (cron job identifier)
+    if (!checkRateLimit("send-annual-review")) {
+      console.error(`[${requestId}] [${requestTimestamp}] Rate limit exceeded`);
+      return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
+        status: 429,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -36,7 +86,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log("Starting annual review reminder check...");
+    console.log(`[${requestId}] [${requestTimestamp}] Starting annual review reminder check...`);
 
     // Get all active members whose profiles need annual review
     const oneYearAgo = new Date();
@@ -52,7 +102,7 @@ serve(async (req) => {
       throw error;
     }
 
-    console.log(`Found ${members?.length || 0} members requiring annual review`);
+    console.log(`[${requestId}] [${requestTimestamp}] Found ${members?.length || 0} members requiring annual review`);
 
     // For each member, create an audit log entry and generate a review token
     for (const member of members || []) {
@@ -76,7 +126,7 @@ serve(async (req) => {
         _new_value: "Annual review reminder sent",
       });
 
-      console.log(`Annual review reminder sent to member ${member.id}`);
+      console.log(`[${requestId}] [${requestTimestamp}] Annual review reminder sent to member ${member.id}`);
 
       // TODO: Send email notification
       // For now, just log the review link
@@ -87,15 +137,17 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         membersNotified: members?.length || 0,
+        requestId,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
-  } catch (error: any) {
-    console.error("Error in send-annual-review:", error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error(`[${requestId}] [${requestTimestamp}] Error in send-annual-review:`, errorMessage);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Internal server error", requestId }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
