@@ -20,31 +20,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      logger.info('Auth session initialized', { userId: session?.user?.id });
-    });
-
-    // Listen for auth changes
+    // Set up auth state listener FIRST (before checking session)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
+      // Synchronous state updates only in callback
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
       setLoading(false);
-      logger.info('Auth state changed', { event: _event, userId: session?.user?.id });
       
-      // Run bootstrap on sign-in to complete any pending org setup
-      if (_event === 'SIGNED_IN') {
-        try {
-          await runBootstrapFromLocalStorage();
-        } catch (error) {
-          logger.error('Bootstrap failed on SIGNED_IN', error);
-        }
+      logger.info('Auth state changed', { event, userId: newSession?.user?.id });
+      
+      // Run bootstrap on sign-in using setTimeout to avoid deadlocks
+      if (event === 'SIGNED_IN' && newSession?.user) {
+        setTimeout(async () => {
+          try {
+            await runBootstrapFromLocalStorage();
+            logger.info('Bootstrap completed after SIGNED_IN');
+          } catch (error) {
+            logger.error('Bootstrap failed on SIGNED_IN', error);
+            // Don't throw - bootstrap failure shouldn't block auth
+          }
+        }, 0);
       }
+    });
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      setSession(existingSession);
+      setUser(existingSession?.user ?? null);
+      setLoading(false);
+      logger.info('Auth session initialized', { userId: existingSession?.user?.id });
     });
 
     return () => subscription.unsubscribe();
@@ -73,20 +79,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [session]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    logger.info('User signed out');
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      logger.info('User signed out');
+    } catch (error) {
+      logger.error('Sign out error', error);
+      // Still clear local state on error
+      setUser(null);
+      setSession(null);
+    }
   };
 
   const refreshSession = async () => {
-    const { data, error } = await supabase.auth.refreshSession();
-    if (error) {
-      logger.error('Failed to refresh session', error);
-    } else {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      logger.info('Session refreshed');
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (error) {
+        logger.error('Failed to refresh session', error);
+      } else {
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        logger.info('Session refreshed');
+      }
+    } catch (error) {
+      logger.error('Session refresh exception', error);
     }
   };
 
