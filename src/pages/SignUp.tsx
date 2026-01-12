@@ -139,10 +139,13 @@ const handleSignUp = async (e: React.FormEvent) => {
     sessionStorage.setItem("pendingSignUpV1", JSON.stringify(pendingData));
 
     console.log("🔐 Creating user account...");
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+    
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: validatedData.email,
       password: validatedData.password,
       options: {
+        emailRedirectTo: redirectUrl,
         data: {
           name: validatedData.name,
         },

@@ -3,12 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { createQueryClient } from "@/lib/queryClient";
 import { initWebVitals } from "@/lib/performance";
 import { initCacheCleanup } from "@/lib/cache";
+import { isEnvValid, getEnvError } from "@/lib/env";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 // Eagerly load landing and auth pages for fast initial load
 import Index from "./pages/Index";
@@ -48,65 +50,105 @@ const PageLoader = () => (
   </div>
 );
 
+// Configuration error component - shown when env vars are missing
+const ConfigError = ({ message }: { message: string }) => (
+  <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-red-50 to-orange-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 border border-red-200 dark:border-red-800">
+      <div className="flex items-center gap-3 mb-4">
+        <AlertTriangle className="h-8 w-8 text-red-500" />
+        <h1 className="text-xl font-bold text-red-600 dark:text-red-400">Configuration Error</h1>
+      </div>
+      <pre className="bg-gray-100 dark:bg-gray-700 p-4 rounded text-sm whitespace-pre-wrap text-gray-800 dark:text-gray-200 mb-4">
+        {message}
+      </pre>
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        Please check your environment configuration and redeploy.
+      </p>
+    </div>
+  </div>
+);
+
 // Create enhanced query client with optimized caching
 const queryClient = createQueryClient();
 
 const App = () => {
-  // Initialize performance monitoring and cache cleanup
+  const [envChecked, setEnvChecked] = useState(false);
+  const [envError, setEnvError] = useState<string | null>(null);
+
+  // Boot guard: Validate environment before rendering
   useEffect(() => {
-    // Initialize Web Vitals tracking
+    // Check environment validity
+    if (!isEnvValid()) {
+      const error = getEnvError();
+      console.error('[App] Environment validation failed:', error);
+      setEnvError(error);
+    } else {
+      console.log('[App] Environment validated successfully');
+    }
+    setEnvChecked(true);
+
+    // Initialize performance monitoring and cache cleanup
     initWebVitals();
-    
-    // Initialize cache cleanup (runs every 5 minutes)
     const cleanupCache = initCacheCleanup();
-    
-    // Cleanup on unmount
+
     return () => {
       cleanupCache();
     };
   }, []);
 
+  // Show loading while checking environment
+  if (!envChecked) {
+    return <PageLoader />;
+  }
+
+  // Show config error if environment is invalid
+  if (envError) {
+    return <ConfigError message={envError} />;
+  }
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/builder" element={<DashboardBuilder />} />
-            <Route path="/dashboard/executive" element={<ExecutiveDashboard />} />
-            <Route path="/boards-committees" element={<BoardsAndCommittees />} />
-            <Route path="/team" element={<TeamOverview />} />
-            <Route path="/boards" element={<Boards />} />
-            <Route path="/boards/:boardId" element={<BoardDetail />} />
-            <Route path="/boards/:boardId/team" element={<BoardAndTeam />} />
-            <Route path="/board-papers" element={<BoardPapers />} />
-            <Route path="/board-papers/:id" element={<BoardPaperDocument />} />
-            <Route path="/compliance" element={<Compliance />} />
-            <Route path="/library" element={<BoardLibrary />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/member-intake" element={<MemberIntake />} />
-            <Route path="/member-invite" element={<MemberInvite />} />
-            <Route path="/member-approval/:memberId" element={<MemberApproval />} />
-            <Route path="/export-team/:boardId" element={<ExportTeam />} />
-            <Route path="/pack-management" element={<PackManagement />} />
-            <Route path="/pack/:packId/sections" element={<PackSections />} />
-            <Route path="/report-submission/:sectionId" element={<ReportSubmission />} />
-            <Route path="/action/:token" element={<ActionLink />} />
-            <Route path="/health" element={<Health />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/signup" element={<SignUp />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/dashboard/builder" element={<DashboardBuilder />} />
+                  <Route path="/dashboard/executive" element={<ExecutiveDashboard />} />
+                  <Route path="/boards-committees" element={<BoardsAndCommittees />} />
+                  <Route path="/team" element={<TeamOverview />} />
+                  <Route path="/boards" element={<Boards />} />
+                  <Route path="/boards/:boardId" element={<BoardDetail />} />
+                  <Route path="/boards/:boardId/team" element={<BoardAndTeam />} />
+                  <Route path="/board-papers" element={<BoardPapers />} />
+                  <Route path="/board-papers/:id" element={<BoardPaperDocument />} />
+                  <Route path="/compliance" element={<Compliance />} />
+                  <Route path="/library" element={<BoardLibrary />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/member-intake" element={<MemberIntake />} />
+                  <Route path="/member-invite" element={<MemberInvite />} />
+                  <Route path="/member-approval/:memberId" element={<MemberApproval />} />
+                  <Route path="/export-team/:boardId" element={<ExportTeam />} />
+                  <Route path="/pack-management" element={<PackManagement />} />
+                  <Route path="/pack/:packId/sections" element={<PackSections />} />
+                  <Route path="/report-submission/:sectionId" element={<ReportSubmission />} />
+                  <Route path="/action/:token" element={<ActionLink />} />
+                  <Route path="/health" element={<Health />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

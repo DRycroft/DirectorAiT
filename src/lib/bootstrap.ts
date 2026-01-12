@@ -5,50 +5,81 @@ import { supabase } from "@/integrations/supabase/client";
  * - organization
  * - default board
  * - board_membership (owner)
- * - profile.org_id
- * - org_admin role
+ * - profile.org_id update
+ * - user_roles entry (org_admin)
  *
  * Detection rule:
  *   User has NO profiles.org_id AND NO board_memberships
+ * 
+ * IMPORTANT: Uses user_roles table for role management (not org_admins)
  */
 export async function runBootstrapFromLocalStorage(): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
+  console.log('[Bootstrap] Starting bootstrap check...');
+  
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  if (userError) {
+    console.error('[Bootstrap] Failed to get user:', userError);
+    throw userError;
+  }
+  
+  if (!user) {
+    console.log('[Bootstrap] No authenticated user, skipping bootstrap');
+    return;
+  }
+
+  console.log('[Bootstrap] Checking user:', user.id);
 
   // 1) Check if profile already has org
-  const { data: existingProfile } = await supabase
+  const { data: existingProfile, error: profileError } = await supabase
     .from("profiles")
     .select("org_id")
     .eq("id", user.id)
     .maybeSingle();
 
+  if (profileError) {
+    console.error('[Bootstrap] Failed to check profile:', profileError);
+    throw profileError;
+  }
+
   if (existingProfile?.org_id) {
-    sessionStorage.removeItem("pendingSignUpV1");
+    console.log('[Bootstrap] User already has org_id, skipping bootstrap');
+    cleanupPendingData();
     return;
   }
 
   // 2) Check if user already has board membership
-  const { data: existingMemberships } = await supabase
+  const { data: existingMemberships, error: membershipError } = await supabase
     .from("board_memberships")
     .select("id")
     .eq("user_id", user.id)
     .limit(1);
 
+  if (membershipError) {
+    console.error('[Bootstrap] Failed to check memberships:', membershipError);
+    throw membershipError;
+  }
+
   if (existingMemberships && existingMemberships.length > 0) {
-    sessionStorage.removeItem("pendingSignUpV1");
+    console.log('[Bootstrap] User already has board membership, skipping bootstrap');
+    cleanupPendingData();
     return;
   }
+
+  console.log('[Bootstrap] User needs bootstrap, proceeding...');
 
   // 3) Load signup cache (sessionStorage first, localStorage fallback)
   let raw = sessionStorage.getItem("pendingSignUpV1");
   if (!raw) {
     raw = localStorage.getItem("pendingSignUpV1");
-    if (raw) localStorage.removeItem("pendingSignUpV1");
+    if (raw) {
+      localStorage.removeItem("pendingSignUpV1");
+    }
   }
 
   // Sensible defaults
-  let orgName = "My First Organization";
-  let contactName = user.email?.split("@")[0] || "User";
+  let orgName = "My Organization";
+  let contactName = user.user_metadata?.name || user.email?.split("@")[0] || "User";
   let contactEmail = user.email || "";
   let contactPhone: string | null = null;
 
@@ -60,13 +91,17 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
         contactName = pending.name || contactName;
         contactEmail = pending.email || contactEmail;
         contactPhone = pending.phone || null;
+        console.log('[Bootstrap] Using cached signup data:', { orgName, contactName });
+      } else {
+        console.log('[Bootstrap] Cached signup data expired, using defaults');
       }
-    } catch {
-      // ignore malformed cache
+    } catch (e) {
+      console.warn('[Bootstrap] Failed to parse cached signup data:', e);
     }
   }
 
   // 4) Create organization
+  console.log('[Bootstrap] Creating organization:', orgName);
   const { data: org, error: orgError } = await supabase
     .from("organizations")
     .insert({
@@ -78,9 +113,15 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
     .select()
     .single();
 
-  if (orgError) throw orgError;
+  if (orgError) {
+    console.error('[Bootstrap] Failed to create organization:', orgError);
+    throw orgError;
+  }
+
+  console.log('[Bootstrap] Organization created:', org.id);
 
   // 5) Create default board
+  console.log('[Bootstrap] Creating default board...');
   const { data: board, error: boardError } = await supabase
     .from("boards")
     .insert({
@@ -92,10 +133,16 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
     .select()
     .single();
 
-  if (boardError) throw boardError;
+  if (boardError) {
+    console.error('[Bootstrap] Failed to create board:', boardError);
+    throw boardError;
+  }
+
+  console.log('[Bootstrap] Board created:', board.id);
 
   // 6) Create board membership (owner)
-  const { error: membershipError } = await supabase
+  console.log('[Bootstrap] Creating board membership...');
+  const { error: membershipCreateError } = await supabase
     .from("board_memberships")
     .insert({
       board_id: board.id,
@@ -103,10 +150,16 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
       role: "owner",
     });
 
-  if (membershipError) throw membershipError;
+  if (membershipCreateError) {
+    console.error('[Bootstrap] Failed to create board membership:', membershipCreateError);
+    throw membershipCreateError;
+  }
+
+  console.log('[Bootstrap] Board membership created');
 
   // 7) Update profile with org
-  const { error: profileError } = await supabase
+  console.log('[Bootstrap] Updating profile with org_id...');
+  const { error: profileUpdateError } = await supabase
     .from("profiles")
     .update({
       org_id: org.id,
@@ -115,16 +168,54 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
     })
     .eq("id", user.id);
 
-  if (profileError) throw profileError;
+  if (profileUpdateError) {
+    console.error('[Bootstrap] Failed to update profile:', profileUpdateError);
+    throw profileUpdateError;
+  }
 
-  // 8) Assign org_admin role (idempotent)
+  console.log('[Bootstrap] Profile updated');
+
+  // 8) Assign org_admin role via user_roles table (idempotent)
+  console.log('[Bootstrap] Assigning org_admin role...');
   const { error: roleError } = await supabase
     .from("user_roles")
     .insert({ user_id: user.id, role: "org_admin" });
 
+  // Ignore duplicate key error - means role already exists
   if (roleError && !/duplicate key/i.test(roleError.message)) {
+    console.error('[Bootstrap] Failed to assign role:', roleError);
     throw roleError;
   }
 
-  sessionStorage.removeItem("pendingSignUpV1");
+  console.log('[Bootstrap] Bootstrap completed successfully!');
+  cleanupPendingData();
+}
+
+/**
+ * Clean up any pending signup data from storage
+ */
+function cleanupPendingData(): void {
+  try {
+    sessionStorage.removeItem("pendingSignUpV1");
+    localStorage.removeItem("pendingSignUpV1");
+  } catch (e) {
+    // Ignore storage errors
+  }
+}
+
+/**
+ * Check if bootstrap is needed for the current user
+ * Returns true if user needs org/board setup
+ */
+export async function needsBootstrap(): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("org_id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  return !profile?.org_id;
 }
