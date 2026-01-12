@@ -1,101 +1,72 @@
 /**
- * Environment variable validation with hard-failure protection
- * Missing critical Supabase variables will throw immediately - no silent failures
+ * Environment validation utilities
+ * All validation happens LAZILY - no module-level env access
  */
 
 interface EnvVars {
   VITE_SUPABASE_URL: string;
   VITE_SUPABASE_PUBLISHABLE_KEY: string;
-  VITE_SUPABASE_PROJECT_ID: string;
 }
 
-// Cache for validated environment
-let cachedEnv: EnvVars | null = null;
-let validationError: string | null = null;
+// Cache for validation result
+let _validationResult: { valid: boolean; error?: string; env?: EnvVars } | null = null;
 
-function getEnvVar(name: string): string {
-  // Try import.meta.env first (Vite)
-  const value = import.meta.env?.[name];
-  return value || '';
-}
-
-function validateEnv(): EnvVars | null {
-  if (cachedEnv) {
-    return cachedEnv;
+/**
+ * Validate environment variables (lazy - called only when needed)
+ */
+function validateEnv(): { valid: boolean; error?: string; env?: EnvVars } {
+  if (_validationResult) {
+    return _validationResult;
   }
 
-  const url = getEnvVar('VITE_SUPABASE_URL');
-  const key = getEnvVar('VITE_SUPABASE_PUBLISHABLE_KEY');
-  const projectId = getEnvVar('VITE_SUPABASE_PROJECT_ID');
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   const missing: string[] = [];
-  
   if (!url) missing.push('VITE_SUPABASE_URL');
   if (!key) missing.push('VITE_SUPABASE_PUBLISHABLE_KEY');
 
-  // If missing essential vars, store error but don't throw yet
   if (missing.length > 0) {
-    validationError = `[FATAL] Missing required Supabase environment variables:\n${missing.join('\n')}\n\nThe application cannot start without these values.`;
-    console.error(validationError);
-    return null;
+    _validationResult = {
+      valid: false,
+      error: `Missing required environment variables:\n${missing.join('\n')}\n\nPlease configure these in your deployment settings.`,
+    };
+  } else {
+    _validationResult = {
+      valid: true,
+      env: {
+        VITE_SUPABASE_URL: url,
+        VITE_SUPABASE_PUBLISHABLE_KEY: key,
+      },
+    };
+    console.log('[env] Supabase config loaded');
   }
 
-  cachedEnv = {
-    VITE_SUPABASE_URL: url,
-    VITE_SUPABASE_PUBLISHABLE_KEY: key,
-    VITE_SUPABASE_PROJECT_ID: projectId || '',
-  };
-
-  // Log successful initialization in development
-  if (import.meta.env.DEV) {
-    console.log('[env] Environment validated successfully', {
-      url: url.substring(0, 30) + '...',
-      projectId: projectId || '(not set)',
-    });
-  }
-
-  return cachedEnv;
+  return _validationResult;
 }
 
 /**
- * Check if environment is valid without throwing
- * Useful for conditional rendering before full initialization
+ * Check if environment is valid (safe to call at any time)
  */
 export function isEnvValid(): boolean {
-  return validateEnv() !== null;
+  return validateEnv().valid;
 }
 
 /**
- * Get the validation error message if environment is invalid
+ * Get validation error message (null if valid)
  */
 export function getEnvError(): string | null {
-  validateEnv(); // Trigger validation
-  return validationError;
+  const result = validateEnv();
+  return result.error || null;
 }
 
 /**
- * Get a specific env var, throwing if not available
- * Use this when you NEED the value and can't continue without it
+ * Get an environment variable (throws if not configured)
  */
 export function requireEnv(name: keyof EnvVars): string {
-  const validated = validateEnv();
-  if (!validated) {
-    throw new Error(validationError || 'Environment not configured');
+  const result = validateEnv();
+  if (!result.valid || !result.env) {
+    throw new Error(result.error || 'Environment not configured');
   }
-  return validated[name];
+  return result.env[name];
 }
-
-// Lazy getter - validates when accessed
-// DOES NOT THROW - returns empty string if not configured
-// Use isEnvValid() first to check, or requireEnv() if you need to throw
-export const env: EnvVars = new Proxy({} as EnvVars, {
-  get(_, prop: string) {
-    const validated = validateEnv();
-    if (!validated) {
-      // Return empty string to prevent immediate crash at module load
-      // The app should check isEnvValid() and show appropriate UI
-      return '';
-    }
-    return validated[prop as keyof EnvVars];
-  }
-});

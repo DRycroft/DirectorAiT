@@ -72,20 +72,22 @@ const ConfigError = ({ message }: { message: string }) => (
 const queryClient = createQueryClient();
 
 const App = () => {
-  const [envChecked, setEnvChecked] = useState(false);
-  const [envError, setEnvError] = useState<string | null>(null);
+  const [bootState, setBootState] = useState<'checking' | 'ready' | 'error'>('checking');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
-  // Boot guard: Validate environment before rendering
+  // Boot guard: Validate environment inside useEffect (NOT at module scope)
   useEffect(() => {
-    // Check environment validity
+    // Validate environment
     if (!isEnvValid()) {
-      const error = getEnvError();
-      console.error('[App] Environment validation failed:', error);
-      setEnvError(error);
-    } else {
-      console.log('[App] Environment validated successfully');
+      const error = getEnvError() || 'Unknown configuration error';
+      console.error('[App] Boot failed:', error);
+      setErrorMessage(error);
+      setBootState('error');
+      return;
     }
-    setEnvChecked(true);
+
+    console.log('[App] Environment validated, app ready');
+    setBootState('ready');
 
     // Initialize performance monitoring and cache cleanup
     initWebVitals();
@@ -96,14 +98,14 @@ const App = () => {
     };
   }, []);
 
-  // Show loading while checking environment
-  if (!envChecked) {
+  // Show loading spinner while checking
+  if (bootState === 'checking') {
     return <PageLoader />;
   }
 
-  // Show config error if environment is invalid
-  if (envError) {
-    return <ConfigError message={envError} />;
+  // Show config error screen (NOT blank)
+  if (bootState === 'error') {
+    return <ConfigError message={errorMessage} />;
   }
 
   return (
