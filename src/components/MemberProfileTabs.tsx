@@ -4,12 +4,25 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Eye, EyeOff, Lock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+interface SensitiveData {
+  personal_email?: string | null;
+  personal_mobile?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  home_address?: string | null;
+  national_id?: string | null;
+  sensitive_notes?: string | null;
+  health_notes?: string | null;
+  date_of_birth?: string | null;
+}
+
 interface MemberProfileTabsProps {
   member: any;
+  sensitiveData?: SensitiveData | null;
   isAdmin?: boolean;
 }
 
-const MemberProfileTabs = ({ member, isAdmin = false }: MemberProfileTabsProps) => {
+const MemberProfileTabs = ({ member, sensitiveData, isAdmin = false }: MemberProfileTabsProps) => {
   const publishPrefs = member.publish_preferences || {};
 
   const PublicPreview = () => (
@@ -65,10 +78,10 @@ const MemberProfileTabs = ({ member, isAdmin = false }: MemberProfileTabsProps) 
           </div>
         )}
 
-        {publishPrefs.public_contact_email && member.personal_email && (
+        {publishPrefs.public_contact_email && sensitiveData?.personal_email && (
           <div>
             <h4 className="font-semibold mb-2">Contact</h4>
-            <p className="text-sm">{member.personal_email}</p>
+            <p className="text-sm">{sensitiveData.personal_email}</p>
           </div>
         )}
       </CardContent>
@@ -89,11 +102,11 @@ const MemberProfileTabs = ({ member, isAdmin = false }: MemberProfileTabsProps) 
           </div>
           <div>
             <label className="text-sm font-semibold">Personal Mobile</label>
-            <p className="text-sm">{member.personal_mobile || "Not provided"}</p>
+            <p className="text-sm">{sensitiveData?.personal_mobile || "Not provided"}</p>
           </div>
           <div>
             <label className="text-sm font-semibold">Personal Email</label>
-            <p className="text-sm">{member.personal_email || "Not provided"}</p>
+            <p className="text-sm">{sensitiveData?.personal_email || "Not provided"}</p>
           </div>
           <div>
             <label className="text-sm font-semibold">Appointment Date</label>
@@ -132,8 +145,8 @@ const MemberProfileTabs = ({ member, isAdmin = false }: MemberProfileTabsProps) 
         <div>
           <label className="text-sm font-semibold">Emergency Contact</label>
           <p className="text-sm">
-            {member.emergency_contact_name || "Not provided"}
-            {member.emergency_contact_phone && ` - ${member.emergency_contact_phone}`}
+            {sensitiveData?.emergency_contact_name || "Not provided"}
+            {sensitiveData?.emergency_contact_phone && ` - ${sensitiveData.emergency_contact_phone}`}
           </p>
         </div>
       </CardContent>
@@ -163,16 +176,16 @@ const MemberProfileTabs = ({ member, isAdmin = false }: MemberProfileTabsProps) 
         <CardContent className="space-y-4">
           <div>
             <label className="text-sm font-semibold">National ID</label>
-            <p className="text-sm">{member.national_id || "Not provided"}</p>
+            <p className="text-sm">{sensitiveData?.national_id || "Not provided"}</p>
           </div>
           <div>
             <label className="text-sm font-semibold">Home Address</label>
-            <p className="text-sm whitespace-pre-line">{member.home_address || "Not provided"}</p>
+            <p className="text-sm whitespace-pre-line">{sensitiveData?.home_address || "Not provided"}</p>
           </div>
-          {member.sensitive_notes && (
+          {sensitiveData?.sensitive_notes && (
             <div>
               <label className="text-sm font-semibold">Sensitive Notes</label>
-              <p className="text-sm whitespace-pre-line">{member.sensitive_notes}</p>
+              <p className="text-sm whitespace-pre-line">{sensitiveData.sensitive_notes}</p>
             </div>
           )}
         </CardContent>
