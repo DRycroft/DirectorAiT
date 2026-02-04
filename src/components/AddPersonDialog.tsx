@@ -281,13 +281,17 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
     try {
       setLoading(true);
 
-      // Standard field mapping
+      // Standard field mapping (non-sensitive fields only)
       const standardFields = new Set([
         'full_name', 'preferred_title', 'position', 'starting_date', 'finishing_date',
-        'home_address', 'date_of_birth', 'personal_email', 'personal_mobile',
         'public_social_links', 'reports_responsible_for', 'reports_to',
-        'professional_qualifications', 'personal_interests', 'health_notes',
-        'emergency_contact_name', 'emergency_contact_phone', 'member_type'
+        'professional_qualifications', 'personal_interests', 'member_type'
+      ]);
+
+      // Sensitive fields that go to board_members_sensitive
+      const sensitiveFields = new Set([
+        'home_address', 'date_of_birth', 'personal_email', 'personal_mobile',
+        'health_notes', 'emergency_contact_name', 'emergency_contact_phone'
       ]);
 
       // Parse LinkedIn URL if provided
@@ -308,7 +312,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
       // Separate custom fields from standard fields and convert dates
       const customFields: Record<string, any> = {};
       Object.keys(values).forEach(key => {
-        if (!standardFields.has(key)) {
+        if (!standardFields.has(key) && !sensitiveFields.has(key)) {
           const value = values[key];
           // Convert Date objects to ISO strings for storage
           if (value instanceof Date) {
@@ -332,6 +336,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
         if (otherName) customFields.reports_to_custom = otherName;
       }
 
+      // Insert board member (without sensitive fields)
       const insertData: BoardMemberInsert = {
         board_id: boardId,
         member_type: values.member_type,
@@ -344,28 +349,46 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
         term_expiry: values.finishing_date instanceof Date
           ? values.finishing_date.toISOString().split("T")[0]
           : null,
-        home_address: values.home_address || null,
-        date_of_birth: values.date_of_birth instanceof Date
-          ? values.date_of_birth.toISOString().split("T")[0]
-          : null,
-        personal_email: values.personal_email,
-        personal_mobile: values.personal_mobile || null,
         public_social_links: Object.keys(socialLinks).length > 0 ? socialLinks : null,
         reports_responsible_for: reportsArray.length > 0 ? reportsArray : null,
         // Only store a UUID in the DB column. Presets/custom names go into custom_fields.
         reports_to: isUuid(selectedReportsTo) ? selectedReportsTo : null,
         professional_qualifications: values.professional_qualifications || null,
         personal_interests: values.personal_interests || null,
-        health_notes: values.health_notes || null,
-        emergency_contact_name: values.emergency_contact_name || null,
-        emergency_contact_phone: values.emergency_contact_phone || null,
         custom_fields: Object.keys(customFields).length > 0 ? customFields : null,
         status: "active",
       };
 
-      const { error } = await supabase.from("board_members").insert(insertData);
+      const { data: newMember, error } = await supabase
+        .from("board_members")
+        .insert(insertData)
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // Insert sensitive data into board_members_sensitive
+      const sensitiveData = {
+        member_id: newMember.id,
+        home_address: values.home_address || null,
+        date_of_birth: values.date_of_birth instanceof Date
+          ? values.date_of_birth.toISOString().split("T")[0]
+          : null,
+        personal_email: values.personal_email || null,
+        personal_mobile: values.personal_mobile || null,
+        health_notes: values.health_notes || null,
+        emergency_contact_name: values.emergency_contact_name || null,
+        emergency_contact_phone: values.emergency_contact_phone || null,
+      };
+
+      const { error: sensitiveError } = await supabase
+        .from("board_members_sensitive")
+        .insert(sensitiveData);
+
+      if (sensitiveError) {
+        // Log error but don't fail the whole operation
+        logError("AddPersonDialog - Insert sensitive data", sensitiveError);
+      }
 
       toast({
         title: "Success",

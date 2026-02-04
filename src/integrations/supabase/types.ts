@@ -440,23 +440,15 @@ export type Database = {
           created_at: string | null
           custom_fields: Json | null
           cv_file_url: string | null
-          date_of_birth: string | null
           detailed_work_history: string | null
-          emergency_contact_name: string | null
-          emergency_contact_phone: string | null
           full_name: string
-          health_notes: string | null
-          home_address: string | null
           id: string
           invite_expires_at: string | null
           invite_sent_at: string | null
           invite_token: string | null
           legal_name: string | null
           member_type: string | null
-          national_id: string | null
-          personal_email: string | null
           personal_interests: string | null
-          personal_mobile: string | null
           position: string | null
           preferred_title: string | null
           professional_qualifications: string | null
@@ -470,7 +462,6 @@ export type Database = {
           reappointment_history: Json | null
           reports_responsible_for: Json | null
           reports_to: string | null
-          sensitive_notes: string | null
           short_bio: string | null
           skills_competencies: Json | null
           status: string | null
@@ -486,23 +477,15 @@ export type Database = {
           created_at?: string | null
           custom_fields?: Json | null
           cv_file_url?: string | null
-          date_of_birth?: string | null
           detailed_work_history?: string | null
-          emergency_contact_name?: string | null
-          emergency_contact_phone?: string | null
           full_name: string
-          health_notes?: string | null
-          home_address?: string | null
           id?: string
           invite_expires_at?: string | null
           invite_sent_at?: string | null
           invite_token?: string | null
           legal_name?: string | null
           member_type?: string | null
-          national_id?: string | null
-          personal_email?: string | null
           personal_interests?: string | null
-          personal_mobile?: string | null
           position?: string | null
           preferred_title?: string | null
           professional_qualifications?: string | null
@@ -516,7 +499,6 @@ export type Database = {
           reappointment_history?: Json | null
           reports_responsible_for?: Json | null
           reports_to?: string | null
-          sensitive_notes?: string | null
           short_bio?: string | null
           skills_competencies?: Json | null
           status?: string | null
@@ -532,23 +514,15 @@ export type Database = {
           created_at?: string | null
           custom_fields?: Json | null
           cv_file_url?: string | null
-          date_of_birth?: string | null
           detailed_work_history?: string | null
-          emergency_contact_name?: string | null
-          emergency_contact_phone?: string | null
           full_name?: string
-          health_notes?: string | null
-          home_address?: string | null
           id?: string
           invite_expires_at?: string | null
           invite_sent_at?: string | null
           invite_token?: string | null
           legal_name?: string | null
           member_type?: string | null
-          national_id?: string | null
-          personal_email?: string | null
           personal_interests?: string | null
-          personal_mobile?: string | null
           position?: string | null
           preferred_title?: string | null
           professional_qualifications?: string | null
@@ -562,7 +536,6 @@ export type Database = {
           reappointment_history?: Json | null
           reports_responsible_for?: Json | null
           reports_to?: string | null
-          sensitive_notes?: string | null
           short_bio?: string | null
           skills_competencies?: Json | null
           status?: string | null
@@ -590,6 +563,7 @@ export type Database = {
       board_members_sensitive: {
         Row: {
           created_at: string | null
+          date_of_birth: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           health_notes: string | null
@@ -597,11 +571,14 @@ export type Database = {
           id: string
           member_id: string
           national_id: string | null
+          personal_email: string | null
+          personal_mobile: string | null
           sensitive_notes: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          date_of_birth?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           health_notes?: string | null
@@ -609,11 +586,14 @@ export type Database = {
           id?: string
           member_id: string
           national_id?: string | null
+          personal_email?: string | null
+          personal_mobile?: string | null
           sensitive_notes?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          date_of_birth?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           health_notes?: string | null
@@ -621,6 +601,8 @@ export type Database = {
           id?: string
           member_id?: string
           national_id?: string | null
+          personal_email?: string | null
+          personal_mobile?: string | null
           sensitive_notes?: string | null
           updated_at?: string | null
         }

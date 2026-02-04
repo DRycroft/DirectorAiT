@@ -54,9 +54,10 @@ const MemberInvite = () => {
 
   const fetchMemberData = async (token: string) => {
     try {
+      // Fetch member with sensitive data
       const { data, error } = await supabase
         .from("board_members")
-        .select("*")
+        .select("*, board_members_sensitive(*)")
         .eq("invite_token", token)
         .eq("status", "invited")
         .maybeSingle();
@@ -73,6 +74,7 @@ const MemberInvite = () => {
         return;
       }
 
+      const sensitive = data.board_members_sensitive;
       setMember(data);
       setFormData({
         full_name: data.full_name || "",
@@ -81,10 +83,10 @@ const MemberInvite = () => {
         short_bio: data.short_bio || "",
         public_company_affiliations: data.public_company_affiliations || "",
         professional_qualifications: data.professional_qualifications || "",
-        personal_mobile: data.personal_mobile || "",
-        personal_email: data.personal_email || "",
-        emergency_contact_name: data.emergency_contact_name || "",
-        emergency_contact_phone: data.emergency_contact_phone || "",
+        personal_mobile: sensitive?.personal_mobile || "",
+        personal_email: sensitive?.personal_email || "",
+        emergency_contact_name: sensitive?.emergency_contact_name || "",
+        emergency_contact_phone: sensitive?.emergency_contact_phone || "",
       });
     } catch (error: any) {
       console.error("Error fetching member:", error);
@@ -103,10 +105,16 @@ const MemberInvite = () => {
     setSaving(true);
 
     try {
-      const { error } = await supabase
+      // Update non-sensitive fields on board_members
+      const { error: memberError } = await supabase
         .from("board_members")
         .update({
-          ...formData,
+          full_name: formData.full_name,
+          preferred_title: formData.preferred_title,
+          public_job_title: formData.public_job_title,
+          short_bio: formData.short_bio,
+          public_company_affiliations: formData.public_company_affiliations,
+          professional_qualifications: formData.professional_qualifications,
           publish_preferences: publishToggles,
           status: "pending",
           profile_completed_at: new Date().toISOString(),
@@ -114,7 +122,20 @@ const MemberInvite = () => {
         })
         .eq("id", member.id);
 
-      if (error) throw error;
+      if (memberError) throw memberError;
+
+      // Upsert sensitive fields to board_members_sensitive
+      const { error: sensitiveError } = await supabase
+        .from("board_members_sensitive")
+        .upsert({
+          member_id: member.id,
+          personal_mobile: formData.personal_mobile,
+          personal_email: formData.personal_email,
+          emergency_contact_name: formData.emergency_contact_name,
+          emergency_contact_phone: formData.emergency_contact_phone,
+        }, { onConflict: 'member_id' });
+
+      if (sensitiveError) throw sensitiveError;
 
       toast({
         title: "Profile submitted",

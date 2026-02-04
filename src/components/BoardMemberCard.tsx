@@ -3,6 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Mail, Phone, Calendar } from "lucide-react";
 
+interface SensitiveData {
+  personal_email?: string | null;
+  personal_mobile?: string | null;
+}
+
 interface BoardMemberCardProps {
   member: {
     id: string;
@@ -11,16 +16,15 @@ interface BoardMemberCardProps {
     public_job_title?: string;
     short_bio?: string;
     public_photo_url?: string;
-    personal_mobile?: string;
-    personal_email?: string;
     appointment_date?: string;
     term_expiry?: string;
     status: string;
   };
+  sensitiveData?: SensitiveData | null;
   onClick?: () => void;
 }
 
-const BoardMemberCard = ({ member, onClick }: BoardMemberCardProps) => {
+const BoardMemberCard = ({ member, sensitiveData, onClick }: BoardMemberCardProps) => {
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -90,16 +94,16 @@ const BoardMemberCard = ({ member, onClick }: BoardMemberCardProps) => {
           <p className="text-sm line-clamp-2">{member.short_bio}</p>
         )}
         <div className="space-y-2 text-sm text-muted-foreground">
-          {member.personal_email && (
+          {sensitiveData?.personal_email && (
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              <span>{member.personal_email}</span>
+              <span>{sensitiveData.personal_email}</span>
             </div>
           )}
-          {member.personal_mobile && (
+          {sensitiveData?.personal_mobile && (
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4" />
-              <span>{member.personal_mobile}</span>
+              <span>{sensitiveData.personal_mobile}</span>
             </div>
           )}
           {member.appointment_date && (

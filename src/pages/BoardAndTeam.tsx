@@ -14,16 +14,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { logError } from "@/lib/errorHandling";
 import { BoardWithOrg, BoardMember, ViewerRole } from "@/types/database";
 
+// Extended type with sensitive data joined
+interface BoardMemberWithSensitive extends BoardMember {
+  board_members_sensitive?: {
+    personal_email?: string | null;
+    personal_mobile?: string | null;
+    emergency_contact_name?: string | null;
+    emergency_contact_phone?: string | null;
+    home_address?: string | null;
+    national_id?: string | null;
+    sensitive_notes?: string | null;
+    health_notes?: string | null;
+    date_of_birth?: string | null;
+  } | null;
+}
+
 const BoardAndTeam = () => {
   const { boardId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [board, setBoard] = useState<BoardWithOrg | null>(null);
-  const [boardMembers, setBoardMembers] = useState<BoardMember[]>([]);
-  const [executives, setExecutives] = useState<BoardMember[]>([]);
-  const [keyStaff, setKeyStaff] = useState<BoardMember[]>([]);
-  const [selectedMember, setSelectedMember] = useState<BoardMember | null>(null);
+  const [boardMembers, setBoardMembers] = useState<BoardMemberWithSensitive[]>([]);
+  const [executives, setExecutives] = useState<BoardMemberWithSensitive[]>([]);
+  const [keyStaff, setKeyStaff] = useState<BoardMemberWithSensitive[]>([]);
+  const [selectedMember, setSelectedMember] = useState<BoardMemberWithSensitive | null>(null);
   const [viewerRole, setViewerRole] = useState<ViewerRole>('public');
 
   useEffect(() => {
@@ -79,10 +94,10 @@ const BoardAndTeam = () => {
       if (boardError) throw boardError;
       setBoard(boardData);
 
-      // Fetch all members
+      // Fetch all members with sensitive data (will be filtered by RLS)
       const { data: allMembers, error: membersError } = await supabase
         .from("board_members")
-        .select("*")
+        .select("*, board_members_sensitive(*)")
         .eq("board_id", boardId)
         .eq("status", "active")
         .order("position");
@@ -110,17 +125,32 @@ const BoardAndTeam = () => {
     }
   };
 
-  const getFilteredMember = (member: BoardMember) => {
+  const getFilteredMember = (member: BoardMemberWithSensitive) => {
     const publishPrefs = (member.publish_preferences as Record<string, boolean>) || {};
+    const sensitive = member.board_members_sensitive;
     
     if (viewerRole === 'admin') {
-      return member; // Show everything
+      // Merge sensitive data for admin view
+      return {
+        ...member,
+        personal_email: sensitive?.personal_email,
+        personal_mobile: sensitive?.personal_mobile,
+        emergency_contact_name: sensitive?.emergency_contact_name,
+        emergency_contact_phone: sensitive?.emergency_contact_phone,
+        home_address: sensitive?.home_address,
+        national_id: sensitive?.national_id,
+        sensitive_notes: sensitive?.sensitive_notes,
+        health_notes: sensitive?.health_notes,
+        date_of_birth: sensitive?.date_of_birth,
+      };
     }
     
     if (viewerRole === 'internal') {
-      // Show public + internal fields
+      // Show public + internal fields (no sensitive data)
       return {
         ...member,
+        personal_email: sensitive?.personal_email,
+        personal_mobile: sensitive?.personal_mobile,
         national_id: null,
         home_address: null,
         sensitive_notes: null,
@@ -136,12 +166,12 @@ const BoardAndTeam = () => {
       short_bio: publishPrefs.short_bio ? member.short_bio : null,
       public_company_affiliations: publishPrefs.public_company_affiliations ? member.public_company_affiliations : null,
       professional_qualifications: publishPrefs.professional_qualifications ? member.professional_qualifications : null,
-      personal_email: publishPrefs.public_contact_email ? member.personal_email : null,
+      personal_email: publishPrefs.public_contact_email ? sensitive?.personal_email : null,
     };
   };
 
   const MemberTable = ({ members, title, description, icon: Icon, accentColor }: { 
-    members: BoardMember[], 
+    members: BoardMemberWithSensitive[], 
     title: string, 
     description: string,
     icon: React.ComponentType<{ className?: string }>,
@@ -195,7 +225,7 @@ const BoardAndTeam = () => {
                       <TableCell>{filtered.position || "-"}</TableCell>
                       {viewerRole !== 'public' && (
                         <TableCell className="text-sm text-muted-foreground">
-                          {member.personal_email || "-"}
+                          {member.board_members_sensitive?.personal_email || "-"}
                         </TableCell>
                       )}
                       <TableCell>
@@ -268,11 +298,11 @@ const BoardAndTeam = () => {
               </div>
             )}
 
-            {viewerRole !== 'public' && selectedMember.personal_email && (
+            {viewerRole !== 'public' && selectedMember.board_members_sensitive?.personal_email && (
               <div>
                 <h3 className="text-sm font-semibold text-muted-foreground">Contact</h3>
-                <p>{selectedMember.personal_email}</p>
-                {selectedMember.personal_mobile && <p>{selectedMember.personal_mobile}</p>}
+                <p>{selectedMember.board_members_sensitive.personal_email}</p>
+                {selectedMember.board_members_sensitive.personal_mobile && <p>{selectedMember.board_members_sensitive.personal_mobile}</p>}
               </div>
             )}
 
@@ -301,11 +331,11 @@ const BoardAndTeam = () => {
                     <p>{selectedMember.legal_name}</p>
                   </div>
                 )}
-                {selectedMember.emergency_contact_name && (
+                {selectedMember.board_members_sensitive?.emergency_contact_name && (
                   <div>
                     <h3 className="text-sm font-semibold text-muted-foreground">Emergency Contact</h3>
-                    <p>{selectedMember.emergency_contact_name}</p>
-                    {selectedMember.emergency_contact_phone && <p>{selectedMember.emergency_contact_phone}</p>}
+                    <p>{selectedMember.board_members_sensitive.emergency_contact_name}</p>
+                    {selectedMember.board_members_sensitive.emergency_contact_phone && <p>{selectedMember.board_members_sensitive.emergency_contact_phone}</p>}
                   </div>
                 )}
               </>

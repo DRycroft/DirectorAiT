@@ -206,10 +206,10 @@ const TeamOverview = () => {
                   <CardTitle className="text-lg">Reporting Structure</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div>
+                <div>
                     <h4 className="font-medium mb-1">Reports To</h4>
                     <p className="text-sm text-muted-foreground">
-                      {selectedMember.sensitive_notes || "Not specified"}
+                      {selectedMember.reports_to || "Not specified"}
                     </p>
                   </div>
                   <Separator />
@@ -372,11 +372,11 @@ const TeamOverview = () => {
                   <TableCell className="text-sm text-muted-foreground">
                     {memberType === 'board' 
                       ? (row.member?.boards?.title || "-")
-                      : (row.member?.sensitive_notes || "-")
+                      : (row.member?.reports_to || "-")
                     }
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {row.member?.personal_email || "-"}
+                    {row.member?.public_contact_email || "-"}
                   </TableCell>
                   <TableCell className="text-right">
                     {row.member && (
