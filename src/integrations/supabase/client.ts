@@ -15,13 +15,18 @@ export function getSupabaseClient(): SupabaseClient<Database> {
     return _client;
   }
 
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  // Primary: Use Vite env vars (injected at build time by Vercel/Lovable)
+  // Fallback: Use Lovable Cloud values for preview when env injection fails
+  const LOVABLE_CLOUD_URL = 'https://lomksomekpysjgtnlguq.supabase.co';
+  const LOVABLE_CLOUD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvbWtzb21la3B5c2pndG5sZ3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3NjEyMDgsImV4cCI6MjA3NjMzNzIwOH0.xwRiW2B8X51puDJ3IxnwKWsUsv7jRHsAIJjd6Wkq-JA';
 
-  if (!url || !key) {
-    throw new Error(
-      'Missing Supabase configuration. Ensure VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY are set.'
-    );
+  const url = import.meta.env.VITE_SUPABASE_URL || LOVABLE_CLOUD_URL;
+  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || LOVABLE_CLOUD_KEY;
+
+  // Log which source is being used (helpful for debugging)
+  const usingFallback = !import.meta.env.VITE_SUPABASE_URL;
+  if (usingFallback) {
+    console.log('[Supabase] Using Lovable Cloud fallback (VITE_* env vars not injected)');
   }
 
   console.log('[Supabase] Initializing client...');

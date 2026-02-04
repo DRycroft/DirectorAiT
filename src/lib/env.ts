@@ -19,27 +19,27 @@ function validateEnv(): { valid: boolean; error?: string; env?: EnvVars } {
     return _validationResult;
   }
 
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  // Lovable Cloud fallback values for preview when env injection fails
+  const LOVABLE_CLOUD_URL = 'https://lomksomekpysjgtnlguq.supabase.co';
+  const LOVABLE_CLOUD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvbWtzb21la3B5c2pndG5sZ3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3NjEyMDgsImV4cCI6MjA3NjMzNzIwOH0.xwRiW2B8X51puDJ3IxnwKWsUsv7jRHsAIJjd6Wkq-JA';
 
-  const missing: string[] = [];
-  if (!url) missing.push('VITE_SUPABASE_URL');
-  if (!key) missing.push('VITE_SUPABASE_PUBLISHABLE_KEY');
+  const url = import.meta.env.VITE_SUPABASE_URL || LOVABLE_CLOUD_URL;
+  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || LOVABLE_CLOUD_KEY;
 
-  if (missing.length > 0) {
-    _validationResult = {
-      valid: false,
-      error: `Missing required environment variables:\n${missing.join('\n')}\n\nPlease configure these in your deployment settings.`,
-    };
+  const usingFallback = !import.meta.env.VITE_SUPABASE_URL;
+
+  _validationResult = {
+    valid: true,
+    env: {
+      VITE_SUPABASE_URL: url,
+      VITE_SUPABASE_PUBLISHABLE_KEY: key,
+    },
+  };
+  
+  if (usingFallback) {
+    console.log('[env] Using Lovable Cloud fallback config');
   } else {
-    _validationResult = {
-      valid: true,
-      env: {
-        VITE_SUPABASE_URL: url,
-        VITE_SUPABASE_PUBLISHABLE_KEY: key,
-      },
-    };
-    console.log('[env] Supabase config loaded');
+    console.log('[env] Supabase config loaded from env vars');
   }
 
   return _validationResult;
