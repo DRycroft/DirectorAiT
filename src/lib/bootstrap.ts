@@ -12,6 +12,9 @@ import { supabase } from "@/integrations/supabase/client";
  *   User has NO profiles.org_id AND NO board_memberships
  * 
  * IMPORTANT: Uses user_roles table for role management (not org_admins)
+ * 
+ * SECURITY: Only stores minimal non-PII data in sessionStorage (company name only).
+ * User's name, email, phone come from Supabase auth user metadata.
  */
 export async function runBootstrapFromLocalStorage(): Promise<void> {
   console.log('[Bootstrap] Starting bootstrap check...');
@@ -68,30 +71,23 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
 
   console.log('[Bootstrap] User needs bootstrap, proceeding...');
 
-  // 3) Load signup cache (sessionStorage first, localStorage fallback)
-  let raw = sessionStorage.getItem("pendingSignUpV1");
-  if (!raw) {
-    raw = localStorage.getItem("pendingSignUpV1");
-    if (raw) {
-      localStorage.removeItem("pendingSignUpV1");
-    }
-  }
-
-  // Sensible defaults
+  // 3) Load signup cache - V2 only stores company name (no PII)
+  // User data comes from auth metadata
   let orgName = "My Organization";
-  let contactName = user.user_metadata?.name || user.email?.split("@")[0] || "User";
-  let contactEmail = user.email || "";
-  let contactPhone: string | null = null;
+  
+  // Get user info from Supabase auth (secure source)
+  const contactName = user.user_metadata?.name || user.email?.split("@")[0] || "User";
+  const contactEmail = user.email || "";
+  const contactPhone: string | null = user.user_metadata?.phone || null;
 
+  // Try to get company name from V2 storage (minimal data approach)
+  let raw = sessionStorage.getItem("pendingSignUpV2");
   if (raw) {
     try {
       const pending = JSON.parse(raw);
       if (!pending.expiresAt || pending.expiresAt >= Date.now()) {
         orgName = pending.companyName || orgName;
-        contactName = pending.name || contactName;
-        contactEmail = pending.email || contactEmail;
-        contactPhone = pending.phone || null;
-        console.log('[Bootstrap] Using cached signup data:', { orgName, contactName });
+        console.log('[Bootstrap] Using cached company name:', orgName);
       } else {
         console.log('[Bootstrap] Cached signup data expired, using defaults');
       }
@@ -193,9 +189,13 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
 
 /**
  * Clean up any pending signup data from storage
+ * Removes both old V1 format (contained PII) and new V2 format
  */
 function cleanupPendingData(): void {
   try {
+    // Remove V2 (current minimal format)
+    sessionStorage.removeItem("pendingSignUpV2");
+    // Remove legacy V1 format (contained PII - should already be removed)
     sessionStorage.removeItem("pendingSignUpV1");
     localStorage.removeItem("pendingSignUpV1");
   } catch (e) {

@@ -64,6 +64,15 @@ const signUpSchema = z.object({
     .max(100, "Role must be less than 100 characters"),
 });
 
+// Minimal data stored in session - only non-PII needed for org creation
+interface PendingSignup {
+  companyName: string;
+  expiresAt: number;
+}
+
+// Storage key with version for easy migration
+const PENDING_SIGNUP_KEY = "pendingSignUpV2";
+
 const SignUp = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -85,6 +94,9 @@ const SignUp = () => {
   });
 
   useEffect(() => {
+    // Clean up old V1 data if present
+    sessionStorage.removeItem("pendingSignUpV1");
+    
     if (formData.password) {
       const result = zxcvbn(formData.password);
       const strengthLabels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
@@ -118,99 +130,102 @@ const SignUp = () => {
     }
   };
 
-const handleSignUp = async (e: React.FormEvent) => {
-  console.count("[SIGNUP] handleSignUp invoked");
-  e.preventDefault();
-  setLoading(true);
+  const handleSignUp = async (e: React.FormEvent) => {
+    console.count("[SIGNUP] handleSignUp invoked");
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    console.log("🔄 Starting signup process...");
-    const validatedData = signUpSchema.parse(formData);
-    console.log("✅ Form validation passed");
+    try {
+      console.log("🔄 Starting signup process...");
+      const validatedData = signUpSchema.parse(formData);
+      console.log("✅ Form validation passed");
 
-    // Store signup data for bootstrap (15-minute expiry)
-    const pendingData = {
-      companyName: validatedData.companyName,
-      name: validatedData.name,
-      email: validatedData.email,
-      phone: validatedData.phone || null,
-      expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutes
-    };
-    sessionStorage.setItem("pendingSignUpV1", JSON.stringify(pendingData));
+      // Store only minimal, non-PII data needed for org creation
+      // Name, email, phone are handled by Supabase auth - no need to cache
+      const pendingData: PendingSignup = {
+        companyName: validatedData.companyName,
+        expiresAt: Date.now() + 10 * 60 * 1000, // Reduced to 10 minutes
+      };
+      sessionStorage.setItem(PENDING_SIGNUP_KEY, JSON.stringify(pendingData));
 
-    console.log("🔐 Creating user account...");
-    const redirectUrl = `${window.location.origin}/auth/callback`;
-    
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: validatedData.email,
-      password: validatedData.password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          name: validatedData.name,
-        },
-      },
-    });
-
-    // ❗ ALWAYS handle error first
-    if (authError) {
-      console.error("❌ Auth error:", authError);
-
-      if (
-        authError.message?.toLowerCase().includes("already registered") ||
-        authError.message?.toLowerCase().includes("user already exists")
-      ) {
-        toast.error("This email is already registered! Please log in instead.", {
-          duration: 8000,
-          action: {
-            label: "Go to Login",
-            onClick: () => navigate("/auth"),
+      console.log("🔐 Creating user account...");
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: validatedData.email,
+        password: validatedData.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            name: validatedData.name,
+            // Phone stored in user metadata, not sessionStorage
+            phone: validatedData.phone || undefined,
           },
-        });
-      } else {
-        toast.error(getUserFriendlyError(authError));
+        },
+      });
+
+      // ❗ ALWAYS handle error first
+      if (authError) {
+        console.error("❌ Auth error:", authError);
+        
+        // Clear pending data on error
+        sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+
+        if (
+          authError.message?.toLowerCase().includes("already registered") ||
+          authError.message?.toLowerCase().includes("user already exists")
+        ) {
+          toast.error("This email is already registered! Please log in instead.", {
+            duration: 8000,
+            action: {
+              label: "Go to Login",
+              onClick: () => navigate("/auth"),
+            },
+          });
+        } else {
+          toast.error(getUserFriendlyError(authError));
+        }
+
+        throw authError;
       }
 
-      throw authError;
+      // ✅ Success path
+      if (authData?.user) {
+        console.log("✅ Signup successful:", authData.user.id);
+
+        setFormData({
+          name: "",
+          email: "",
+          password: "",
+          phone: "",
+          companyName: "",
+          userRole: "",
+        });
+
+        toast.success("Account created. Please check your email to verify your account.");
+        navigate("/auth");
+        return;
+      }
+
+      throw new Error("Signup failed with no error and no user.");
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(newErrors);
+        toast.error(error.errors[0].message);
+      } else {
+        logError("SignUp", error);
+        toast.error(getUserFriendlyError(error));
+      }
+    } finally {
+      setLoading(false);
     }
-
-    // ✅ Success path
-    if (authData?.user) {
-      console.log("✅ Signup successful:", authData.user.id);
-
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-        phone: "",
-        companyName: "",
-        userRole: "",
-      });
-
-      toast.success("Account created. Please log in.");
-      navigate("/auth");
-      return;
-    }
-
-    throw new Error("Signup failed with no error and no user.");
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const newErrors: Record<string, string> = {};
-      error.errors.forEach((err) => {
-        if (err.path[0]) {
-          newErrors[err.path[0].toString()] = err.message;
-        }
-      });
-      setErrors(newErrors);
-      toast.error(error.errors[0].message);
-    } else {
-      logError("SignUp", error);
-      toast.error(getUserFriendlyError(error));
-    }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   const getPasswordStrengthColor = () => {
