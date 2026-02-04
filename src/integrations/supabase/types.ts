@@ -2614,6 +2614,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_board_admin_for_member: {
+        Args: { _member_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_board_member: {
         Args: { board_id: string; user_id: string }
         Returns: boolean
