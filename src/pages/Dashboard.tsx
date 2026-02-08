@@ -5,10 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Users, FileText, CheckCircle2, AlertCircle, TrendingUp, Calendar } from "lucide-react";
+import { Users, FileText, CheckCircle2, AlertCircle, TrendingUp, Calendar, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { logError } from "@/lib/errorHandling";
 import { LucideIcon } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DashboardStats {
   totalBoards: number;
@@ -21,6 +22,7 @@ interface DashboardStats {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isBootstrapping } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
     totalBoards: 0,
@@ -32,8 +34,9 @@ const Dashboard = () => {
   const [boards, setBoards] = useState<any[]>([]);
 
   useEffect(() => {
+    if (isBootstrapping) return;
     checkAuth();
-  }, []);
+  }, [isBootstrapping]);
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -128,6 +131,18 @@ const Dashboard = () => {
       </CardContent>
     </Card>
   );
+
+  if (isBootstrapping) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground text-lg">Setting up your organisation…</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

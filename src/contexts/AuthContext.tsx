@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isBootstrapping: boolean;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
@@ -18,6 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isBootstrapping, setIsBootstrapping] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST (before checking session)
@@ -33,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Run bootstrap on sign-in using setTimeout to avoid deadlocks
       if (event === 'SIGNED_IN' && newSession?.user) {
+        setIsBootstrapping(true);
         setTimeout(async () => {
           try {
             await runBootstrapFromLocalStorage();
@@ -40,6 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } catch (error) {
             logger.error('Bootstrap failed on SIGNED_IN', error);
             // Don't throw - bootstrap failure shouldn't block auth
+          } finally {
+            setIsBootstrapping(false);
           }
         }, 0);
       }
@@ -111,6 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
+    isBootstrapping,
     signOut,
     refreshSession,
   };
