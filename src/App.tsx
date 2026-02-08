@@ -75,26 +75,34 @@ const App = () => {
   const [bootState, setBootState] = useState<'checking' | 'ready' | 'error'>('checking');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  // Boot guard: Validate environment inside useEffect (NOT at module scope)
+  // Boot guard: Defer env validation to allow Lovable Cloud fallback to settle
   useEffect(() => {
-    // Validate environment
-    if (!isEnvValid()) {
-      const error = getEnvError() || 'Unknown configuration error';
-      console.error('[App] Boot failed:', error);
-      setErrorMessage(error);
-      setBootState('error');
-      return;
-    }
+    let cancelled = false;
+    let cleanupCache: (() => void) | undefined;
 
-    console.log('[App] Environment validated, app ready');
-    setBootState('ready');
+    // Use a microtask to ensure all module-level initialisation has completed
+    Promise.resolve().then(() => {
+      if (cancelled) return;
 
-    // Initialize performance monitoring and cache cleanup
-    initWebVitals();
-    const cleanupCache = initCacheCleanup();
+      if (!isEnvValid()) {
+        const error = getEnvError() || 'Unknown configuration error';
+        console.error('[App] Boot failed:', error);
+        setErrorMessage(error);
+        setBootState('error');
+        return;
+      }
+
+      console.log('[App] Environment validated, app ready');
+      setBootState('ready');
+
+      // Initialize performance monitoring and cache cleanup
+      initWebVitals();
+      cleanupCache = initCacheCleanup();
+    });
 
     return () => {
-      cleanupCache();
+      cancelled = true;
+      cleanupCache?.();
     };
   }, []);
 
