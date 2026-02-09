@@ -271,9 +271,7 @@ const SignUp = () => {
             <ArrowLeft className="w-4 h-4" />
             Back to home
           </Link>
-          <div className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mt-4">
-            BoardConnect
-          </div>
+          <img src="/directorait-logo.png" alt="DirectorAiT" className="h-10 mx-auto mt-4 mb-2" />
           <p className="text-muted-foreground">Create your account</p>
         </div>
         

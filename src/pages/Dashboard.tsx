@@ -173,7 +173,7 @@ const Dashboard = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back to BoardConnect</p>
+            <p className="text-muted-foreground">Welcome back to DirectorAiT</p>
           </div>
         </div>
 

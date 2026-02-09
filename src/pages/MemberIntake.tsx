@@ -211,7 +211,7 @@ const MemberIntake = () => {
                     />
                     <div className="space-y-1">
                       <Label htmlFor="consent" className="text-sm font-normal cursor-pointer">
-                        I consent to BoardConnect scanning my publicly available information *
+                        I consent to DirectorAiT scanning my publicly available information *
                       </Label>
                       <p className="text-xs text-muted-foreground">
                         We will only collect information that is publicly accessible online

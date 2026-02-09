@@ -28,7 +28,7 @@ const Hero = () => {
             
             <p className="text-xl text-muted-foreground leading-relaxed max-w-xl">
               Move from monthly rituals to continuous, evidence-driven governance. 
-              BoardConnect enables timely decisions through AI-assisted briefings, 
+              DirectorAiT enables timely decisions through AI-assisted briefings, 
               anonymous insights, and immutable audit trails.
             </p>
             
@@ -63,7 +63,7 @@ const Hero = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-primary/20 rounded-2xl blur-3xl" />
             <img 
               src={heroImage} 
-              alt="BoardConnect Platform" 
+              alt="DirectorAiT Platform" 
               className="relative rounded-2xl shadow-2xl border border-border"
             />
           </div>
