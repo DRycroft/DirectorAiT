@@ -1,59 +1,7 @@
-// Lazy-initialized Supabase client - NO module-level env access
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
-// Singleton client - lazily initialized
-let _client: SupabaseClient<Database> | null = null;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-/**
- * Get the Supabase client instance.
- * Lazily creates the client on first access to avoid module-level env access.
- * @throws Error if environment variables are missing
- */
-export function getSupabaseClient(): SupabaseClient<Database> {
-  if (_client) {
-    return _client;
-  }
-
-  // Primary: Use Vite env vars (injected at build time by Vercel/Lovable)
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-  if (!url || !key) {
-    throw new Error("Supabase environment variables missing");
-  }
-
-  // Log which source is being used (helpful for debugging)
-  const usingFallback = !import.meta.env.VITE_SUPABASE_URL;
-  if (usingFallback) {
-    console.log("[Supabase] Using Lovable Cloud fallback (VITE_* env vars not injected)");
-  }
-
-  console.log("[Supabase] Initializing client...");
-
-  _client = createClient<Database>(url, key, {
-    auth: {
-      storage: typeof window !== "undefined" ? localStorage : undefined,
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  });
-
-  console.log("[Supabase] Client initialized successfully");
-  return _client;
-}
-
-/**
- * Legacy export for compatibility - uses lazy getter
- * @deprecated Use getSupabaseClient() instead for explicit initialization
- */
-export const supabase = new Proxy({} as SupabaseClient<Database>, {
-  get(_, prop) {
-    const client = getSupabaseClient();
-    const value = (client as any)[prop];
-    if (typeof value === "function") {
-      return value.bind(client);
-    }
-    return value;
-  },
-});
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
