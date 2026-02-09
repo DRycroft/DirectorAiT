@@ -1,6 +1,6 @@
 // Lazy-initialized Supabase client - NO module-level env access
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from './types';
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "./types";
 
 // Singleton client - lazily initialized
 let _client: SupabaseClient<Database> | null = null;
@@ -16,30 +16,30 @@ export function getSupabaseClient(): SupabaseClient<Database> {
   }
 
   // Primary: Use Vite env vars (injected at build time by Vercel/Lovable)
-  // Fallback: Use Lovable Cloud values for preview when env injection fails
-  const LOVABLE_CLOUD_URL = 'https://lomksomekpysjgtnlguq.supabase.co';
-  const LOVABLE_CLOUD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvbWtzb21la3B5c2pndG5sZ3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3NjEyMDgsImV4cCI6MjA3NjMzNzIwOH0.xwRiW2B8X51puDJ3IxnwKWsUsv7jRHsAIJjd6Wkq-JA';
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-  const url = import.meta.env.VITE_SUPABASE_URL || LOVABLE_CLOUD_URL;
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || LOVABLE_CLOUD_KEY;
+  if (!url || !key) {
+    throw new Error("Supabase environment variables missing");
+  }
 
   // Log which source is being used (helpful for debugging)
   const usingFallback = !import.meta.env.VITE_SUPABASE_URL;
   if (usingFallback) {
-    console.log('[Supabase] Using Lovable Cloud fallback (VITE_* env vars not injected)');
+    console.log("[Supabase] Using Lovable Cloud fallback (VITE_* env vars not injected)");
   }
 
-  console.log('[Supabase] Initializing client...');
-  
+  console.log("[Supabase] Initializing client...");
+
   _client = createClient<Database>(url, key, {
     auth: {
-      storage: typeof window !== 'undefined' ? localStorage : undefined,
+      storage: typeof window !== "undefined" ? localStorage : undefined,
       persistSession: true,
       autoRefreshToken: true,
     },
   });
 
-  console.log('[Supabase] Client initialized successfully');
+  console.log("[Supabase] Client initialized successfully");
   return _client;
 }
 
@@ -51,7 +51,7 @@ export const supabase = new Proxy({} as SupabaseClient<Database>, {
   get(_, prop) {
     const client = getSupabaseClient();
     const value = (client as any)[prop];
-    if (typeof value === 'function') {
+    if (typeof value === "function") {
       return value.bind(client);
     }
     return value;
