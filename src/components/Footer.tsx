@@ -6,9 +6,7 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-2">
         <div className="flex flex-wrap items-start gap-x-8 gap-y-2 text-xs">
           <div className="flex-shrink-0">
-            <div className="text-sm font-bold leading-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              BoardConnect
-            </div>
+            <img src="/directorait-logo.png" alt="DirectorAiT" className="h-6" />
             <p className="text-xs text-muted-foreground max-w-[200px] leading-tight mt-0.5">
               AI-assisted board governance for evidence-driven decision making.
             </p>

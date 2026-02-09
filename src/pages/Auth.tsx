@@ -66,9 +66,7 @@ const Auth = () => {
             <ArrowLeft className="w-4 h-4" />
             Back to home
           </Link>
-          <div className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            BoardConnect
-          </div>
+          <img src="/directorait-logo.png" alt="DirectorAiT" className="h-10 mx-auto mb-2" />
           <p className="text-muted-foreground">Sign in to your account</p>
         </div>
         

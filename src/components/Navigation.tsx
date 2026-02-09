@@ -51,9 +51,7 @@ const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 py-3">
-            <div className="text-2xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-              BoardConnect
-            </div>
+            <img src="/directorait-logo.png" alt="DirectorAiT" className="h-8" />
           </Link>
           
           <div className="hidden md:flex items-end gap-1 h-full relative">
