@@ -2146,6 +2146,7 @@ export type Database = {
           id: string
           mfa_enforced: boolean
           name: string
+          onboarding_complete: boolean
           org_id: string | null
           phone: string | null
           updated_at: string
@@ -2156,6 +2157,7 @@ export type Database = {
           id: string
           mfa_enforced?: boolean
           name: string
+          onboarding_complete?: boolean
           org_id?: string | null
           phone?: string | null
           updated_at?: string
@@ -2166,6 +2168,7 @@ export type Database = {
           id?: string
           mfa_enforced?: boolean
           name?: string
+          onboarding_complete?: boolean
           org_id?: string | null
           phone?: string | null
           updated_at?: string

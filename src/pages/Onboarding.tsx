@@ -92,11 +92,12 @@ const Onboarding = () => {
         profileUpdate.phone = profileData.phone;
       }
 
-      // Always update phone if provided
+      // Always update phone and mark onboarding complete
       const { error: profileUpdateError } = await supabase
         .from("profiles")
         .update({
           phone: profileData.phone || null,
+          onboarding_complete: true,
         })
         .eq("id", user.id);
 
