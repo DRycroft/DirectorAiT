@@ -118,23 +118,76 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
 
       if (tokenError) throw tokenError;
 
+      const inviteToken = tokenData as string;
+
       const { error } = await supabase.from("board_members").insert({
         board_id: formData.board_id,
         member_type: memberType,
         position: formData.position?.trim() || null,
         full_name: formData.full_name.trim(),
-        personal_email: formData.personal_email.trim(),
+        invite_email: formData.personal_email.trim(),
         status: "invited",
-        invite_token: tokenData,
+        invite_token: inviteToken,
         invite_sent_at: new Date().toISOString(),
       });
 
       if (error) throw error;
 
-      toast({
-        title: "Member invited",
-        description: `Invite sent to ${formData.personal_email}`,
-      });
+      // Fetch board name, org name, and current user's name for the email
+      const [boardResult, userResult] = await Promise.all([
+        supabase
+          .from("boards")
+          .select("title, organizations!boards_org_id_fkey(name)")
+          .eq("id", formData.board_id)
+          .single(),
+        supabase.auth.getUser(),
+      ]);
+
+      const boardName = (boardResult.data as any)?.title || "a board";
+      const orgNameForEmail = (boardResult.data as any)?.organizations?.name || organizationName || "an organisation";
+
+      let invitedByName = "An administrator";
+      if (userResult.data.user) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("name")
+          .eq("id", userResult.data.user.id)
+          .single();
+        if (profileData?.name) {
+          invitedByName = profileData.name;
+        }
+      }
+
+      const inviteUrl = `https://www.directorait.com/invite/${inviteToken}`;
+
+      // Send the invite email via edge function
+      const { error: emailError } = await supabase.functions.invoke(
+        "send-invite-email",
+        {
+          body: {
+            invite_token: inviteToken,
+            invite_email: formData.personal_email.trim(),
+            invitee_name: formData.full_name.trim(),
+            org_name: orgNameForEmail,
+            board_name: boardName,
+            invited_by_name: invitedByName,
+          },
+        }
+      );
+
+      if (emailError) {
+        logError("BoardManagement.sendInviteEmail", emailError);
+        toast({
+          title: "Member created — email failed",
+          description: `Member record created but invite email failed to send. Please share this link manually: ${inviteUrl}`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Member invited",
+          description: `Invite email sent to ${formData.personal_email}`,
+        });
+      }
 
       setFormData({
         board_id: "",

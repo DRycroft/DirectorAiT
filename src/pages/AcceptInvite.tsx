@@ -37,12 +37,14 @@ export default function AcceptInvite() {
     checkExistingSession();
   }, [token]);
 
+  const [expired, setExpired] = useState(false);
+
   const fetchInvite = async () => {
     try {
       const { data, error } = await supabase
         .from("board_members")
         .select(`
-          id, full_name, public_contact_email, board_id,
+          id, full_name, public_contact_email, invite_email, invite_expires_at, board_id,
           board:boards!board_members_board_id_fkey(title, org_id, organization:organizations!boards_org_id_fkey(name))
         `)
         .eq("invite_token", token!)
@@ -54,10 +56,19 @@ export default function AcceptInvite() {
       if (!data || !data.board) {
         setInvite(null);
       } else {
-        const inviteData = data as unknown as InviteData;
-        setInvite(inviteData);
-        if (inviteData.public_contact_email) {
-          setEmail(inviteData.public_contact_email);
+        // Check expiry
+        const expiresAt = (data as any).invite_expires_at;
+        if (expiresAt && new Date(expiresAt) < new Date()) {
+          setExpired(true);
+          setInvite(null);
+        } else {
+          const inviteData = data as unknown as InviteData;
+          setInvite(inviteData);
+          // Pre-fill email from invite_email, then fall back to public_contact_email
+          const prefillEmail = (data as any).invite_email || inviteData.public_contact_email;
+          if (prefillEmail) {
+            setEmail(prefillEmail);
+          }
         }
       }
     } catch (error) {
@@ -201,10 +212,11 @@ export default function AcceptInvite() {
           <CardHeader className="text-center">
             <img src="/directorait-logo.png" alt="DirectorAiT" className="h-10 mx-auto mb-2" />
             <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-2" />
-            <CardTitle>Invalid or Expired Invite</CardTitle>
+            <CardTitle>{expired ? "Invite Expired" : "Invalid or Expired Invite"}</CardTitle>
             <CardDescription>
-              This invitation link is no longer valid. It may have expired or already been used.
-              Please contact the person who invited you.
+              {expired
+                ? "This invite link has expired. Please contact the organisation administrator to request a new invite."
+                : "This invitation link is no longer valid. It may have expired or already been used. Please contact the person who invited you."}
             </CardDescription>
           </CardHeader>
         </Card>
