@@ -443,6 +443,7 @@ export type Database = {
           detailed_work_history: string | null
           full_name: string
           id: string
+          invite_email: string | null
           invite_expires_at: string | null
           invite_sent_at: string | null
           invite_token: string | null
@@ -480,6 +481,7 @@ export type Database = {
           detailed_work_history?: string | null
           full_name: string
           id?: string
+          invite_email?: string | null
           invite_expires_at?: string | null
           invite_sent_at?: string | null
           invite_token?: string | null
@@ -517,6 +519,7 @@ export type Database = {
           detailed_work_history?: string | null
           full_name?: string
           id?: string
+          invite_email?: string | null
           invite_expires_at?: string | null
           invite_sent_at?: string | null
           invite_token?: string | null
