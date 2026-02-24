@@ -8,7 +8,9 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN") {
+      if (event === "PASSWORD_RECOVERY") {
+        navigate("/auth/reset-password", { replace: true });
+      } else if (event === "SIGNED_IN") {
         navigate("/dashboard", { replace: true });
       } else if (event === "SIGNED_OUT") {
         navigate("/auth", { replace: true });
