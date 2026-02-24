@@ -35,8 +35,8 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'BoardConnect - AI-Powered Board Governance',
-        short_name: 'BoardConnect',
+        name: 'DirectorAiT - AI-Powered Board Governance',
+        short_name: 'DirectorAiT',
         description: 'Transform board decision making with AI-assisted briefings, anonymous insights, and immutable audit trails.',
         theme_color: '#1e40af',
         background_color: '#ffffff',

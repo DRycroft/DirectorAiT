@@ -100,6 +100,11 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <div className="text-right">
+                  <Link to="/auth/forgot-password" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    Forgot password?
+                  </Link>
+                </div>
               </div>
               
               <Button type="submit" variant="accent" className="w-full" disabled={loading}>
