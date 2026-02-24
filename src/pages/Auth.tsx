@@ -117,7 +117,7 @@ const Auth = () => {
         </Card>
         
         <p className="mt-8 text-center text-xs text-muted-foreground">
-          Protected by enterprise-grade security with enforced MFA
+          Secured with enterprise-grade encryption
         </p>
       </div>
     </div>

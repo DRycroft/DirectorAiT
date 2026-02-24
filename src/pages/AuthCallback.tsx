@@ -1,26 +1,30 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { runBootstrapFromLocalStorage } from "@/lib/bootstrap";
 import { Loader2 } from "lucide-react";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") {
+        navigate("/dashboard", { replace: true });
+      } else if (event === "SIGNED_OUT") {
+        navigate("/auth", { replace: true });
+      }
+    });
+
+    // Fallback: check existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        try { 
-          await runBootstrapFromLocalStorage(); 
-        } catch (error) {
-          console.error("Bootstrap error:", error);
-        }
         navigate("/dashboard", { replace: true });
       } else {
         navigate("/auth", { replace: true });
       }
-    })();
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   return (
