@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 import zxcvbn from "zxcvbn";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 const signUpSchema = z.object({
   name: z.string()
@@ -351,14 +353,14 @@ const SignUp = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone (Optional)</Label>
-                  <Input 
-                    id="phone" 
-                    type="tel" 
-                    placeholder="+1234567890"
+                  <PhoneInput
+                    id="phone"
+                    international
+                    defaultCountry="NZ"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    onBlur={(e) => validateField('phone', e.target.value)}
-                    className={errors.phone ? 'border-destructive' : ''}
+                    onChange={(value) => setFormData({ ...formData, phone: value || "" })}
+                    onBlur={() => validateField('phone', formData.phone)}
+                    className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 md:text-sm ${errors.phone ? 'border-destructive' : 'border-input'}`}
                   />
                   {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                 </div>
