@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,9 +130,13 @@ const SignUp = () => {
     }
   };
 
+  const submittingRef = useRef(false);
+
   const handleSignUp = async (e: React.FormEvent) => {
     console.count("[SIGNUP] handleSignUp invoked");
     e.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setLoading(true);
 
     try {
@@ -224,6 +228,7 @@ const SignUp = () => {
       }
     } finally {
       setLoading(false);
+      submittingRef.current = false;
     }
   };
 
@@ -241,11 +246,39 @@ const SignUp = () => {
   };
   const generateStrongPassword = () => {
     const length = 16;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    const array = new Uint8Array(length);
-    crypto.getRandomValues(array);
-    const password = Array.from(array, byte => charset[byte % charset.length]).join('');
-    
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lower = "abcdefghijklmnopqrstuvwxyz";
+    const digits = "0123456789";
+    const special = "!@#$%^&*";
+    const all = upper + lower + digits + special;
+
+    const randomChar = (chars: string) => {
+      const array = new Uint8Array(1);
+      crypto.getRandomValues(array);
+      return chars[array[0] % chars.length];
+    };
+
+    // Guarantee at least one of each required class
+    const guaranteed = [
+      randomChar(upper),
+      randomChar(lower),
+      randomChar(digits),
+      randomChar(special),
+    ];
+
+    // Fill remaining length from full charset
+    const remaining = Array.from({ length: length - guaranteed.length }, () => randomChar(all));
+
+    // Combine and shuffle
+    const combined = [...guaranteed, ...remaining];
+    for (let i = combined.length - 1; i > 0; i--) {
+      const array = new Uint8Array(1);
+      crypto.getRandomValues(array);
+      const j = array[0] % (i + 1);
+      [combined[i], combined[j]] = [combined[j], combined[i]];
+    }
+
+    const password = combined.join('');
     setFormData(prev => ({ ...prev, password }));
     setShowPassword(true);
     toast.success("Strong password generated");

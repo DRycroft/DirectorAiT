@@ -55,6 +55,11 @@ export function getUserFriendlyError(error: unknown): string {
     if (err.message?.includes('fetch') || err.message?.includes('network')) {
       return "Network error. Please check your connection and try again.";
     }
+    
+    // Weak password errors - pass through the actual message
+    if (err.message?.includes('Password should be') || err.message?.includes('weak') || err.name === 'AuthWeakPasswordError') {
+      return err.message;
+    }
   }
 
   // Generic fallback
