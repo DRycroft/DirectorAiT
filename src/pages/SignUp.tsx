@@ -158,8 +158,8 @@ const SignUp = () => {
           emailRedirectTo: redirectUrl,
           data: {
             name: validatedData.name,
-            // Phone stored in user metadata, not sessionStorage
             phone: validatedData.phone || undefined,
+            role: validatedData.userRole,
           },
         },
       });
