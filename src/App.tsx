@@ -22,6 +22,7 @@ import Health from "./pages/Health";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
+import AcceptInvite from "./pages/AcceptInvite";
 
 // Lazy load heavy/authenticated routes
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -91,6 +92,7 @@ const App = () => {
                   <Route path="/auth/reset-password" element={<ResetPassword />} />
                   <Route path="/action/:token" element={<ActionLink />} />
                   <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/invite/:token" element={<AcceptInvite />} />
                   <Route path="/health" element={<Health />} />
 
                   {/* Protected routes */}

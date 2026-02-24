@@ -7,11 +7,11 @@ async function shouldOnboard(userId: string): Promise<boolean> {
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("name")
+      .select("onboarding_complete")
       .eq("id", userId)
       .single();
     if (error || !data) return true;
-    return !data.name || data.name.trim() === "";
+    return !data.onboarding_complete;
   } catch {
     return false;
   }

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Users, FileText, CheckCircle2, AlertCircle, TrendingUp, Calendar, Loader2 } from "lucide-react";
@@ -19,6 +20,11 @@ interface DashboardStats {
   pendingApprovals: number;
 }
 
+interface UserOrg {
+  org_id: string;
+  org_name: string;
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -32,6 +38,8 @@ const Dashboard = () => {
     pendingApprovals: 0,
   });
   const [boards, setBoards] = useState<any[]>([]);
+  const [userOrgs, setUserOrgs] = useState<UserOrg[]>([]);
+  const [selectedOrgId, setSelectedOrgId] = useState<string>("");
 
   useEffect(() => {
     if (isBootstrapping) return;
@@ -40,43 +48,127 @@ const Dashboard = () => {
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) {
       navigate("/auth");
       return;
     }
-    
-    await fetchDashboardData();
+    await fetchUserOrgs(user.id);
   };
 
-  const fetchDashboardData = async () => {
+  const fetchUserOrgs = async (userId: string) => {
+    try {
+      // Get all orgs the user belongs to via their profile + board_memberships
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("org_id")
+        .eq("id", userId)
+        .maybeSingle();
+
+      const orgIds = new Set<string>();
+      const orgMap = new Map<string, string>();
+
+      // Add profile org
+      if (profile?.org_id) {
+        orgIds.add(profile.org_id);
+      }
+
+      // Get orgs from board memberships
+      const { data: memberships } = await supabase
+        .from("board_memberships")
+        .select("board_id")
+        .eq("user_id", userId);
+
+      if (memberships && memberships.length > 0) {
+        const boardIds = memberships.map((m) => m.board_id);
+        const { data: boardsData } = await supabase
+          .from("boards")
+          .select("org_id")
+          .in("id", boardIds);
+
+        if (boardsData) {
+          boardsData.forEach((b) => orgIds.add(b.org_id));
+        }
+      }
+
+      // Fetch org names
+      if (orgIds.size > 0) {
+        const { data: orgs } = await supabase
+          .from("organizations")
+          .select("id, name")
+          .in("id", Array.from(orgIds));
+
+        if (orgs) {
+          orgs.forEach((o) => orgMap.set(o.id, o.name));
+        }
+      }
+
+      const orgsArray: UserOrg[] = Array.from(orgMap.entries()).map(([id, name]) => ({
+        org_id: id,
+        org_name: name,
+      }));
+
+      setUserOrgs(orgsArray);
+
+      // Default to profile org or first available
+      const defaultOrg = profile?.org_id || (orgsArray.length > 0 ? orgsArray[0].org_id : "");
+      setSelectedOrgId(defaultOrg);
+
+      if (defaultOrg) {
+        await fetchDashboardData(defaultOrg);
+      } else {
+        setLoading(false);
+      }
+    } catch (error) {
+      logError("Dashboard - fetchUserOrgs", error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedOrgId && !isBootstrapping) {
+      fetchDashboardData(selectedOrgId);
+    }
+  }, [selectedOrgId]);
+
+  const fetchDashboardData = async (orgId: string) => {
     try {
       setLoading(true);
 
-      // Fetch boards
+      // Fetch boards for selected org
       const { data: boardsData, error: boardsError } = await supabase
         .from("boards")
         .select("*, board_memberships!inner(role)")
+        .eq("org_id", orgId)
         .order("created_at", { ascending: false });
 
       if (boardsError) throw boardsError;
 
-      // Fetch agendas
-      const { count: agendasCount } = await supabase
-        .from("agendas")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "draft");
+      // Fetch agendas for boards in this org
+      const boardIds = boardsData?.map((b) => b.id) || [];
 
-      // Fetch action items
-      const { count: actionsCount } = await supabase
-        .from("action_items")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "pending");
+      let agendasCount = 0;
+      let actionsCount = 0;
+
+      if (boardIds.length > 0) {
+        const { count: ac } = await supabase
+          .from("agendas")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "draft")
+          .in("board_id", boardIds);
+        agendasCount = ac || 0;
+
+        const { count: actc } = await supabase
+          .from("action_items")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending");
+        actionsCount = actc || 0;
+      }
 
       // Fetch documents
       const { count: documentsCount } = await supabase
         .from("archived_documents")
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", orgId);
 
       // Fetch pending approvals
       const { count: approvalsCount } = await supabase
@@ -86,8 +178,8 @@ const Dashboard = () => {
 
       setStats({
         totalBoards: boardsData?.length || 0,
-        activeAgendas: agendasCount || 0,
-        pendingActions: actionsCount || 0,
+        activeAgendas: agendasCount,
+        pendingActions: actionsCount,
         documentCount: documentsCount || 0,
         pendingApprovals: approvalsCount || 0,
       });
@@ -105,16 +197,16 @@ const Dashboard = () => {
     }
   };
 
-  const StatCard = ({ 
-    title, 
-    value, 
-    icon: Icon, 
-    description, 
-    onClick 
-  }: { 
-    title: string; 
-    value: number; 
-    icon: LucideIcon; 
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
+    description,
+    onClick,
+  }: {
+    title: string;
+    value: number;
+    icon: LucideIcon;
     description?: string;
     onClick?: () => void;
   }) => (
@@ -174,6 +266,27 @@ const Dashboard = () => {
           <div>
             <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
             <p className="text-muted-foreground">Welcome back to DirectorAiT</p>
+          </div>
+          {/* Org switcher */}
+          <div>
+            {userOrgs.length > 1 ? (
+              <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
+                <SelectTrigger className="w-[240px]">
+                  <SelectValue placeholder="Select organisation" />
+                </SelectTrigger>
+                <SelectContent>
+                  {userOrgs.map((org) => (
+                    <SelectItem key={org.org_id} value={org.org_id}>
+                      {org.org_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : userOrgs.length === 1 ? (
+              <span className="text-sm font-medium text-muted-foreground">
+                {userOrgs[0].org_name}
+              </span>
+            ) : null}
           </div>
         </div>
 
