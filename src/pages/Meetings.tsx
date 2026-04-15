@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -24,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Calendar, Edit2, CalendarDays } from "lucide-react";
+import { Plus, Calendar, Edit2, CalendarDays, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 
 
@@ -318,11 +319,16 @@ const Meetings = () => {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     {format(new Date(m.meeting_date), "PPPp")}
                   </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to={`/meetings/${m.id}`}>
+                      Manage Agenda <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                    </Link>
+                  </Button>
                 </CardContent>
               </Card>
             ))}
