@@ -64,6 +64,7 @@ export default function PackView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFinalising, setIsFinalising] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const [canManagePack, setCanManagePack] = useState(false);
 
   const isFinalised = pack?.status === 'finalised';
 
