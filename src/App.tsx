@@ -32,8 +32,6 @@ const Boards = lazy(() => import("./pages/Boards"));
 const BoardDetail = lazy(() => import("./pages/BoardDetail"));
 const BoardAndTeam = lazy(() => import("./pages/BoardAndTeam"));
 const TeamOverview = lazy(() => import("./pages/TeamOverview"));
-const BoardPapers = lazy(() => import("./pages/BoardPapers"));
-const BoardPaperDocument = lazy(() => import("./pages/BoardPaperDocument"));
 const MemberIntake = lazy(() => import("./pages/MemberIntake"));
 const MemberInvite = lazy(() => import("./pages/MemberInvite"));
 const MyProfile = lazy(() => import("./pages/MyProfile"));
@@ -105,8 +103,8 @@ const App = () => {
                   <Route path="/boards" element={<ProtectedRoute><Boards /></ProtectedRoute>} />
                   <Route path="/boards/:boardId" element={<ProtectedRoute><BoardDetail /></ProtectedRoute>} />
                   <Route path="/boards/:boardId/team" element={<ProtectedRoute><BoardAndTeam /></ProtectedRoute>} />
-                  <Route path="/board-papers" element={<ProtectedRoute><BoardPapers /></ProtectedRoute>} />
-                  <Route path="/board-papers/:id" element={<ProtectedRoute><BoardPaperDocument /></ProtectedRoute>} />
+                  <Route path="/board-papers" element={<Navigate to="/pack-management" replace />} />
+                  <Route path="/board-papers/:id" element={<Navigate to="/pack-management" replace />} />
                   <Route path="/compliance" element={<ProtectedRoute><Compliance /></ProtectedRoute>} />
                   <Route path="/library" element={<ProtectedRoute><BoardLibrary /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
