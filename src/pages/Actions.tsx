@@ -4,7 +4,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+
 import {
   Select,
   SelectContent,
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { CheckCircle2, ClipboardList, Loader2 } from "lucide-react";
+import { ClipboardList, Loader2 } from "lucide-react";
 import { format, isPast, isToday } from "date-fns";
 import { Link } from "react-router-dom";
 
@@ -39,7 +39,7 @@ interface ActionItem {
   agenda_title?: string;
   meeting_title?: string;
   meeting_id?: string;
-  owner_name?: string;
+  owner_name?: string | null;
 }
 
 interface OwnerOption {
