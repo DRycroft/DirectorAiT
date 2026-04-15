@@ -230,6 +230,7 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
     }
   };
 
+  const isArchived = (member: Member) => {
     if (!member.term_expiry) return false;
     return new Date(member.term_expiry) < new Date();
   };
