@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
+import AgendaItemActions from "@/components/meetings/AgendaItemActions";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -360,6 +361,12 @@ const MeetingDetail = () => {
                         <Clock className="h-3 w-3" />
                         {item.estimated_duration} min
                       </span>
+                    )}
+                    {agenda && (
+                      <AgendaItemActions
+                        agendaItemId={item.id}
+                        boardId={agenda.board_id}
+                      />
                     )}
                   </div>
 
