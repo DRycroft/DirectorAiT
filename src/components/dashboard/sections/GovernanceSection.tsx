@@ -445,6 +445,57 @@ export const GovernanceSection = () => {
             </CardContent>
           </Card>
         </DashboardSection>
+
+        {/* Recent Decisions */}
+        <DashboardSection width="full">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Gavel className="h-5 w-5" /> Recent Decisions
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {recentDecisions.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">No decisions recorded yet.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Decision</TableHead>
+                      <TableHead>Meeting</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Outcome</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentDecisions.map((d) => (
+                      <TableRow key={d.id}>
+                        <TableCell className="font-medium">{d.title}</TableCell>
+                        <TableCell>
+                          <Link to={`/meetings/${d.meeting_id}`} className="text-primary hover:underline text-sm">
+                            {d.meeting_title}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-sm">{format(new Date(d.decision_date), "PP")}</TableCell>
+                        <TableCell>
+                          <Badge variant={
+                            d.outcome === "approved" ? "default" :
+                            d.outcome === "rejected" ? "destructive" :
+                            d.outcome === "deferred" ? "secondary" : "outline"
+                          }>
+                            {(d.outcome ?? "recorded").charAt(0).toUpperCase() + (d.outcome ?? "recorded").slice(1)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </DashboardSection>
       </DashboardGrid>
     </div>
   );
