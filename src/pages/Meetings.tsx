@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -24,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Calendar, Edit2, CalendarDays } from "lucide-react";
+import { Plus, Calendar, Edit2, CalendarDays, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 
 
