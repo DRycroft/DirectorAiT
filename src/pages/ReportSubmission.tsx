@@ -134,6 +134,8 @@ export default function ReportSubmission() {
     );
   }
 
+  const isPackFinalised = section?.pack?.status === 'finalised';
+
   if (!section) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -142,6 +144,24 @@ export default function ReportSubmission() {
           <h2 className="text-xl font-semibold mb-2">Section Not Found</h2>
           <p className="text-muted-foreground mb-4">
             The requested section could not be found.
+          </p>
+          <Button onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Go Back
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isPackFinalised) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="p-8 text-center max-w-md">
+          <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Pack is Finalised</h2>
+          <p className="text-muted-foreground mb-4">
+            This board pack has been finalised. Sections cannot be edited until the pack is unlocked.
           </p>
           <Button onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
