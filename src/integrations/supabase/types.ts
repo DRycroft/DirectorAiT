@@ -2147,6 +2147,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          job_title: string | null
           mfa_enforced: boolean
           name: string
           onboarding_complete: boolean
@@ -2158,6 +2159,7 @@ export type Database = {
           created_at?: string
           email: string
           id: string
+          job_title?: string | null
           mfa_enforced?: boolean
           name: string
           onboarding_complete?: boolean
@@ -2169,6 +2171,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          job_title?: string | null
           mfa_enforced?: boolean
           name?: string
           onboarding_complete?: boolean
