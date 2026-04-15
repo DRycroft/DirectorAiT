@@ -128,6 +128,20 @@ const Navigation = () => {
             >
               Documents
             </Link>
+            {user && (
+              <Link 
+                to="/my-profile" 
+                className={cn(
+                  "relative px-5 pt-3 pb-4 text-sm font-medium transition-all rounded-t-xl",
+                  isActive('/my-profile')
+                    ? "text-foreground bg-background border-t-2 border-x-2 border-primary shadow-[0_-2px_8px_rgba(0,0,0,0.1)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30 mb-0.5"
+                )}
+                style={isActive('/my-profile') ? { marginBottom: '-1px' } : {}}
+              >
+                My Profile
+              </Link>
+            )}
             <Link 
               to="/settings" 
               className={cn(
