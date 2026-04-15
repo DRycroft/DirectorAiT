@@ -379,8 +379,8 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
         if (otherName) customFields.reports_to_custom = otherName;
       }
 
-      // Insert board member (without sensitive fields)
-      const insertData: BoardMemberInsert = {
+      // Build the member data object
+      const memberData = {
         board_id: boardId,
         member_type: values.member_type,
         full_name: values.full_name,
@@ -394,25 +394,13 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
           : null,
         public_social_links: Object.keys(socialLinks).length > 0 ? socialLinks : null,
         reports_responsible_for: reportsArray.length > 0 ? reportsArray : null,
-        // Only store a UUID in the DB column. Presets/custom names go into custom_fields.
         reports_to: isUuid(selectedReportsTo) ? selectedReportsTo : null,
         professional_qualifications: values.professional_qualifications || null,
         personal_interests: values.personal_interests || null,
         custom_fields: Object.keys(customFields).length > 0 ? customFields : null,
-        status: "active",
       };
 
-      const { data: newMember, error } = await supabase
-        .from("board_members")
-        .insert(insertData)
-        .select('id')
-        .single();
-
-      if (error) throw error;
-
-      // Insert sensitive data into board_members_sensitive
       const sensitiveData = {
-        member_id: newMember.id,
         home_address: values.home_address || null,
         date_of_birth: values.date_of_birth instanceof Date
           ? values.date_of_birth.toISOString().split("T")[0]
@@ -424,13 +412,45 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
         emergency_contact_phone: values.emergency_contact_phone || null,
       };
 
-      const { error: sensitiveError } = await supabase
-        .from("board_members_sensitive")
-        .insert(sensitiveData);
+      let memberId: string;
 
-      if (sensitiveError) {
-        // Log error but don't fail the whole operation
-        logError("AddPersonDialog - Insert sensitive data", sensitiveError);
+      if (editMember) {
+        // UPDATE existing member
+        const { error } = await supabase
+          .from("board_members")
+          .update(memberData)
+          .eq("id", editMember.id);
+
+        if (error) throw error;
+        memberId = editMember.id;
+
+        // Upsert sensitive data
+        const { error: sensitiveError } = await supabase
+          .from("board_members_sensitive")
+          .upsert({ member_id: memberId, ...sensitiveData }, { onConflict: "member_id" });
+
+        if (sensitiveError) {
+          logError("AddPersonDialog - Update sensitive data", sensitiveError);
+        }
+      } else {
+        // INSERT new member
+        const { data: newMember, error } = await supabase
+          .from("board_members")
+          .insert({ ...memberData, status: "active" } as BoardMemberInsert)
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        memberId = newMember.id;
+
+        // Insert sensitive data
+        const { error: sensitiveError } = await supabase
+          .from("board_members_sensitive")
+          .insert({ member_id: memberId, ...sensitiveData });
+
+        if (sensitiveError) {
+          logError("AddPersonDialog - Insert sensitive data", sensitiveError);
+        }
       }
 
       toast({
