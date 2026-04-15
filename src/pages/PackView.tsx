@@ -15,7 +15,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle, Lock, Unlock, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle, Lock, Unlock, ShieldCheck, Printer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -228,13 +228,23 @@ export default function PackView() {
     );
   }
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${!isFinalised ? 'print-draft-watermark' : ''}`}>
       <div className="container mx-auto py-8 px-4 max-w-4xl">
-        <Button variant="ghost" onClick={() => navigate(`/pack/${packId}/sections`)} className="mb-6">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Sections
-        </Button>
+        <div className="flex items-center justify-between mb-6 print:hidden">
+          <Button variant="ghost" onClick={() => navigate(`/pack/${packId}/sections`)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Sections
+          </Button>
+          <Button variant="outline" onClick={handlePrint}>
+            <Printer className="h-4 w-4 mr-2" />
+            Export PDF
+          </Button>
+        </div>
 
         {/* Finalised banner */}
         {isFinalised && (
