@@ -69,7 +69,7 @@ const statusLabel = (status: string | null) => {
 };
 
 const Meetings = () => {
-  const { user: _user } = useAuth();
+  
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [boards, setBoards] = useState<BoardOption[]>([]);
   const [loading, setLoading] = useState(true);
