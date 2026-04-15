@@ -268,6 +268,7 @@ export const GovernanceSection = () => {
                       <TableHead>Action</TableHead>
                       <TableHead>Owner</TableHead>
                       <TableHead>Due Date</TableHead>
+                      <TableHead>Age</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -278,19 +279,31 @@ export const GovernanceSection = () => {
                         action.status !== "completed" &&
                         isPast(new Date(action.due_date)) &&
                         !isToday(new Date(action.due_date));
+                      const overdueD = overdue && action.due_date
+                        ? differenceInCalendarDays(new Date(), new Date(action.due_date))
+                        : 0;
                       return (
-                        <TableRow key={action.id}>
+                        <TableRow key={action.id} className={overdue ? "bg-destructive/5" : ""}>
                           <TableCell className="font-medium">{action.title}</TableCell>
                           <TableCell>{action.owner_name ?? "Unassigned"}</TableCell>
                           <TableCell>
                             {action.due_date ? (
-                              <span className={overdue ? "text-destructive font-medium" : ""}>
-                                {format(new Date(action.due_date), "PP")}
-                                {overdue && " (overdue)"}
-                              </span>
+                              <div>
+                                <span className={overdue ? "text-destructive font-medium" : ""}>
+                                  {format(new Date(action.due_date), "PP")}
+                                </span>
+                                {overdue && (
+                                  <div className="text-xs text-destructive">{overdueD}d overdue</div>
+                                )}
+                              </div>
                             ) : (
                               "—"
                             )}
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-xs text-muted-foreground">
+                              {differenceInCalendarDays(new Date(), new Date(action.due_date || new Date()))}d
+                            </span>
                           </TableCell>
                           <TableCell>
                             <Badge
@@ -303,7 +316,7 @@ export const GovernanceSection = () => {
                               }
                             >
                               {overdue
-                                ? "Overdue"
+                                ? `Overdue (${overdueD}d)`
                                 : action.status === "in_progress"
                                 ? "In Progress"
                                 : "Pending"}
