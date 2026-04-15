@@ -95,6 +95,7 @@ export default function PackView() {
       if (sectionsError) throw sectionsError;
       setSections((sectionsData as any[]) || []);
 
+      // Get org for supporting docs + role check
       const { data: boardData } = await supabase
         .from('boards')
         .select('org_id')
@@ -103,6 +104,24 @@ export default function PackView() {
 
       if (boardData?.org_id) {
         const orgId = boardData.org_id;
+
+        // Check user roles for finalise/unlock permission
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          const { data: orgRoles } = await supabase
+            .from('user_roles')
+            .select('role, org_id')
+            .eq('user_id', userData.user.id)
+            .in('role', ['org_admin', 'chair', 'super_admin']);
+
+          const canManage = (orgRoles || []).some((r: any) =>
+            r.role === 'super_admin' ||
+            ((r.role === 'org_admin' || r.role === 'chair') && r.org_id === orgId)
+          );
+          setCanManagePack(canManage);
+        }
+
+        // Load supporting docs
         const [execRes, minutesRes, specialRes] = await Promise.all([
           supabase.from('executive_reports').select('id, file_name, file_path, uploaded_at, report_type, status').eq('org_id', orgId).order('uploaded_at', { ascending: false }).limit(10),
           supabase.from('meeting_minutes').select('id, file_name, file_path, uploaded_at, meeting_type, status').eq('org_id', orgId).order('uploaded_at', { ascending: false }).limit(10),
@@ -127,20 +146,8 @@ export default function PackView() {
     if (!packId) return;
     setIsFinalising(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { error } = await supabase
-        .from('board_packs')
-        .update({
-          status: 'finalised',
-          finalised_at: new Date().toISOString(),
-          finalised_by: user.id,
-        })
-        .eq('id', packId);
-
+      const { error } = await supabase.rpc('finalise_board_pack', { _pack_id: packId });
       if (error) throw error;
-
       toast({ title: 'Pack finalised', description: 'This board pack is now locked and ready for distribution.' });
       loadAssembledPack();
     } catch (error: any) {
@@ -154,17 +161,8 @@ export default function PackView() {
     if (!packId) return;
     setIsUnlocking(true);
     try {
-      const { error } = await supabase
-        .from('board_packs')
-        .update({
-          status: 'draft',
-          finalised_at: null,
-          finalised_by: null,
-        })
-        .eq('id', packId);
-
+      const { error } = await supabase.rpc('unlock_board_pack', { _pack_id: packId });
       if (error) throw error;
-
       toast({ title: 'Pack unlocked', description: 'This board pack has been returned to draft status.' });
       loadAssembledPack();
     } catch (error: any) {
