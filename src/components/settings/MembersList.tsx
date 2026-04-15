@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Mail, Copy, Loader2 } from "lucide-react";
+import { Mail, Copy, Loader2, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { logError } from "@/lib/errorHandling";
@@ -29,6 +29,7 @@ export function MembersList({ boardId, memberType, onRefresh: _onRefresh }: Memb
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingInvite, setGeneratingInvite] = useState<string | null>(null);
+  const [revokingInvite, setRevokingInvite] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -162,6 +163,38 @@ export function MembersList({ boardId, memberType, onRefresh: _onRefresh }: Memb
     }
   };
 
+  const handleRevokeInvite = async (memberId: string) => {
+    setRevokingInvite(memberId);
+    try {
+      const { error } = await supabase
+        .from("board_members")
+        .update({
+          status: "revoked",
+          invite_token: null,
+          invite_expires_at: null,
+        })
+        .eq("id", memberId)
+        .eq("status", "invited");
+
+      if (error) throw error;
+
+      toast({
+        title: "Invite revoked",
+        description: "The invitation link is no longer valid.",
+      });
+      loadMembers();
+    } catch (error: any) {
+      logError("MembersList - Revoke invite", error);
+      toast({
+        title: "Error",
+        description: "Failed to revoke invite",
+        variant: "destructive",
+      });
+    } finally {
+      setRevokingInvite(null);
+    }
+  };
+
   const isArchived = (member: Member) => {
     if (!member.term_expiry) return false;
     return new Date(member.term_expiry) < new Date();
@@ -251,21 +284,39 @@ export function MembersList({ boardId, memberType, onRefresh: _onRefresh }: Memb
                       </TableCell>
                       <TableCell>
                         {member.status === "invited" ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleGenerateInvite(member.id)}
-                            disabled={generatingInvite === member.id}
-                          >
-                            {generatingInvite === member.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <>
-                                <Copy className="h-4 w-4 mr-2" />
-                                Resend
-                              </>
-                            )}
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleGenerateInvite(member.id)}
+                              disabled={generatingInvite === member.id || revokingInvite === member.id}
+                            >
+                              {generatingInvite === member.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <Copy className="h-4 w-4 mr-1" />
+                                  Resend
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleRevokeInvite(member.id)}
+                              disabled={revokingInvite === member.id || generatingInvite === member.id}
+                              title="Revoke invite"
+                            >
+                              {revokingInvite === member.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <XCircle className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        ) : member.status === "revoked" ? (
+                          <span className="text-xs text-muted-foreground">Revoked</span>
                         ) : (
                           <span className="text-xs text-muted-foreground">Active</span>
                         )}

@@ -112,6 +112,27 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
     }
 
     try {
+      // Duplicate invite prevention: check for existing pending invite on same email+board
+      const normalizedEmail = formData.personal_email.trim().toLowerCase();
+      const { data: existingInvite } = await supabase
+        .from("board_members")
+        .select("id, status")
+        .eq("board_id", formData.board_id)
+        .eq("invite_email", normalizedEmail)
+        .in("status", ["invited", "active"])
+        .maybeSingle();
+
+      if (existingInvite) {
+        toast({
+          title: existingInvite.status === "active" ? "Already a member" : "Invite already pending",
+          description: existingInvite.status === "active"
+            ? `${normalizedEmail} is already an active member of this board.`
+            : `A pending invite for ${normalizedEmail} already exists on this board. Use the Resend button in the members list to re-send the invite.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data: tokenData, error: tokenError } = await supabase.rpc(
         "generate_member_invite_token"
       );

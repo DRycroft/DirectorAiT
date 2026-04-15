@@ -18,6 +18,14 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export async function runBootstrapFromLocalStorage(): Promise<void> {
   console.log('[Bootstrap] Starting bootstrap check...');
+
+  // Guard: skip bootstrap if the user is on an invite acceptance path.
+  // Invited users should NOT get a spurious org/board created before
+  // the invite acceptance flow links them to the correct org.
+  if (window.location.pathname.startsWith("/invite/")) {
+    console.log('[Bootstrap] Skipping — user is on invite acceptance path');
+    return;
+  }
   
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   
