@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, CheckCircle2, Clock, Edit } from 'lucide-react';
+import { ArrowLeft, FileText, CheckCircle2, Clock, Edit, Eye } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -139,11 +139,17 @@ export default function PackSections() {
           Back to Packs
         </Button>
 
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">{pack.title}</h1>
-          <p className="text-muted-foreground">
-            Meeting Date: {new Date(pack.meeting_date).toLocaleDateString()}
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">{pack.title}</h1>
+            <p className="text-muted-foreground">
+              Meeting Date: {new Date(pack.meeting_date).toLocaleDateString()}
+            </p>
+          </div>
+          <Button onClick={() => navigate(`/pack/${packId}/view`)}>
+            <Eye className="h-4 w-4 mr-2" />
+            View Pack
+          </Button>
         </div>
 
         <Card className="p-6">
