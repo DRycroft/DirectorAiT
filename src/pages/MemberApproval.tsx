@@ -137,17 +137,15 @@ const MemberApproval = () => {
 
       if (updateError) throw updateError;
 
-      // Create audit log
-      if (user?.id) {
-        await supabase.from("board_member_audit").insert({
-          member_id: memberId,
-          changed_by: user.id,
-          field_name: "status",
-          old_value: member.status,
-          new_value: "active",
-          change_type: "published",
-        });
-      }
+      // Create audit log via secure RPC
+      const { error: auditError } = await supabase.rpc("log_board_member_audit", {
+        _member_id: memberId,
+        _field_name: "status",
+        _change_type: "approved",
+        _old_value: member.status,
+        _new_value: "active",
+      });
+      if (auditError) console.error("Audit log failed:", auditError);
 
       toast({
         title: "Member approved",
@@ -205,17 +203,15 @@ const MemberApproval = () => {
         logError("MemberApproval - Write rejection notes", sensitiveWriteError);
       }
 
-      // Create audit log
-      if (user?.id) {
-        await supabase.from("board_member_audit").insert({
-          member_id: memberId,
-          changed_by: user.id,
-          field_name: "status",
-          old_value: member.status,
-          new_value: "rejected",
-          change_type: "rejected",
-        });
-      }
+      // Create audit log via secure RPC
+      const { error: auditError } = await supabase.rpc("log_board_member_audit", {
+        _member_id: memberId,
+        _field_name: "status",
+        _change_type: "rejected",
+        _old_value: member.status,
+        _new_value: "rejected",
+      });
+      if (auditError) console.error("Audit log failed:", auditError);
 
       toast({
         title: "Profile rejected",
