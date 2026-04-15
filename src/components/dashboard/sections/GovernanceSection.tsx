@@ -305,7 +305,6 @@ export const GovernanceSection = () => {
                       <TableHead>Action</TableHead>
                       <TableHead>Owner</TableHead>
                       <TableHead>Due Date</TableHead>
-                      <TableHead>Age</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
