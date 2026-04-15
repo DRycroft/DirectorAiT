@@ -118,6 +118,7 @@ export type Database = {
           created_at: string
           id: string
           meeting_date: string
+          minutes_content: string | null
           status: string | null
           title: string
           updated_at: string
@@ -127,6 +128,7 @@ export type Database = {
           created_at?: string
           id?: string
           meeting_date: string
+          minutes_content?: string | null
           status?: string | null
           title: string
           updated_at?: string
@@ -136,6 +138,7 @@ export type Database = {
           created_at?: string
           id?: string
           meeting_date?: string
+          minutes_content?: string | null
           status?: string | null
           title?: string
           updated_at?: string
@@ -1908,6 +1911,50 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_decisions: {
+        Row: {
+          agenda_id: string
+          created_at: string
+          decision_date: string
+          description: string | null
+          id: string
+          outcome: string | null
+          proposer: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agenda_id: string
+          created_at?: string
+          decision_date?: string
+          description?: string | null
+          id?: string
+          outcome?: string | null
+          proposer?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agenda_id?: string
+          created_at?: string
+          decision_date?: string
+          description?: string | null
+          id?: string
+          outcome?: string | null
+          proposer?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_decisions_agenda_id_fkey"
+            columns: ["agenda_id"]
+            isOneToOne: false
+            referencedRelation: "agendas"
             referencedColumns: ["id"]
           },
         ]

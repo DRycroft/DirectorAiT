@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardGrid, DashboardSection } from "../DashboardLayout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, FileText, Calendar, Loader2 } from "lucide-react";
+import { AlertCircle, FileText, Calendar, Loader2, Gavel } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { format, isPast, isToday, differenceInCalendarDays } from "date-fns";
@@ -31,6 +31,15 @@ interface PackRow {
   board_title: string;
 }
 
+interface DecisionRow {
+  id: string;
+  title: string;
+  outcome: string | null;
+  decision_date: string;
+  meeting_title: string;
+  meeting_id: string;
+}
+
 export const GovernanceSection = () => {
   const [loading, setLoading] = useState(true);
   const [openActions, setOpenActions] = useState<ActionRow[]>([]);
@@ -40,6 +49,7 @@ export const GovernanceSection = () => {
   const [recentPacks, setRecentPacks] = useState<PackRow[]>([]);
   const [packStats, setPackStats] = useState({ total: 0, draft: 0, finalised: 0 });
   const [nextMeeting, setNextMeeting] = useState<MeetingRow | null>(null);
+  const [recentDecisions, setRecentDecisions] = useState<DecisionRow[]>([]);
 
   useEffect(() => {
     fetchGovernanceData();
@@ -143,6 +153,33 @@ export const GovernanceSection = () => {
         draft: mappedPacks.filter(p => p.status === "draft").length,
         finalised: mappedPacks.filter(p => p.status === "finalised").length,
       });
+
+      // Fetch recent decisions
+      const { data: decisionsData } = await supabase
+        .from("meeting_decisions")
+        .select("id, title, outcome, decision_date, agenda_id")
+        .order("decision_date", { ascending: false })
+        .limit(5);
+
+      // Resolve agenda titles for decisions
+      const decAgendaIds = [...new Set((decisionsData ?? []).map((d: any) => d.agenda_id))];
+      const agendaMap = new Map<string, string>();
+      if (decAgendaIds.length > 0) {
+        const { data: agendaNames } = await supabase
+          .from("agendas")
+          .select("id, title")
+          .in("id", decAgendaIds);
+        (agendaNames ?? []).forEach((a: any) => agendaMap.set(a.id, a.title));
+      }
+
+      setRecentDecisions((decisionsData ?? []).map((d: any) => ({
+        id: d.id,
+        title: d.title,
+        outcome: d.outcome,
+        decision_date: d.decision_date,
+        meeting_title: agendaMap.get(d.agenda_id) ?? "Unknown Meeting",
+        meeting_id: d.agenda_id,
+      })));
     } catch {
       // Fail silently on dashboard — widgets show empty state
     } finally {
@@ -404,6 +441,57 @@ export const GovernanceSection = () => {
                     </Link>
                   ))}
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        </DashboardSection>
+
+        {/* Recent Decisions */}
+        <DashboardSection width="full">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Gavel className="h-5 w-5" /> Recent Decisions
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {recentDecisions.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">No decisions recorded yet.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Decision</TableHead>
+                      <TableHead>Meeting</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Outcome</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentDecisions.map((d) => (
+                      <TableRow key={d.id}>
+                        <TableCell className="font-medium">{d.title}</TableCell>
+                        <TableCell>
+                          <Link to={`/meetings/${d.meeting_id}`} className="text-primary hover:underline text-sm">
+                            {d.meeting_title}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-sm">{format(new Date(d.decision_date), "PP")}</TableCell>
+                        <TableCell>
+                          <Badge variant={
+                            d.outcome === "approved" ? "default" :
+                            d.outcome === "rejected" ? "destructive" :
+                            d.outcome === "deferred" ? "secondary" : "outline"
+                          }>
+                            {(d.outcome ?? "recorded").charAt(0).toUpperCase() + (d.outcome ?? "recorded").slice(1)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               )}
             </CardContent>
           </Card>
