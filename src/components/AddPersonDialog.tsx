@@ -747,12 +747,12 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl">
-            <div className="mb-1 text-lg font-normal text-muted-foreground">
-              {organizationName}
-            </div>
-            {getMemberTypeLabel()} Form
-          </DialogTitle>
+            <DialogTitle className="text-center text-2xl">
+              <div className="mb-1 text-lg font-normal text-muted-foreground">
+                {organizationName}
+              </div>
+              {isEditMode ? `Edit ${getMemberTypeLabel()}` : `${getMemberTypeLabel()} Form`}
+            </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -845,7 +845,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
                 Cancel
               </Button>
               <Button type="submit" disabled={loading || formTemplate.length === 0}>
-                {loading ? "Adding..." : "Add Team Member"}
+                {loading ? (isEditMode ? "Saving..." : "Adding...") : (isEditMode ? "Save Changes" : "Add Team Member")}
               </Button>
             </div>
           </form>
