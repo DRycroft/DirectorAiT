@@ -159,7 +159,7 @@ export default function AdminManagement() {
           role: "org_admin" as any,
           org_id: profile.org_id,
         }, {
-          onConflict: "user_id,role",
+          onConflict: "user_id,role,org_id",
         });
 
       if (roleError) throw roleError;

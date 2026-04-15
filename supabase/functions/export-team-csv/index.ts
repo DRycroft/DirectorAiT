@@ -127,7 +127,8 @@ serve(async (req) => {
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
-        .in('role', ['org_admin', 'super_admin']);
+        .in('role', ['org_admin', 'super_admin'])
+        .or(`org_id.eq.${profile.org_id},org_id.is.null`);
         
       if (!roles || roles.length === 0) {
         return new Response(

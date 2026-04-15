@@ -175,7 +175,7 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
   console.log('[Bootstrap] Assigning org_admin role...');
   const { error: roleError } = await supabase
     .from("user_roles")
-    .insert({ user_id: user.id, role: "org_admin" });
+    .insert({ user_id: user.id, role: "org_admin", org_id: org.id });
 
   // Ignore duplicate key error - means role already exists
   if (roleError && !/duplicate key/i.test(roleError.message)) {
