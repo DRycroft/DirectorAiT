@@ -659,6 +659,8 @@ export type Database = {
           board_id: string
           created_at: string | null
           created_by: string
+          finalised_at: string | null
+          finalised_by: string | null
           id: string
           meeting_date: string
           status: string | null
@@ -670,6 +672,8 @@ export type Database = {
           board_id: string
           created_at?: string | null
           created_by: string
+          finalised_at?: string | null
+          finalised_by?: string | null
           id?: string
           meeting_date: string
           status?: string | null
@@ -681,6 +685,8 @@ export type Database = {
           board_id?: string
           created_at?: string | null
           created_by?: string
+          finalised_at?: string | null
+          finalised_by?: string | null
           id?: string
           meeting_date?: string
           status?: string | null

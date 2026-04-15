@@ -77,6 +77,7 @@ export default function PackManagement() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
+      case 'finalised':
         return <CheckCircle2 className="h-5 w-5 text-success" />;
       case 'in_progress':
         return <Clock className="h-5 w-5 text-warning" />;
@@ -260,7 +261,9 @@ export default function PackManagement() {
                         </div>
                       </div>
                     </div>
-                    <div className="text-sm capitalize px-3 py-1 rounded-full bg-muted">
+                    <div className={`text-sm capitalize px-3 py-1 rounded-full ${
+                      pack.status === 'finalised' ? 'bg-success/10 text-success font-medium' : 'bg-muted'
+                    }`}>
                       {pack.status}
                     </div>
                   </div>

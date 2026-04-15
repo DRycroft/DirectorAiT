@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Save, FileText } from 'lucide-react';
+import { ArrowLeft, Save, FileText, Lock } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +23,7 @@ interface SectionDetails {
   pack: {
     title: string;
     meeting_date: string;
+    status: string | null;
   };
 }
 
@@ -53,7 +54,7 @@ export default function ReportSubmission() {
           title,
           pack_id,
           status,
-          pack:board_packs(title, meeting_date)
+          pack:board_packs(title, meeting_date, status)
         `)
         .eq('id', sectionId)
         .single();
@@ -133,6 +134,8 @@ export default function ReportSubmission() {
     );
   }
 
+  const isPackFinalised = section?.pack?.status === 'finalised';
+
   if (!section) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -141,6 +144,24 @@ export default function ReportSubmission() {
           <h2 className="text-xl font-semibold mb-2">Section Not Found</h2>
           <p className="text-muted-foreground mb-4">
             The requested section could not be found.
+          </p>
+          <Button onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Go Back
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isPackFinalised) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="p-8 text-center max-w-md">
+          <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Pack is Finalised</h2>
+          <p className="text-muted-foreground mb-4">
+            This board pack has been finalised. Sections cannot be edited until the pack is unlocked.
           </p>
           <Button onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
