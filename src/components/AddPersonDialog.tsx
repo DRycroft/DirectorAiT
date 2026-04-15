@@ -151,15 +151,40 @@ const baseFormSchema = z.object({
 
 type FormValues = z.infer<typeof baseFormSchema> & Record<string, any>;
 
+interface EditMemberData {
+  id: string;
+  full_name: string;
+  preferred_title?: string | null;
+  position?: string | null;
+  member_type?: string | null;
+  appointment_date?: string | null;
+  term_expiry?: string | null;
+  public_social_links?: any;
+  reports_responsible_for?: any;
+  reports_to?: string | null;
+  professional_qualifications?: string | null;
+  personal_interests?: string | null;
+  custom_fields?: any;
+  // Sensitive fields (loaded separately)
+  home_address?: string | null;
+  date_of_birth?: string | null;
+  personal_email?: string | null;
+  personal_mobile?: string | null;
+  health_notes?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+}
+
 interface AddPersonDialogProps {
   boardId: string;
   organizationName: string;
   onSuccess: () => void;
   trigger?: React.ReactNode;
   defaultMemberType?: 'board' | 'executive' | 'key_staff';
+  editMember?: EditMemberData;
 }
 
-export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger, defaultMemberType }: AddPersonDialogProps) {
+export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger, defaultMemberType, editMember }: AddPersonDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [existingMembers, setExistingMembers] = useState<Array<{ id: string; full_name: string; position: string | null }>>([]);
