@@ -2,7 +2,7 @@
  * Pack View Page
  * 
  * Assembled board-pack view: renders all pack sections in order
- * with their submitted content, ready for future finalisation/export.
+ * with their submitted content. Supports finalisation and lock controls.
  */
 
 import { useState, useEffect } from 'react';
@@ -10,7 +10,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle, Lock, Unlock, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,6 +25,8 @@ interface PackDetails {
   meeting_date: string;
   status: string | null;
   board_id: string;
+  finalised_at: string | null;
+  finalised_by: string | null;
 }
 
 interface SectionWithContent {
@@ -55,6 +62,10 @@ export default function PackView() {
   const [sections, setSections] = useState<SectionWithContent[]>([]);
   const [supportingDocs, setSupportingDocs] = useState<SupportingDoc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFinalising, setIsFinalising] = useState(false);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+
+  const isFinalised = pack?.status === 'finalised';
 
   useEffect(() => {
     if (packId) loadAssembledPack();
@@ -64,16 +75,14 @@ export default function PackView() {
     if (!packId) return;
     setIsLoading(true);
     try {
-      // Load pack
       const { data: packData, error: packError } = await supabase
         .from('board_packs')
-        .select('id, title, meeting_date, status, board_id')
+        .select('id, title, meeting_date, status, board_id, finalised_at, finalised_by')
         .eq('id', packId)
         .single();
       if (packError) throw packError;
-      setPack(packData);
+      setPack(packData as PackDetails);
 
-      // Load sections with latest documents
       const { data: sectionsData, error: sectionsError } = await supabase
         .from('pack_sections')
         .select(`
@@ -85,7 +94,6 @@ export default function PackView() {
       if (sectionsError) throw sectionsError;
       setSections((sectionsData as any[]) || []);
 
-      // Load supporting docs from org via board
       const { data: boardData } = await supabase
         .from('boards')
         .select('org_id')
@@ -95,45 +103,15 @@ export default function PackView() {
       if (boardData?.org_id) {
         const orgId = boardData.org_id;
         const [execRes, minutesRes, specialRes] = await Promise.all([
-          supabase
-            .from('executive_reports')
-            .select('id, file_name, file_path, uploaded_at, report_type, status')
-            .eq('org_id', orgId)
-            .order('uploaded_at', { ascending: false })
-            .limit(10),
-          supabase
-            .from('meeting_minutes')
-            .select('id, file_name, file_path, uploaded_at, meeting_type, status')
-            .eq('org_id', orgId)
-            .order('uploaded_at', { ascending: false })
-            .limit(10),
-          supabase
-            .from('special_papers')
-            .select('id, file_name, file_path, uploaded_at, paper_type, status')
-            .eq('org_id', orgId)
-            .order('uploaded_at', { ascending: false })
-            .limit(10),
+          supabase.from('executive_reports').select('id, file_name, file_path, uploaded_at, report_type, status').eq('org_id', orgId).order('uploaded_at', { ascending: false }).limit(10),
+          supabase.from('meeting_minutes').select('id, file_name, file_path, uploaded_at, meeting_type, status').eq('org_id', orgId).order('uploaded_at', { ascending: false }).limit(10),
+          supabase.from('special_papers').select('id, file_name, file_path, uploaded_at, paper_type, status').eq('org_id', orgId).order('uploaded_at', { ascending: false }).limit(10),
         ]);
 
         const docs: SupportingDoc[] = [
-          ...(execRes.data || []).map((d: any) => ({
-            id: d.id, file_name: d.file_name, file_path: d.file_path,
-            uploaded_at: d.uploaded_at, source: 'executive_reports' as const,
-            type_label: `Executive Report – ${d.report_type || 'General'}`,
-            status: d.status,
-          })),
-          ...(minutesRes.data || []).map((d: any) => ({
-            id: d.id, file_name: d.file_name, file_path: d.file_path,
-            uploaded_at: d.uploaded_at, source: 'meeting_minutes' as const,
-            type_label: `Meeting Minutes – ${d.meeting_type || 'General'}`,
-            status: d.status,
-          })),
-          ...(specialRes.data || []).map((d: any) => ({
-            id: d.id, file_name: d.file_name, file_path: d.file_path,
-            uploaded_at: d.uploaded_at, source: 'special_papers' as const,
-            type_label: `Special Paper – ${d.paper_type || 'General'}`,
-            status: d.status,
-          })),
+          ...(execRes.data || []).map((d: any) => ({ id: d.id, file_name: d.file_name, file_path: d.file_path, uploaded_at: d.uploaded_at, source: 'executive_reports' as const, type_label: `Executive Report – ${d.report_type || 'General'}`, status: d.status })),
+          ...(minutesRes.data || []).map((d: any) => ({ id: d.id, file_name: d.file_name, file_path: d.file_path, uploaded_at: d.uploaded_at, source: 'meeting_minutes' as const, type_label: `Meeting Minutes – ${d.meeting_type || 'General'}`, status: d.status })),
+          ...(specialRes.data || []).map((d: any) => ({ id: d.id, file_name: d.file_name, file_path: d.file_path, uploaded_at: d.uploaded_at, source: 'special_papers' as const, type_label: `Special Paper – ${d.paper_type || 'General'}`, status: d.status })),
         ];
         setSupportingDocs(docs);
       }
@@ -141,6 +119,57 @@ export default function PackView() {
       toast({ title: 'Error loading pack', description: error.message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleFinalisePack = async () => {
+    if (!packId) return;
+    setIsFinalising(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('board_packs')
+        .update({
+          status: 'finalised',
+          finalised_at: new Date().toISOString(),
+          finalised_by: user.id,
+        })
+        .eq('id', packId);
+
+      if (error) throw error;
+
+      toast({ title: 'Pack finalised', description: 'This board pack is now locked and ready for distribution.' });
+      loadAssembledPack();
+    } catch (error: any) {
+      toast({ title: 'Error finalising pack', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsFinalising(false);
+    }
+  };
+
+  const handleUnlockPack = async () => {
+    if (!packId) return;
+    setIsUnlocking(true);
+    try {
+      const { error } = await supabase
+        .from('board_packs')
+        .update({
+          status: 'draft',
+          finalised_at: null,
+          finalised_by: null,
+        })
+        .eq('id', packId);
+
+      if (error) throw error;
+
+      toast({ title: 'Pack unlocked', description: 'This board pack has been returned to draft status.' });
+      loadAssembledPack();
+    } catch (error: any) {
+      toast({ title: 'Error unlocking pack', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsUnlocking(false);
     }
   };
 
@@ -208,17 +237,93 @@ export default function PackView() {
           Back to Sections
         </Button>
 
+        {/* Finalised banner */}
+        {isFinalised && (
+          <div className="mb-6 p-4 rounded-lg border border-success/30 bg-success/5 flex items-center gap-3">
+            <ShieldCheck className="h-5 w-5 text-success shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-sm">This pack has been finalised</p>
+              {pack.finalised_at && (
+                <p className="text-xs text-muted-foreground">
+                  Locked on {new Date(pack.finalised_at).toLocaleDateString()} at {new Date(pack.finalised_at).toLocaleTimeString()}
+                </p>
+              )}
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" disabled={isUnlocking}>
+                  <Unlock className="h-3 w-3 mr-1" />
+                  Unlock
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Unlock this pack?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will return the pack to draft status, allowing further edits. Any distributed copies will no longer match the current version.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleUnlockPack}>
+                    Unlock Pack
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
+
         {/* Pack Header */}
         <div className="mb-8 print:mb-4" id="pack-header">
-          <h1 className="text-4xl font-bold mb-1">{pack.title}</h1>
-          <p className="text-muted-foreground">
-            Meeting Date: {new Date(pack.meeting_date).toLocaleDateString()}
-          </p>
-          <div className="flex items-center gap-3 mt-2 text-sm">
-            <span className="px-2 py-0.5 rounded-full bg-muted capitalize">{pack.status}</span>
-            <span className="text-muted-foreground">
-              {submittedCount}/{sections.length} sections submitted
-            </span>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-1">{pack.title}</h1>
+              <p className="text-muted-foreground">
+                Meeting Date: {new Date(pack.meeting_date).toLocaleDateString()}
+              </p>
+              <div className="flex items-center gap-3 mt-2 text-sm">
+                <span className={`px-2 py-0.5 rounded-full capitalize ${
+                  isFinalised ? 'bg-success/10 text-success font-medium' : 'bg-muted'
+                }`}>
+                  {isFinalised && <Lock className="h-3 w-3 inline mr-1" />}
+                  {pack.status}
+                </span>
+                <span className="text-muted-foreground">
+                  {submittedCount}/{sections.length} sections submitted
+                </span>
+              </div>
+            </div>
+
+            {!isFinalised && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button disabled={isFinalising}>
+                    <Lock className="h-4 w-4 mr-2" />
+                    {isFinalising ? 'Finalising…' : 'Finalise Pack'}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Finalise this board pack?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Once finalised, sections cannot be edited until the pack is unlocked by an administrator.
+                      {submittedCount < sections.length && (
+                        <span className="block mt-2 text-warning font-medium">
+                          Warning: {sections.length - submittedCount} section(s) have not been submitted yet.
+                        </span>
+                      )}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleFinalisePack}>
+                      Finalise Pack
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         </div>
 
@@ -240,7 +345,6 @@ export default function PackView() {
 
               return (
                 <div key={section.id} className="break-inside-avoid">
-                  {/* Section heading */}
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-sm font-mono text-muted-foreground w-8">{idx + 1}.</span>
                     {getStatusIcon(section.status)}
@@ -250,7 +354,6 @@ export default function PackView() {
                     )}
                   </div>
 
-                  {/* Section content */}
                   <Card className="p-6">
                     {latestDoc ? (
                       <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
@@ -286,11 +389,7 @@ export default function PackView() {
                         <p className="text-xs text-muted-foreground">{doc.type_label} • {new Date(doc.uploaded_at).toLocaleDateString()}</p>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDownload(doc.file_path, doc.file_name, getBucketForSource(doc.source))}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => handleDownload(doc.file_path, doc.file_name, getBucketForSource(doc.source))}>
                       <Download className="h-4 w-4" />
                     </Button>
                   </Card>
