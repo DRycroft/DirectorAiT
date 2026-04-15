@@ -248,28 +248,30 @@ export default function PackView() {
                 </p>
               )}
             </div>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" disabled={isUnlocking}>
-                  <Unlock className="h-3 w-3 mr-1" />
-                  Unlock
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Unlock this pack?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will return the pack to draft status, allowing further edits. Any distributed copies will no longer match the current version.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleUnlockPack}>
-                    Unlock Pack
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {canManagePack && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={isUnlocking}>
+                    <Unlock className="h-3 w-3 mr-1" />
+                    Unlock
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Unlock this pack?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will return the pack to draft status, allowing further edits. Any distributed copies will no longer match the current version.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleUnlockPack}>
+                      Unlock Pack
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         )}
 
