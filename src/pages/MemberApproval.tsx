@@ -183,11 +183,11 @@ const MemberApproval = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
-      // Update member status back to invited
+      // Update member status to rejected
       const { error: updateError } = await supabase
         .from("board_members")
         .update({
-          status: "invited",
+          status: "rejected",
         })
         .eq("id", memberId);
 
@@ -205,8 +205,6 @@ const MemberApproval = () => {
         logError("MemberApproval - Write rejection notes", sensitiveWriteError);
       }
 
-      if (updateError) throw updateError;
-
       // Create audit log
       if (user?.id) {
         await supabase.from("board_member_audit").insert({
@@ -214,8 +212,8 @@ const MemberApproval = () => {
           changed_by: user.id,
           field_name: "status",
           old_value: member.status,
-          new_value: "invited",
-          change_type: "updated",
+          new_value: "rejected",
+          change_type: "rejected",
         });
       }
 

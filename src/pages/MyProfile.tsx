@@ -24,6 +24,7 @@ interface BoardMemberRecord {
   public_contact_email: string | null;
   publish_preferences: Record<string, boolean> | null;
   profile_completed_at: string | null;
+  status: string | null;
   board_id: string;
 }
 
@@ -74,7 +75,7 @@ const MyProfile = () => {
     try {
       const { data, error } = await supabase
         .from("board_members")
-        .select("id, full_name, preferred_title, public_job_title, short_bio, public_company_affiliations, professional_qualifications, public_contact_email, publish_preferences, profile_completed_at, board_id, boards:boards!board_members_board_id_fkey(title)")
+        .select("id, full_name, preferred_title, public_job_title, short_bio, public_company_affiliations, professional_qualifications, public_contact_email, publish_preferences, profile_completed_at, status, board_id, boards:boards!board_members_board_id_fkey(title)")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
 
@@ -181,8 +182,8 @@ const MyProfile = () => {
         profile_completed_at: new Date().toISOString(),
       };
 
-      // On first completion, move to pending for admin review
-      if (isFirstCompletion) {
+      // On first completion or resubmission after rejection, move to pending
+      if (isFirstCompletion || member.status === "rejected") {
         updatePayload.status = "pending";
       }
 
