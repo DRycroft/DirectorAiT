@@ -24,6 +24,7 @@ interface BoardMemberRecord {
   public_contact_email: string | null;
   publish_preferences: Record<string, boolean> | null;
   profile_completed_at: string | null;
+  status: string | null;
   board_id: string;
 }
 
