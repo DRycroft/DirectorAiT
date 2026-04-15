@@ -168,18 +168,27 @@ const MyProfile = () => {
     setSaved(false);
 
     try {
+      const isFirstCompletion = !member.profile_completed_at;
+
+      const updatePayload: Record<string, any> = {
+        full_name: formData.full_name,
+        preferred_title: formData.preferred_title || null,
+        public_job_title: formData.public_job_title || null,
+        short_bio: formData.short_bio || null,
+        public_company_affiliations: formData.public_company_affiliations || null,
+        professional_qualifications: formData.professional_qualifications || null,
+        publish_preferences: publishToggles,
+        profile_completed_at: new Date().toISOString(),
+      };
+
+      // On first completion, move to pending for admin review
+      if (isFirstCompletion) {
+        updatePayload.status = "pending";
+      }
+
       const { error: memberError } = await supabase
         .from("board_members")
-        .update({
-          full_name: formData.full_name,
-          preferred_title: formData.preferred_title || null,
-          public_job_title: formData.public_job_title || null,
-          short_bio: formData.short_bio || null,
-          public_company_affiliations: formData.public_company_affiliations || null,
-          professional_qualifications: formData.professional_qualifications || null,
-          publish_preferences: publishToggles,
-          profile_completed_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .eq("id", member.id);
 
       if (memberError) throw memberError;
