@@ -42,6 +42,7 @@ export default function AcceptInvite() {
 
   const fetchInvite = async () => {
     try {
+      // Server-side expiry enforcement: only match invites that are not yet expired
       const { data, error } = await supabase
         .from("board_members")
         .select(`
@@ -50,26 +51,31 @@ export default function AcceptInvite() {
         `)
         .eq("invite_token", token!)
         .eq("status", "invited")
+        .or("invite_expires_at.is.null,invite_expires_at.gt." + new Date().toISOString())
         .maybeSingle();
 
       if (error) throw error;
 
       if (!data || !data.board) {
+        // If no match, check whether the token exists but is expired
+        const { data: expiredCheck } = await supabase
+          .from("board_members")
+          .select("id")
+          .eq("invite_token", token!)
+          .eq("status", "invited")
+          .maybeSingle();
+
+        if (expiredCheck) {
+          setExpired(true);
+        }
         setInvite(null);
       } else {
-        // Check expiry
-        const expiresAt = (data as any).invite_expires_at;
-        if (expiresAt && new Date(expiresAt) < new Date()) {
-          setExpired(true);
-          setInvite(null);
-        } else {
-          const inviteData = data as unknown as InviteData;
-          setInvite(inviteData);
-          // Pre-fill email from invite_email, then fall back to public_contact_email
-          const prefillEmail = (data as any).invite_email || inviteData.public_contact_email;
-          if (prefillEmail) {
-            setEmail(prefillEmail);
-          }
+        const inviteData = data as unknown as InviteData;
+        setInvite(inviteData);
+        // Pre-fill email from invite_email, then fall back to public_contact_email
+        const prefillEmail = (data as any).invite_email || inviteData.public_contact_email;
+        if (prefillEmail) {
+          setEmail(prefillEmail);
         }
       }
     } catch (error) {
@@ -123,10 +129,15 @@ export default function AcceptInvite() {
         if (membershipError) throw membershipError;
       }
 
-      // (c) Update board_members row
+      // (c) Update board_members row — clear token for single-use enforcement
       const { error: updateError } = await supabase
         .from("board_members")
-        .update({ status: "active", user_id: userId })
+        .update({
+          status: "active",
+          user_id: userId,
+          invite_token: null,
+          invite_expires_at: null,
+        })
         .eq("id", invite.id);
       if (updateError) throw updateError;
 
@@ -142,6 +153,19 @@ export default function AcceptInvite() {
           .from("profiles")
           .update({ org_id: invite.board.org_id })
           .eq("id", userId);
+      }
+
+      // (e) Assign observer role in user_roles if not already present
+      const orgId = profile?.org_id || invite.board.org_id;
+      if (orgId) {
+        const { error: roleError } = await supabase
+          .from("user_roles")
+          .insert({ user_id: userId, role: "observer", org_id: orgId });
+
+        // Ignore duplicate key errors — role already exists
+        if (roleError && !/duplicate key/i.test(roleError.message)) {
+          console.error("Failed to assign observer role:", roleError);
+        }
       }
 
       toast.success("Invite accepted! Welcome to " + invite.board.organization.name);
