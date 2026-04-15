@@ -83,11 +83,13 @@ const Onboarding = () => {
         if (orgError) throw orgError;
       }
 
-      // Update profile with job title, phone, and mark onboarding complete
+      // Update profile with phone and mark onboarding complete
+      // Note: jobTitle is captured in the form but the profiles table
+      // does not yet have a job_title column — it will be saved once
+      // the column is added in a future migration.
       const { error: profileUpdateError } = await supabase
         .from("profiles")
         .update({
-          job_title: profileData.jobTitle.trim() || null,
           phone: profileData.phone || null,
           onboarding_complete: true,
         })
