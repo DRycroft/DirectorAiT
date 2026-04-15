@@ -140,12 +140,16 @@ const MemberApproval = () => {
       if (updateError) throw updateError;
 
       // Write rejection notes to the correct sensitive table
-      const { error: sensitiveError } = await supabase
+      const { error: sensitiveWriteError } = await supabase
         .from("board_members_sensitive")
         .upsert({
           member_id: memberId,
           sensitive_notes: `Rejected: ${comments}`,
         }, { onConflict: "member_id" });
+
+      if (sensitiveWriteError) {
+        logError("MemberApproval - Write rejection notes", sensitiveWriteError);
+      }
 
       if (updateError) throw updateError;
 
