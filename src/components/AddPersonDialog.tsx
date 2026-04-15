@@ -192,27 +192,45 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
   const [loadingTemplate, setLoadingTemplate] = useState(false);
   const { toast } = useToast();
 
+  const isEditMode = !!editMember;
+
+  const buildDefaultValues = (): Record<string, any> => {
+    const defaults: Record<string, any> = {
+      member_type: editMember?.member_type as any || defaultMemberType || "board",
+      full_name: editMember?.full_name || "",
+      preferred_title: editMember?.preferred_title || "",
+      position: editMember?.position || "",
+      home_address: editMember?.home_address || "",
+      personal_email: editMember?.personal_email || "",
+      personal_mobile: editMember?.personal_mobile || "",
+      public_social_links: editMember?.public_social_links?.linkedin || "",
+      reports_responsible_for: Array.isArray(editMember?.reports_responsible_for)
+        ? editMember.reports_responsible_for.join(", ")
+        : "",
+      reports_to: editMember?.reports_to || "",
+      professional_qualifications: editMember?.professional_qualifications || "",
+      personal_interests: editMember?.personal_interests || "",
+      health_notes: editMember?.health_notes || "",
+      emergency_contact_name: editMember?.emergency_contact_name || "",
+      emergency_contact_phone: editMember?.emergency_contact_phone || "",
+    };
+    if (editMember?.appointment_date) {
+      defaults.starting_date = new Date(editMember.appointment_date);
+    }
+    if (editMember?.term_expiry) {
+      defaults.finishing_date = new Date(editMember.term_expiry);
+    }
+    if (editMember?.date_of_birth) {
+      defaults.date_of_birth = new Date(editMember.date_of_birth);
+    }
+    return defaults;
+  };
+
   const [formSchema, setFormSchema] = useState(baseFormSchema);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      member_type: defaultMemberType || "board",
-      full_name: "",
-      preferred_title: "",
-      position: "",
-      home_address: "",
-      personal_email: "",
-      personal_mobile: "",
-      public_social_links: "",
-      reports_responsible_for: "",
-      reports_to: "",
-      professional_qualifications: "",
-      personal_interests: "",
-      health_notes: "",
-      emergency_contact_name: "",
-      emergency_contact_phone: "",
-    },
+    defaultValues: buildDefaultValues(),
   });
 
   const memberType = form.watch("member_type");
