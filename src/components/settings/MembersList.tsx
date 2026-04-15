@@ -72,29 +72,82 @@ export function MembersList({ boardId, memberType, onRefresh: _onRefresh }: Memb
 
       if (tokenError) throw tokenError;
 
-      // Set token expiration to 7 days from now
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
-
+      // Update member with new token (trigger auto-sets invite_expires_at)
       const { error } = await supabase
         .from("board_members")
         .update({ 
           invite_token: token,
           invite_sent_at: new Date().toISOString(),
-          invite_expires_at: expiresAt.toISOString(),
           status: "invited"
         })
         .eq("id", memberId);
 
       if (error) throw error;
 
-      const inviteUrl = `${window.location.origin}/member-intake?token=${encodeURIComponent(token)}`;
-      await navigator.clipboard.writeText(inviteUrl);
+      // Fetch member details needed for the email
+      const { data: memberData } = await supabase
+        .from("board_members")
+        .select(`
+          full_name, invite_email,
+          board:boards!board_members_board_id_fkey(title, org_id, organization:organizations!boards_org_id_fkey(name))
+        `)
+        .eq("id", memberId)
+        .single();
 
-      toast({
-        title: "Invite Link Copied",
-        description: "The invite link has been copied to your clipboard. It expires in 7 days.",
-      });
+      const inviteEmail = (memberData as any)?.invite_email;
+      const boardName = (memberData as any)?.board?.title || "a board";
+      const orgName = (memberData as any)?.board?.organization?.name || "an organisation";
+
+      // Get current user's name for the email
+      let invitedByName = "An administrator";
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("name")
+          .eq("id", currentUser.id)
+          .single();
+        if (profileData?.name) invitedByName = profileData.name;
+      }
+
+      if (inviteEmail) {
+        // Send the invite email via edge function
+        const { error: emailError } = await supabase.functions.invoke(
+          "send-invite-email",
+          {
+            body: {
+              invite_token: token,
+              invite_email: inviteEmail,
+              invitee_name: (memberData as any)?.full_name || "",
+              org_name: orgName,
+              board_name: boardName,
+              invited_by_name: invitedByName,
+            },
+          }
+        );
+
+        if (emailError) {
+          logError("MembersList - Resend email", emailError);
+          const inviteUrl = `${window.location.origin}/invite/${token}`;
+          toast({
+            title: "Token refreshed — email failed",
+            description: `New invite created but email failed to send. Share this link manually: ${inviteUrl}`,
+          });
+        } else {
+          toast({
+            title: "Invite resent",
+            description: `Invite email sent to ${inviteEmail}. Expires in 7 days.`,
+          });
+        }
+      } else {
+        // No email on file — copy link to clipboard as fallback
+        const inviteUrl = `${window.location.origin}/invite/${token}`;
+        await navigator.clipboard.writeText(inviteUrl);
+        toast({
+          title: "Invite link copied",
+          description: "No email on file. The invite link has been copied to your clipboard.",
+        });
+      }
 
       loadMembers();
     } catch (error: any) {
