@@ -198,7 +198,38 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
     }
   };
 
-  const isArchived = (member: Member) => {
+  const handleEditMember = async (memberId: string) => {
+    try {
+      // Load full member data including sensitive fields
+      const [memberRes, sensitiveRes] = await Promise.all([
+        supabase
+          .from("board_members")
+          .select("*")
+          .eq("id", memberId)
+          .single(),
+        supabase
+          .from("board_members_sensitive")
+          .select("*")
+          .eq("member_id", memberId)
+          .maybeSingle(),
+      ]);
+
+      if (memberRes.error) throw memberRes.error;
+
+      setEditingMember({
+        ...memberRes.data,
+        ...(sensitiveRes.data || {}),
+      });
+    } catch (error) {
+      logError("MembersList - Load member for edit", error);
+      toast({
+        title: "Error",
+        description: "Failed to load member data for editing",
+        variant: "destructive",
+      });
+    }
+  };
+
     if (!member.term_expiry) return false;
     return new Date(member.term_expiry) < new Date();
   };
