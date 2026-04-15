@@ -26,7 +26,7 @@ import {
 import { toast } from "sonner";
 import { Plus, Calendar, Edit2, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
-import { useAuth } from "@/contexts/AuthContext";
+
 
 interface Meeting {
   id: string;

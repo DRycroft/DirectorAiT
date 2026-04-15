@@ -17,6 +17,7 @@ const Navigation = () => {
     if (path === '/dashboard') return location.pathname === '/dashboard';
     if (path === '/boards-committees') return location.pathname === '/boards-committees';
     if (path === '/pack-management') return location.pathname.startsWith('/pack-management') || location.pathname.startsWith('/pack/') || location.pathname.startsWith('/report-submission');
+    if (path === '/meetings') return location.pathname.startsWith('/meetings');
     if (path === '/compliance') return location.pathname === '/compliance';
     if (path === '/library') return location.pathname === '/library';
     if (path === '/settings') return location.pathname === '/settings';
@@ -103,6 +104,18 @@ const Navigation = () => {
               style={isActive('/pack-management') ? { marginBottom: '-1px' } : {}}
             >
               Board Papers
+            </Link>
+            <Link 
+              to="/meetings" 
+              className={cn(
+                "relative px-5 pt-3 pb-4 text-sm font-medium transition-all rounded-t-xl",
+                isActive('/meetings')
+                  ? "text-foreground bg-background border-t-2 border-x-2 border-primary shadow-[0_-2px_8px_rgba(0,0,0,0.1)]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30 mb-0.5"
+              )}
+              style={isActive('/meetings') ? { marginBottom: '-1px' } : {}}
+            >
+              Meetings
             </Link>
             <Link 
               to="/compliance" 
