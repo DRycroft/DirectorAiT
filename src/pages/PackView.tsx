@@ -307,33 +307,35 @@ export default function PackView() {
             </div>
 
             {!isFinalised && canManagePack && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button disabled={isFinalising}>
-                    <Lock className="h-4 w-4 mr-2" />
-                    {isFinalising ? 'Finalising…' : 'Finalise Pack'}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Finalise this board pack?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Once finalised, sections cannot be edited until the pack is unlocked by an administrator.
-                      {submittedCount < sections.length && (
-                        <span className="block mt-2 text-warning font-medium">
-                          Warning: {sections.length - submittedCount} section(s) have not been submitted yet.
-                        </span>
-                      )}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleFinalisePack}>
-                      Finalise Pack
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <div className="print:hidden">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button disabled={isFinalising}>
+                      <Lock className="h-4 w-4 mr-2" />
+                      {isFinalising ? 'Finalising…' : 'Finalise Pack'}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Finalise this board pack?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Once finalised, sections cannot be edited until the pack is unlocked by an administrator.
+                        {submittedCount < sections.length && (
+                          <span className="block mt-2 text-warning font-medium">
+                            Warning: {sections.length - submittedCount} section(s) have not been submitted yet.
+                          </span>
+                        )}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleFinalisePack}>
+                        Finalise Pack
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             )}
           </div>
         </div>
