@@ -75,7 +75,7 @@ const MyProfile = () => {
     try {
       const { data, error } = await supabase
         .from("board_members")
-        .select("id, full_name, preferred_title, public_job_title, short_bio, public_company_affiliations, professional_qualifications, public_contact_email, publish_preferences, profile_completed_at, board_id, boards:boards!board_members_board_id_fkey(title)")
+        .select("id, full_name, preferred_title, public_job_title, short_bio, public_company_affiliations, professional_qualifications, public_contact_email, publish_preferences, profile_completed_at, status, board_id, boards:boards!board_members_board_id_fkey(title)")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
 
