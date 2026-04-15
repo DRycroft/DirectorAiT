@@ -284,21 +284,39 @@ export function MembersList({ boardId, memberType, onRefresh: _onRefresh }: Memb
                       </TableCell>
                       <TableCell>
                         {member.status === "invited" ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleGenerateInvite(member.id)}
-                            disabled={generatingInvite === member.id}
-                          >
-                            {generatingInvite === member.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <>
-                                <Copy className="h-4 w-4 mr-2" />
-                                Resend
-                              </>
-                            )}
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleGenerateInvite(member.id)}
+                              disabled={generatingInvite === member.id || revokingInvite === member.id}
+                            >
+                              {generatingInvite === member.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <Copy className="h-4 w-4 mr-1" />
+                                  Resend
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleRevokeInvite(member.id)}
+                              disabled={revokingInvite === member.id || generatingInvite === member.id}
+                              title="Revoke invite"
+                            >
+                              {revokingInvite === member.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <XCircle className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        ) : member.status === "revoked" ? (
+                          <span className="text-xs text-muted-foreground">Revoked</span>
                         ) : (
                           <span className="text-xs text-muted-foreground">Active</span>
                         )}
