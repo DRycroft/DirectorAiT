@@ -3,10 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Mail, Copy, Loader2, XCircle } from "lucide-react";
+import { Mail, Copy, Loader2, XCircle, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { logError } from "@/lib/errorHandling";
+import { AddPersonDialog } from "@/components/AddPersonDialog";
 
 interface Member {
   id: string;
