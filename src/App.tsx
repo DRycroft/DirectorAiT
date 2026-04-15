@@ -36,6 +36,7 @@ const BoardPapers = lazy(() => import("./pages/BoardPapers"));
 const BoardPaperDocument = lazy(() => import("./pages/BoardPaperDocument"));
 const MemberIntake = lazy(() => import("./pages/MemberIntake"));
 const MemberInvite = lazy(() => import("./pages/MemberInvite"));
+const MyProfile = lazy(() => import("./pages/MyProfile"));
 const MemberApproval = lazy(() => import("./pages/MemberApproval"));
 const ExportTeam = lazy(() => import("./pages/ExportTeam"));
 const BoardsAndCommittees = lazy(() => import("./pages/BoardsAndCommittees"));
@@ -111,6 +112,7 @@ const App = () => {
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                   <Route path="/member-intake" element={<ProtectedRoute><MemberIntake /></ProtectedRoute>} />
                   <Route path="/member-invite" element={<ProtectedRoute><MemberInvite /></ProtectedRoute>} />
+                  <Route path="/my-profile" element={<ProtectedRoute><MyProfile /></ProtectedRoute>} />
                   <Route path="/member-approval/:memberId" element={<ProtectedRoute><MemberApproval /></ProtectedRoute>} />
                   <Route path="/export-team/:boardId" element={<ProtectedRoute><ExportTeam /></ProtectedRoute>} />
                   <Route path="/pack-management" element={<ProtectedRoute><PackManagement /></ProtectedRoute>} />

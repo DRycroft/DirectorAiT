@@ -170,11 +170,14 @@ export default function AcceptInvite() {
 
       toast.success("Invite accepted! Welcome to " + invite.board.organization.name);
 
-      // Navigate based on onboarding status
+      // Navigate based on onboarding status, then to profile completion
       if (!profile?.onboarding_complete) {
+        // After onboarding, user will be sent to dashboard — we store a flag so
+        // the profile-completion page knows to prompt them
         navigate("/onboarding", { replace: true });
       } else {
-        navigate("/dashboard", { replace: true });
+        // Send to profile completion page so the member fills in their board-specific details
+        navigate("/my-profile", { replace: true });
       }
     } catch (error) {
       toast.error(getUserFriendlyError(error));
