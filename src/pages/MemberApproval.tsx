@@ -129,14 +129,23 @@ const MemberApproval = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
-      // Update member status with comments
+      // Update member status back to invited
       const { error: updateError } = await supabase
         .from("board_members")
         .update({
           status: "invited",
-          sensitive_notes: `Rejected: ${comments}`,
         })
         .eq("id", memberId);
+
+      if (updateError) throw updateError;
+
+      // Write rejection notes to the correct sensitive table
+      const { error: sensitiveError } = await supabase
+        .from("board_members_sensitive")
+        .upsert({
+          member_id: memberId,
+          sensitive_notes: `Rejected: ${comments}`,
+        }, { onConflict: "member_id" });
 
       if (updateError) throw updateError;
 

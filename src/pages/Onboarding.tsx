@@ -83,19 +83,11 @@ const Onboarding = () => {
         if (orgError) throw orgError;
       }
 
-      // Update profile with job title and phone
-      const profileUpdate: Record<string, string | null> = {};
-      if (profileData.jobTitle.trim()) {
-        profileUpdate.phone = profileData.phone || null;
-      }
-      if (profileData.phone) {
-        profileUpdate.phone = profileData.phone;
-      }
-
-      // Always update phone and mark onboarding complete
+      // Update profile with job title, phone, and mark onboarding complete
       const { error: profileUpdateError } = await supabase
         .from("profiles")
         .update({
+          job_title: profileData.jobTitle.trim() || null,
           phone: profileData.phone || null,
           onboarding_complete: true,
         })
