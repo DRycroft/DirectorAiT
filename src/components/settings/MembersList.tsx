@@ -371,7 +371,10 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
                               </Button>
                             }
                           />
+                        ) : member.status === "revoked" ? (
+                          <span className="text-xs text-muted-foreground">Revoked</span>
                         ) : (
+                          <span className="text-xs text-muted-foreground">{member.status}</span>
                         )}
                       </TableCell>
                     </>
