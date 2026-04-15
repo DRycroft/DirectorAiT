@@ -34,7 +34,7 @@ const Auth = () => {
     try {
       const validated = signInSchema.parse({ email, password });
       
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: validated.email,
         password: validated.password
       });
@@ -42,7 +42,21 @@ const Auth = () => {
       if (error) throw error;
 
       toast.success("Signed in successfully!");
-      navigate("/dashboard");
+
+      // Check onboarding status before navigating
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_complete")
+          .eq("id", data.user.id)
+          .maybeSingle();
+
+        if (!profile?.onboarding_complete) {
+          navigate("/onboarding", { replace: true });
+          return;
+        }
+      }
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);

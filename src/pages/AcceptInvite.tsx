@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, UserPlus, LogIn, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getUserFriendlyError } from "@/lib/errorHandling";
+import { passwordSchema, PASSWORD_REQUIREMENTS_TEXT } from "@/lib/passwordSchema";
 
 interface InviteData {
   id: string;
@@ -158,6 +159,14 @@ export default function AcceptInvite() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate password with shared policy
+    const passwordResult = passwordSchema.safeParse(password);
+    if (!passwordResult.success) {
+      toast.error(passwordResult.error.errors[0].message);
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
@@ -304,8 +313,9 @@ export default function AcceptInvite() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={8}
+                    minLength={10}
                   />
+                  <p className="text-xs text-muted-foreground">{PASSWORD_REQUIREMENTS_TEXT}</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-confirm">Confirm Password</Label>
