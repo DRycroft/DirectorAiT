@@ -153,6 +153,33 @@ export const GovernanceSection = () => {
         draft: mappedPacks.filter(p => p.status === "draft").length,
         finalised: mappedPacks.filter(p => p.status === "finalised").length,
       });
+
+      // Fetch recent decisions
+      const { data: decisionsData } = await supabase
+        .from("meeting_decisions")
+        .select("id, title, outcome, decision_date, agenda_id")
+        .order("decision_date", { ascending: false })
+        .limit(5);
+
+      // Resolve agenda titles for decisions
+      const decAgendaIds = [...new Set((decisionsData ?? []).map((d: any) => d.agenda_id))];
+      const agendaMap = new Map<string, string>();
+      if (decAgendaIds.length > 0) {
+        const { data: agendaNames } = await supabase
+          .from("agendas")
+          .select("id, title")
+          .in("id", decAgendaIds);
+        (agendaNames ?? []).forEach((a: any) => agendaMap.set(a.id, a.title));
+      }
+
+      setRecentDecisions((decisionsData ?? []).map((d: any) => ({
+        id: d.id,
+        title: d.title,
+        outcome: d.outcome,
+        decision_date: d.decision_date,
+        meeting_title: agendaMap.get(d.agenda_id) ?? "Unknown Meeting",
+        meeting_id: d.agenda_id,
+      })));
     } catch {
       // Fail silently on dashboard — widgets show empty state
     } finally {
