@@ -315,7 +315,9 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
                   {!showArchived && (
                     <>
                       <TableCell>
-                        <Badge variant={member.status === "active" ? "default" : "secondary"}>
+                        <Badge 
+                          variant={member.status === "active" ? "default" : member.status === "rejected" ? "destructive" : "secondary"}
+                        >
                           {member.status}
                         </Badge>
                       </TableCell>
@@ -382,6 +384,15 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
                               </Button>
                             }
                           />
+                        ) : member.status === "rejected" ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/member-approval/${member.id}`)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Review
+                          </Button>
                         ) : member.status === "revoked" ? (
                           <span className="text-xs text-muted-foreground">Revoked</span>
                         ) : (

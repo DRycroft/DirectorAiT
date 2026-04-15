@@ -181,8 +181,8 @@ const MyProfile = () => {
         profile_completed_at: new Date().toISOString(),
       };
 
-      // On first completion, move to pending for admin review
-      if (isFirstCompletion) {
+      // On first completion or resubmission after rejection, move to pending
+      if (isFirstCompletion || member.status === "rejected") {
         updatePayload.status = "pending";
       }
 
