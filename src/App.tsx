@@ -44,6 +44,7 @@ const BoardLibrary = lazy(() => import("./pages/BoardLibrary"));
 const PackManagement = lazy(() => import("./pages/PackManagement"));
 const PackSections = lazy(() => import("./pages/PackSections"));
 const ReportSubmission = lazy(() => import("./pages/ReportSubmission"));
+const PackView = lazy(() => import("./pages/PackView"));
 
 // Loading fallback component
 const PageLoader = () => (
