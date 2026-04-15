@@ -23,10 +23,11 @@ interface Member {
 interface MembersListProps {
   boardId: string;
   memberType: "board" | "executive" | "key_staff";
+  organizationName?: string;
   onRefresh?: () => void;
 }
 
-export function MembersList({ boardId, memberType, onRefresh: _onRefresh }: MembersListProps) {
+export function MembersList({ boardId, memberType, organizationName, onRefresh: _onRefresh }: MembersListProps) {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingInvite, setGeneratingInvite] = useState<string | null>(null);
