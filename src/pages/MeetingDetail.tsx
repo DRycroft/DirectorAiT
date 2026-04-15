@@ -362,6 +362,12 @@ const MeetingDetail = () => {
                         {item.estimated_duration} min
                       </span>
                     )}
+                    {agenda && (
+                      <AgendaItemActions
+                        agendaItemId={item.id}
+                        boardId={agenda.board_id}
+                      />
+                    )}
                   </div>
 
                   {/* Actions */}
