@@ -147,7 +147,7 @@ const MeetingDetail = () => {
         .single();
       if (aErr) throw aErr;
       setAgenda(agendaData);
-      setMinutesContent((agendaData as any).minutes_content ?? "");
+      setMinutesContent(agendaData.minutes_content ?? "");
       setMinutesDirty(false);
 
       const [boardRes, itemsRes, decisionsRes] = await Promise.all([
@@ -159,7 +159,7 @@ const MeetingDetail = () => {
       setBoardTitle(boardRes.data?.title ?? "Unknown Board");
       if (itemsRes.error) throw itemsRes.error;
       setItems(itemsRes.data ?? []);
-      setDecisions((decisionsRes.data as Decision[]) ?? []);
+      setDecisions((decisionsRes.data ?? []) as Decision[]);
     } catch {
       toast.error("Failed to load meeting details");
     } finally {
@@ -178,7 +178,7 @@ const MeetingDetail = () => {
     try {
       const { error } = await supabase
         .from("agendas")
-        .update({ minutes_content: minutesContent || null } as any)
+        .update({ minutes_content: minutesContent || null })
         .eq("id", meetingId);
       if (error) throw error;
       toast.success("Minutes saved");
@@ -302,7 +302,7 @@ const MeetingDetail = () => {
         if (error) throw error;
         toast.success("Decision updated");
       } else {
-        const { error } = await supabase.from("meeting_decisions").insert({ ...payload, agenda_id: meetingId } as any);
+        const { error } = await supabase.from("meeting_decisions").insert({ ...payload, agenda_id: meetingId });
         if (error) throw error;
         toast.success("Decision recorded");
       }
