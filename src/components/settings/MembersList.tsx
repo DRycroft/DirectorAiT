@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Mail, Copy, Loader2, XCircle, Pencil } from "lucide-react";
+import { Mail, Copy, Loader2, XCircle, Pencil, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { logError } from "@/lib/errorHandling";
@@ -28,6 +29,7 @@ interface MembersListProps {
 }
 
 export function MembersList({ boardId, memberType, organizationName, onRefresh: _onRefresh }: MembersListProps) {
+  const navigate = useNavigate();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingInvite, setGeneratingInvite] = useState<string | null>(null);
@@ -350,6 +352,15 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
                               )}
                             </Button>
                           </div>
+                        ) : member.status === "pending" ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/member-approval/${member.id}`)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Review
+                          </Button>
                         ) : member.status === "active" ? (
                           <AddPersonDialog
                             boardId={boardId}

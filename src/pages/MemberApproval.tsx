@@ -21,25 +21,68 @@ const MemberApproval = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [member, setMember] = useState<any>(null);
+  const [sensitiveData, setSensitiveData] = useState<any>(null);
   const [comments, setComments] = useState("");
+  const [unauthorized, setUnauthorized] = useState(false);
 
   useEffect(() => {
     if (memberId) {
-      checkAuth();
+      checkAuthAndAuthorize();
     } else {
       navigate(-1);
     }
   }, [memberId]);
 
-  const checkAuth = async () => {
+  const checkAuthAndAuthorize = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       navigate("/auth");
       return;
     }
+
+    // Verify admin/chair/super_admin authorization
+    const isAuthorized = await verifyAdminAccess(user.id);
+    if (!isAuthorized) {
+      setUnauthorized(true);
+      setLoading(false);
+      return;
+    }
     
     await fetchMember();
+  };
+
+  const verifyAdminAccess = async (userId: string): Promise<boolean> => {
+    if (!memberId) return false;
+
+    // Check if user is board admin for this member (chair/admin role)
+    const { data: isBoardAdmin } = await supabase.rpc("is_board_admin_for_member", {
+      _user_id: userId,
+      _member_id: memberId,
+    });
+    if (isBoardAdmin) return true;
+
+    // Check org_admin or super_admin
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("org_id")
+      .eq("id", userId)
+      .single();
+
+    if (profile?.org_id) {
+      const { data: isOrgAdmin } = await supabase.rpc("has_role", {
+        _user_id: userId,
+        _role: "org_admin",
+        _org_id: profile.org_id,
+      });
+      if (isOrgAdmin) return true;
+    }
+
+    const { data: isSuperAdmin } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "super_admin",
+    });
+    return !!isSuperAdmin;
   };
 
   const fetchMember = async () => {
@@ -55,6 +98,16 @@ const MemberApproval = () => {
 
       if (error) throw error;
       setMember(data);
+
+      // Fetch sensitive data
+      if (data) {
+        const { data: sensitive } = await supabase
+          .from("board_members_sensitive")
+          .select("*")
+          .eq("member_id", memberId)
+          .maybeSingle();
+        setSensitiveData(sensitive);
+      }
     } catch (error: any) {
       console.error("Error fetching member:", error);
       toast({
@@ -192,6 +245,25 @@ const MemberApproval = () => {
     );
   }
 
+  if (unauthorized) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8 pt-24">
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-destructive font-medium">Access Denied</p>
+              <p className="text-muted-foreground mt-2">You do not have permission to review this member profile.</p>
+              <Button onClick={() => navigate(-1)} className="mt-4">
+                Go Back
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   if (!member) {
     return (
       <div className="min-h-screen bg-background">
@@ -232,7 +304,7 @@ const MemberApproval = () => {
         </div>
 
         <div className="space-y-6">
-          <MemberProfileTabs member={member} isAdmin={true} />
+          <MemberProfileTabs member={member} sensitiveData={sensitiveData} isAdmin={true} />
           
           <COIManagement memberId={member.id} isEditable={false} />
           
