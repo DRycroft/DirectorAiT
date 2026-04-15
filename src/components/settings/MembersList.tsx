@@ -163,6 +163,38 @@ export function MembersList({ boardId, memberType, onRefresh: _onRefresh }: Memb
     }
   };
 
+  const handleRevokeInvite = async (memberId: string) => {
+    setRevokingInvite(memberId);
+    try {
+      const { error } = await supabase
+        .from("board_members")
+        .update({
+          status: "revoked",
+          invite_token: null,
+          invite_expires_at: null,
+        })
+        .eq("id", memberId)
+        .eq("status", "invited");
+
+      if (error) throw error;
+
+      toast({
+        title: "Invite revoked",
+        description: "The invitation link is no longer valid.",
+      });
+      loadMembers();
+    } catch (error: any) {
+      logError("MembersList - Revoke invite", error);
+      toast({
+        title: "Error",
+        description: "Failed to revoke invite",
+        variant: "destructive",
+      });
+    } finally {
+      setRevokingInvite(null);
+    }
+  };
+
   const isArchived = (member: Member) => {
     if (!member.term_expiry) return false;
     return new Date(member.term_expiry) < new Date();
