@@ -248,7 +248,7 @@ export default function PackView() {
 
         {/* Finalised banner */}
         {isFinalised && (
-          <div className="mb-6 p-4 rounded-lg border border-success/30 bg-success/5 flex items-center gap-3">
+          <div className="mb-6 p-4 rounded-lg border border-success/30 bg-success/5 flex items-center gap-3 print:hidden">
             <ShieldCheck className="h-5 w-5 text-success shrink-0" />
             <div className="flex-1">
               <p className="font-semibold text-sm">This pack has been finalised</p>
