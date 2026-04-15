@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardGrid, DashboardSection } from "../DashboardLayout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, FileText, Calendar, Loader2 } from "lucide-react";
+import { AlertCircle, FileText, Calendar, Loader2, Gavel } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { format, isPast, isToday, differenceInCalendarDays } from "date-fns";
@@ -31,6 +31,15 @@ interface PackRow {
   board_title: string;
 }
 
+interface DecisionRow {
+  id: string;
+  title: string;
+  outcome: string | null;
+  decision_date: string;
+  meeting_title: string;
+  meeting_id: string;
+}
+
 export const GovernanceSection = () => {
   const [loading, setLoading] = useState(true);
   const [openActions, setOpenActions] = useState<ActionRow[]>([]);
@@ -40,6 +49,7 @@ export const GovernanceSection = () => {
   const [recentPacks, setRecentPacks] = useState<PackRow[]>([]);
   const [packStats, setPackStats] = useState({ total: 0, draft: 0, finalised: 0 });
   const [nextMeeting, setNextMeeting] = useState<MeetingRow | null>(null);
+  const [recentDecisions, setRecentDecisions] = useState<DecisionRow[]>([]);
 
   useEffect(() => {
     fetchGovernanceData();
