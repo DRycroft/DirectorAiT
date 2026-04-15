@@ -319,11 +319,16 @@ const Meetings = () => {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     {format(new Date(m.meeting_date), "PPPp")}
                   </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to={`/meetings/${m.id}`}>
+                      Manage Agenda <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                    </Link>
+                  </Button>
                 </CardContent>
               </Card>
             ))}
