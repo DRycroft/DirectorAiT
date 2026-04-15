@@ -338,9 +338,7 @@ export const GovernanceSection = () => {
                             )}
                           </TableCell>
                           <TableCell>
-                            <span className="text-xs text-muted-foreground">
-                              {differenceInCalendarDays(new Date(), new Date(action.due_date || new Date()))}d
-                            </span>
+                            <span className="text-xs text-muted-foreground">—</span>
                           </TableCell>
                           <TableCell>
                             <Badge

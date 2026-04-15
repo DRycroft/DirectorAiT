@@ -45,30 +45,23 @@ const scrollToSection = (sectionId: string) => {
 };
 
 export const BoardPulseSection = ({ data }: BoardPulseSectionProps) => {
-  // Default priority issues (breaching parameters)
-  const priorityIssues: PriorityIssue[] = data?.priorityIssues || [
-    {
-      title: 'Cash runway declining',
-      section: 'Financial Health',
-      sectionId: 'financial-section',
-      severity: 'high',
-      description: 'Cash on hand below 6 months runway'
-    },
-    {
-      title: 'Key staff departures',
-      section: 'People & HR',
-      sectionId: 'people-section',
-      severity: 'medium',
-      description: 'Staff turnover above target threshold'
-    },
-    {
-      title: 'Customer retention declining',
-      section: 'Customers & Sales',
-      sectionId: 'customers-sales-section',
-      severity: 'medium',
-      description: 'NRR trending below 100%'
-    }
-  ];
+  const priorityIssues: PriorityIssue[] = data?.priorityIssues || [];
+
+  if (priorityIssues.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-2xl font-bold mb-1">Priority Matters</h2>
+          <p className="text-sm text-muted-foreground">Items requiring immediate attention</p>
+        </div>
+        <Card>
+          <CardContent className="py-8 text-center text-muted-foreground">
+            No priority issues detected. All parameters within normal range.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -105,9 +98,9 @@ export const BoardPulseSection = ({ data }: BoardPulseSectionProps) => {
                     {config.label}
                   </span>
                 </div>
-                <div className="text-sm text-slate-700">{issue.description}</div>
-                <div className="text-xs text-slate-600">
-                  Section: <span className="font-medium text-slate-700">{issue.section}</span>
+                <div className="text-sm text-muted-foreground">{issue.description}</div>
+                <div className="text-xs text-muted-foreground">
+                  Section: <span className="font-medium">{issue.section}</span>
                 </div>
               </CardContent>
             </Card>

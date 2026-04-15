@@ -158,35 +158,35 @@ const BoardDetail = () => {
           <Separator />
 
           {/* Financial Health */}
-          <div id="financial-section" className="border-4 border-red-500 rounded-lg p-4">
+          <div id="financial-section">
             <FinancialSection />
           </div>
 
           <Separator />
 
           {/* People & HR */}
-          <div id="people-section" className="border-4 border-amber-500 rounded-lg p-4">
+          <div id="people-section">
             <PeopleSection />
           </div>
 
           <Separator />
 
           {/* Health & Safety */}
-          <div id="health-safety-section" className="border-4 border-green-500 rounded-lg p-4">
+          <div id="health-safety-section">
             <HealthSafetySection />
           </div>
 
           <Separator />
 
           {/* Customers & Sales */}
-          <div id="customers-sales-section" className="border-4 border-amber-500 rounded-lg p-4">
+          <div id="customers-sales-section">
             <CustomersSalesSection />
           </div>
 
           <Separator />
 
           {/* Governance & Board Actions */}
-          <div id="governance-section" className="border-4 border-green-500 rounded-lg p-4">
+          <div id="governance-section">
             <GovernanceSection />
           </div>
         </div>
