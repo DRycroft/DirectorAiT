@@ -455,7 +455,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
 
       toast({
         title: "Success",
-        description: "Team member added successfully",
+        description: isEditMode ? "Team member updated successfully" : "Team member added successfully",
       });
 
       form.reset();
