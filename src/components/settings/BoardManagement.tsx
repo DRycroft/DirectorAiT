@@ -348,6 +348,7 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
           <MembersList
             boardId={selectedBoard}
             memberType={memberType}
+            organizationName={organizationName}
             key={refreshMembers}
           />
         ) : (
