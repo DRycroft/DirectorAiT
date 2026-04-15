@@ -151,15 +151,40 @@ const baseFormSchema = z.object({
 
 type FormValues = z.infer<typeof baseFormSchema> & Record<string, any>;
 
+interface EditMemberData {
+  id: string;
+  full_name: string;
+  preferred_title?: string | null;
+  position?: string | null;
+  member_type?: string | null;
+  appointment_date?: string | null;
+  term_expiry?: string | null;
+  public_social_links?: any;
+  reports_responsible_for?: any;
+  reports_to?: string | null;
+  professional_qualifications?: string | null;
+  personal_interests?: string | null;
+  custom_fields?: any;
+  // Sensitive fields (loaded separately)
+  home_address?: string | null;
+  date_of_birth?: string | null;
+  personal_email?: string | null;
+  personal_mobile?: string | null;
+  health_notes?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+}
+
 interface AddPersonDialogProps {
   boardId: string;
   organizationName: string;
   onSuccess: () => void;
   trigger?: React.ReactNode;
   defaultMemberType?: 'board' | 'executive' | 'key_staff';
+  editMember?: EditMemberData;
 }
 
-export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger, defaultMemberType }: AddPersonDialogProps) {
+export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger, defaultMemberType, editMember }: AddPersonDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [existingMembers, setExistingMembers] = useState<Array<{ id: string; full_name: string; position: string | null }>>([]);
@@ -167,27 +192,45 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
   const [loadingTemplate, setLoadingTemplate] = useState(false);
   const { toast } = useToast();
 
+  const isEditMode = !!editMember;
+
+  const buildDefaultValues = (): Record<string, any> => {
+    const defaults: Record<string, any> = {
+      member_type: editMember?.member_type as any || defaultMemberType || "board",
+      full_name: editMember?.full_name || "",
+      preferred_title: editMember?.preferred_title || "",
+      position: editMember?.position || "",
+      home_address: editMember?.home_address || "",
+      personal_email: editMember?.personal_email || "",
+      personal_mobile: editMember?.personal_mobile || "",
+      public_social_links: editMember?.public_social_links?.linkedin || "",
+      reports_responsible_for: Array.isArray(editMember?.reports_responsible_for)
+        ? editMember.reports_responsible_for.join(", ")
+        : "",
+      reports_to: editMember?.reports_to || "",
+      professional_qualifications: editMember?.professional_qualifications || "",
+      personal_interests: editMember?.personal_interests || "",
+      health_notes: editMember?.health_notes || "",
+      emergency_contact_name: editMember?.emergency_contact_name || "",
+      emergency_contact_phone: editMember?.emergency_contact_phone || "",
+    };
+    if (editMember?.appointment_date) {
+      defaults.starting_date = new Date(editMember.appointment_date);
+    }
+    if (editMember?.term_expiry) {
+      defaults.finishing_date = new Date(editMember.term_expiry);
+    }
+    if (editMember?.date_of_birth) {
+      defaults.date_of_birth = new Date(editMember.date_of_birth);
+    }
+    return defaults;
+  };
+
   const [formSchema, setFormSchema] = useState(baseFormSchema);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      member_type: defaultMemberType || "board",
-      full_name: "",
-      preferred_title: "",
-      position: "",
-      home_address: "",
-      personal_email: "",
-      personal_mobile: "",
-      public_social_links: "",
-      reports_responsible_for: "",
-      reports_to: "",
-      professional_qualifications: "",
-      personal_interests: "",
-      health_notes: "",
-      emergency_contact_name: "",
-      emergency_contact_phone: "",
-    },
+    defaultValues: buildDefaultValues(),
   });
 
   const memberType = form.watch("member_type");
@@ -336,8 +379,8 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
         if (otherName) customFields.reports_to_custom = otherName;
       }
 
-      // Insert board member (without sensitive fields)
-      const insertData: BoardMemberInsert = {
+      // Build the member data object
+      const memberData = {
         board_id: boardId,
         member_type: values.member_type,
         full_name: values.full_name,
@@ -351,25 +394,13 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
           : null,
         public_social_links: Object.keys(socialLinks).length > 0 ? socialLinks : null,
         reports_responsible_for: reportsArray.length > 0 ? reportsArray : null,
-        // Only store a UUID in the DB column. Presets/custom names go into custom_fields.
         reports_to: isUuid(selectedReportsTo) ? selectedReportsTo : null,
         professional_qualifications: values.professional_qualifications || null,
         personal_interests: values.personal_interests || null,
         custom_fields: Object.keys(customFields).length > 0 ? customFields : null,
-        status: "active",
       };
 
-      const { data: newMember, error } = await supabase
-        .from("board_members")
-        .insert(insertData)
-        .select('id')
-        .single();
-
-      if (error) throw error;
-
-      // Insert sensitive data into board_members_sensitive
       const sensitiveData = {
-        member_id: newMember.id,
         home_address: values.home_address || null,
         date_of_birth: values.date_of_birth instanceof Date
           ? values.date_of_birth.toISOString().split("T")[0]
@@ -381,18 +412,50 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
         emergency_contact_phone: values.emergency_contact_phone || null,
       };
 
-      const { error: sensitiveError } = await supabase
-        .from("board_members_sensitive")
-        .insert(sensitiveData);
+      let memberId: string;
 
-      if (sensitiveError) {
-        // Log error but don't fail the whole operation
-        logError("AddPersonDialog - Insert sensitive data", sensitiveError);
+      if (editMember) {
+        // UPDATE existing member
+        const { error } = await supabase
+          .from("board_members")
+          .update(memberData)
+          .eq("id", editMember.id);
+
+        if (error) throw error;
+        memberId = editMember.id;
+
+        // Upsert sensitive data
+        const { error: sensitiveError } = await supabase
+          .from("board_members_sensitive")
+          .upsert({ member_id: memberId, ...sensitiveData }, { onConflict: "member_id" });
+
+        if (sensitiveError) {
+          logError("AddPersonDialog - Update sensitive data", sensitiveError);
+        }
+      } else {
+        // INSERT new member
+        const { data: newMember, error } = await supabase
+          .from("board_members")
+          .insert({ ...memberData, status: "active" } as BoardMemberInsert)
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        memberId = newMember.id;
+
+        // Insert sensitive data
+        const { error: sensitiveError } = await supabase
+          .from("board_members_sensitive")
+          .insert({ member_id: memberId, ...sensitiveData });
+
+        if (sensitiveError) {
+          logError("AddPersonDialog - Insert sensitive data", sensitiveError);
+        }
       }
 
       toast({
         title: "Success",
-        description: "Team member added successfully",
+        description: isEditMode ? "Team member updated successfully" : "Team member added successfully",
       });
 
       form.reset();
@@ -684,12 +747,12 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl">
-            <div className="mb-1 text-lg font-normal text-muted-foreground">
-              {organizationName}
-            </div>
-            {getMemberTypeLabel()} Form
-          </DialogTitle>
+            <DialogTitle className="text-center text-2xl">
+              <div className="mb-1 text-lg font-normal text-muted-foreground">
+                {organizationName}
+              </div>
+              {isEditMode ? `Edit ${getMemberTypeLabel()}` : `${getMemberTypeLabel()} Form`}
+            </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -782,7 +845,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
                 Cancel
               </Button>
               <Button type="submit" disabled={loading || formTemplate.length === 0}>
-                {loading ? "Adding..." : "Add Team Member"}
+                {loading ? (isEditMode ? "Saving..." : "Adding...") : (isEditMode ? "Save Changes" : "Add Team Member")}
               </Button>
             </div>
           </form>

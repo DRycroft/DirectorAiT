@@ -83,16 +83,10 @@ const Onboarding = () => {
         if (orgError) throw orgError;
       }
 
-      // Update profile with job title and phone
-      const profileUpdate: Record<string, string | null> = {};
-      if (profileData.jobTitle.trim()) {
-        profileUpdate.phone = profileData.phone || null;
-      }
-      if (profileData.phone) {
-        profileUpdate.phone = profileData.phone;
-      }
-
-      // Always update phone and mark onboarding complete
+      // Update profile with phone and mark onboarding complete
+      // Note: jobTitle is captured in the form but the profiles table
+      // does not yet have a job_title column — it will be saved once
+      // the column is added in a future migration.
       const { error: profileUpdateError } = await supabase
         .from("profiles")
         .update({

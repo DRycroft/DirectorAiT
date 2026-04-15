@@ -3,10 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Mail, Copy, Loader2, XCircle } from "lucide-react";
+import { Mail, Copy, Loader2, XCircle, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { logError } from "@/lib/errorHandling";
+import { AddPersonDialog } from "@/components/AddPersonDialog";
 
 interface Member {
   id: string;
@@ -22,14 +23,16 @@ interface Member {
 interface MembersListProps {
   boardId: string;
   memberType: "board" | "executive" | "key_staff";
+  organizationName?: string;
   onRefresh?: () => void;
 }
 
-export function MembersList({ boardId, memberType, onRefresh: _onRefresh }: MembersListProps) {
+export function MembersList({ boardId, memberType, organizationName, onRefresh: _onRefresh }: MembersListProps) {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingInvite, setGeneratingInvite] = useState<string | null>(null);
   const [revokingInvite, setRevokingInvite] = useState<string | null>(null);
+  const [editingMember, setEditingMember] = useState<any>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -195,6 +198,38 @@ export function MembersList({ boardId, memberType, onRefresh: _onRefresh }: Memb
     }
   };
 
+  const handleEditMember = async (memberId: string) => {
+    try {
+      // Load full member data including sensitive fields
+      const [memberRes, sensitiveRes] = await Promise.all([
+        supabase
+          .from("board_members")
+          .select("*")
+          .eq("id", memberId)
+          .single(),
+        supabase
+          .from("board_members_sensitive")
+          .select("*")
+          .eq("member_id", memberId)
+          .maybeSingle(),
+      ]);
+
+      if (memberRes.error) throw memberRes.error;
+
+      setEditingMember({
+        ...memberRes.data,
+        ...(sensitiveRes.data || {}),
+      });
+    } catch (error) {
+      logError("MembersList - Load member for edit", error);
+      toast({
+        title: "Error",
+        description: "Failed to load member data for editing",
+        variant: "destructive",
+      });
+    }
+  };
+
   const isArchived = (member: Member) => {
     if (!member.term_expiry) return false;
     return new Date(member.term_expiry) < new Date();
@@ -315,10 +350,31 @@ export function MembersList({ boardId, memberType, onRefresh: _onRefresh }: Memb
                               )}
                             </Button>
                           </div>
+                        ) : member.status === "active" ? (
+                          <AddPersonDialog
+                            boardId={boardId}
+                            organizationName={organizationName || ""}
+                            defaultMemberType={memberType}
+                            editMember={editingMember?.id === member.id ? editingMember : undefined}
+                            onSuccess={() => {
+                              setEditingMember(null);
+                              loadMembers();
+                            }}
+                            trigger={
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditMember(member.id)}
+                              >
+                                <Pencil className="h-4 w-4 mr-1" />
+                                Edit
+                              </Button>
+                            }
+                          />
                         ) : member.status === "revoked" ? (
                           <span className="text-xs text-muted-foreground">Revoked</span>
                         ) : (
-                          <span className="text-xs text-muted-foreground">Active</span>
+                          <span className="text-xs text-muted-foreground">{member.status}</span>
                         )}
                       </TableCell>
                     </>
