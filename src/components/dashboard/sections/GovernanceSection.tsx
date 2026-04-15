@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardGrid, DashboardSection } from "../DashboardLayout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, FileText, Calendar, Loader2, Clock } from "lucide-react";
+import { AlertCircle, FileText, Calendar, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { format, isPast, isToday, differenceInCalendarDays } from "date-fns";
