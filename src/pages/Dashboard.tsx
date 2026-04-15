@@ -325,14 +325,14 @@ const Dashboard = () => {
             value={stats.pendingApprovals}
             icon={AlertCircle}
             description="Awaiting review"
-            onClick={() => navigate("/approvals")}
+            onClick={() => navigate("/compliance")}
           />
           <StatCard
-            title="Intelligence Scans"
-            value={0}
+            title="Meetings"
+            value={stats.activeAgendas}
             icon={TrendingUp}
-            description="Competitor monitoring"
-            onClick={() => navigate("/intelligence")}
+            description="Upcoming & active"
+            onClick={() => navigate("/meetings")}
           />
         </div>
 

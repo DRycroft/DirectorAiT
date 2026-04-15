@@ -305,7 +305,6 @@ export const GovernanceSection = () => {
                       <TableHead>Action</TableHead>
                       <TableHead>Owner</TableHead>
                       <TableHead>Due Date</TableHead>
-                      <TableHead>Age</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -338,9 +337,7 @@ export const GovernanceSection = () => {
                             )}
                           </TableCell>
                           <TableCell>
-                            <span className="text-xs text-muted-foreground">
-                              {differenceInCalendarDays(new Date(), new Date(action.due_date || new Date()))}d
-                            </span>
+                            <span className="text-xs text-muted-foreground">—</span>
                           </TableCell>
                           <TableCell>
                             <Badge
