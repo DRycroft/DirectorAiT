@@ -17,6 +17,7 @@ import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PackTemplateBuilder } from '@/components/PackTemplateBuilder';
+import { DocumentUploads } from '@/components/DocumentUploads';
 
 export default function PackManagement() {
   const navigate = useNavigate();
@@ -268,6 +269,11 @@ export default function PackManagement() {
             </div>
           )}
         </Card>
+
+        {/* Supporting Documents Section */}
+        <div className="mt-8">
+          <DocumentUploads />
+        </div>
       </div>
     </div>
   );
