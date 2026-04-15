@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getUserFriendlyError } from "@/lib/errorHandling";
+import { Loader2 } from "lucide-react";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -16,6 +17,19 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [validRecovery, setValidRecovery] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Check if the user arrived via a valid recovery flow.
+    // Supabase exchanges the recovery token in the URL hash for a session
+    // before this page mounts. If there's an active session, the user got
+    // here legitimately. If not, they navigated here directly.
+    const checkRecoverySession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setValidRecovery(!!session);
+    };
+    checkRecoverySession();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +56,38 @@ const ResetPassword = () => {
       setLoading(false);
     }
   };
+
+  // Loading state while checking recovery session
+  if (validRecovery === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-accent/5 to-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // No valid recovery session — user navigated here directly
+  if (!validRecovery) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-accent/5 to-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <img src="/directorait-logo.png" alt="DirectorAiT" className="h-10 mx-auto mb-2" />
+            <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-2" />
+            <CardTitle>Invalid Reset Link</CardTitle>
+            <CardDescription>
+              This password reset link is invalid or has expired. Please request a new one from the login page.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Link to="/auth/forgot-password">
+              <Button variant="outline">Request New Reset Link</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-accent/5 to-background p-4">

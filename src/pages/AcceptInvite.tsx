@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Loader2, UserPlus, LogIn, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getUserFriendlyError } from "@/lib/errorHandling";
+import { passwordSchema, PASSWORD_REQUIREMENTS_TEXT } from "@/lib/passwordSchema";
+import { z } from "zod";
 
 interface InviteData {
   id: string;
