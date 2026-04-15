@@ -98,8 +98,21 @@ const Onboarding = () => {
       // Clean up session data
       sessionStorage.removeItem(PENDING_SIGNUP_KEY);
 
+      // Check if user has a board_members record (from invite flow) — send them to complete profile
+      const { data: boardMember } = await supabase
+        .from("board_members")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+
       toast.success("Setup complete! Welcome to DirectorAiT.");
-      navigate("/dashboard");
+
+      if (boardMember) {
+        navigate("/my-profile");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       toast.error(getUserFriendlyError(error));
     } finally {

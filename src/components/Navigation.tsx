@@ -12,6 +12,7 @@ const Navigation = () => {
   const [user, setUser] = useState<User | null>(null);
 
   const isActive = (path: string) => {
+    if (path === '/my-profile') return location.pathname === '/my-profile';
     if (path === '/team') return location.pathname === '/team';
     if (path === '/dashboard') return location.pathname === '/dashboard';
     if (path === '/boards-committees') return location.pathname === '/boards-committees';
