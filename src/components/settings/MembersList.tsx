@@ -350,10 +350,28 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
                               )}
                             </Button>
                           </div>
-                        ) : member.status === "revoked" ? (
-                          <span className="text-xs text-muted-foreground">Revoked</span>
+                        ) : member.status === "active" ? (
+                          <AddPersonDialog
+                            boardId={boardId}
+                            organizationName={organizationName || ""}
+                            defaultMemberType={memberType}
+                            editMember={editingMember?.id === member.id ? editingMember : undefined}
+                            onSuccess={() => {
+                              setEditingMember(null);
+                              loadMembers();
+                            }}
+                            trigger={
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditMember(member.id)}
+                              >
+                                <Pencil className="h-4 w-4 mr-1" />
+                                Edit
+                              </Button>
+                            }
+                          />
                         ) : (
-                          <span className="text-xs text-muted-foreground">Active</span>
                         )}
                       </TableCell>
                     </>
