@@ -26,12 +26,6 @@ interface BoardMemberRecord {
   board_id: string;
 }
 
-interface SensitiveRecord {
-  personal_mobile: string | null;
-  personal_email: string | null;
-  emergency_contact_name: string | null;
-  emergency_contact_phone: string | null;
-}
 
 const MyProfile = () => {
   const { user } = useAuth();
