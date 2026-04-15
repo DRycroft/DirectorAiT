@@ -15,7 +15,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle, Lock, Unlock, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle, Lock, Unlock, ShieldCheck, Printer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -228,17 +228,27 @@ export default function PackView() {
     );
   }
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${!isFinalised ? 'print-draft-watermark' : ''}`}>
       <div className="container mx-auto py-8 px-4 max-w-4xl">
-        <Button variant="ghost" onClick={() => navigate(`/pack/${packId}/sections`)} className="mb-6">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Sections
-        </Button>
+        <div className="flex items-center justify-between mb-6 print:hidden">
+          <Button variant="ghost" onClick={() => navigate(`/pack/${packId}/sections`)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Sections
+          </Button>
+          <Button variant="outline" onClick={handlePrint}>
+            <Printer className="h-4 w-4 mr-2" />
+            Export PDF
+          </Button>
+        </div>
 
         {/* Finalised banner */}
         {isFinalised && (
-          <div className="mb-6 p-4 rounded-lg border border-success/30 bg-success/5 flex items-center gap-3">
+          <div className="mb-6 p-4 rounded-lg border border-success/30 bg-success/5 flex items-center gap-3 print:hidden">
             <ShieldCheck className="h-5 w-5 text-success shrink-0" />
             <div className="flex-1">
               <p className="font-semibold text-sm">This pack has been finalised</p>
@@ -297,33 +307,35 @@ export default function PackView() {
             </div>
 
             {!isFinalised && canManagePack && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button disabled={isFinalising}>
-                    <Lock className="h-4 w-4 mr-2" />
-                    {isFinalising ? 'Finalising…' : 'Finalise Pack'}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Finalise this board pack?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Once finalised, sections cannot be edited until the pack is unlocked by an administrator.
-                      {submittedCount < sections.length && (
-                        <span className="block mt-2 text-warning font-medium">
-                          Warning: {sections.length - submittedCount} section(s) have not been submitted yet.
-                        </span>
-                      )}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleFinalisePack}>
-                      Finalise Pack
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <div className="print:hidden">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button disabled={isFinalising}>
+                      <Lock className="h-4 w-4 mr-2" />
+                      {isFinalising ? 'Finalising…' : 'Finalise Pack'}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Finalise this board pack?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Once finalised, sections cannot be edited until the pack is unlocked by an administrator.
+                        {submittedCount < sections.length && (
+                          <span className="block mt-2 text-warning font-medium">
+                            Warning: {sections.length - submittedCount} section(s) have not been submitted yet.
+                          </span>
+                        )}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleFinalisePack}>
+                        Finalise Pack
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             )}
           </div>
         </div>
