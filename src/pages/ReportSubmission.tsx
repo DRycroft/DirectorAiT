@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Save, FileText } from 'lucide-react';
+import { ArrowLeft, Save, FileText, Lock } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +23,7 @@ interface SectionDetails {
   pack: {
     title: string;
     meeting_date: string;
+    status: string | null;
   };
 }
 
@@ -53,7 +54,7 @@ export default function ReportSubmission() {
           title,
           pack_id,
           status,
-          pack:board_packs(title, meeting_date)
+          pack:board_packs(title, meeting_date, status)
         `)
         .eq('id', sectionId)
         .single();
