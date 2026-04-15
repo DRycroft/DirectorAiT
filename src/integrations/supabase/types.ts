@@ -2628,6 +2628,7 @@ export type Database = {
         Args: { p_org_id: string }
         Returns: undefined
       }
+      finalise_board_pack: { Args: { _pack_id: string }; Returns: undefined }
       generate_member_invite_token: {
         Args: { _board_id?: string }
         Returns: string
@@ -2676,6 +2677,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      unlock_board_pack: { Args: { _pack_id: string }; Returns: undefined }
       user_can_create_in_org: {
         Args: { check_org_id: string }
         Returns: boolean
