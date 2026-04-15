@@ -36,6 +36,7 @@ const BoardPapers = lazy(() => import("./pages/BoardPapers"));
 const BoardPaperDocument = lazy(() => import("./pages/BoardPaperDocument"));
 const MemberIntake = lazy(() => import("./pages/MemberIntake"));
 const MemberInvite = lazy(() => import("./pages/MemberInvite"));
+const MyProfile = lazy(() => import("./pages/MyProfile"));
 const MemberApproval = lazy(() => import("./pages/MemberApproval"));
 const ExportTeam = lazy(() => import("./pages/ExportTeam"));
 const BoardsAndCommittees = lazy(() => import("./pages/BoardsAndCommittees"));
