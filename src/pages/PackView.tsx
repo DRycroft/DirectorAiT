@@ -294,7 +294,7 @@ export default function PackView() {
               </div>
             </div>
 
-            {!isFinalised && (
+            {!isFinalised && canManagePack && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button disabled={isFinalising}>
