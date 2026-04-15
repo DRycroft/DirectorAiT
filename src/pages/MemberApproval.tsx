@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { logError } from "@/lib/errorHandling";
 import { useNavigate, useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
