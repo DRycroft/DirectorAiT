@@ -90,7 +90,7 @@ const Onboarding = () => {
           job_title: profileData.jobTitle.trim() || null,
           phone: profileData.phone || null,
           onboarding_complete: true,
-        } as any)
+        })
         .eq("id", user.id);
 
       if (profileUpdateError) throw profileUpdateError;
