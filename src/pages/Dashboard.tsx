@@ -311,6 +311,7 @@ const Dashboard = () => {
             value={stats.pendingActions}
             icon={CheckCircle2}
             description="Requiring attention"
+            onClick={() => navigate("/actions")}
           />
           <StatCard
             title="Documents"
