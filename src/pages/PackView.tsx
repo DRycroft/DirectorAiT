@@ -98,6 +98,8 @@ export default function PackView() {
     if (!pack?.board_id) return;
     await governanceAI.execute({ action: 'director-briefing', boardId: pack.board_id });
   };
+
+  useEffect(() => {
     if (packId) loadAssembledPack();
   }, [packId]);
 
