@@ -386,7 +386,26 @@ const MeetingDetail = () => {
               )}
             </div>
           </div>
+          {!isFinalised && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleCloseMeeting}
+            >
+              <Lock className="h-4 w-4 mr-1" /> Close Meeting
+            </Button>
+          )}
           <Badge variant={statusVariant(agenda.status)}>{statusLabel(agenda.status)}</Badge>
+        </div>
+
+        {/* ===== ATTENDANCE & QUORUM ===== */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Attendance & Quorum</h2>
+          <MeetingAttendance
+            agendaId={agenda.id}
+            boardId={agenda.board_id}
+            isFinalised={isFinalised}
+          />
         </div>
 
         {/* ===== AGENDA ITEMS ===== */}
