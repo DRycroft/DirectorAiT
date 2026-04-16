@@ -7,6 +7,8 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useGovernanceAI } from "@/hooks/useGovernanceAI";
+import AIResultPanel from "@/components/AIResultPanel";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
