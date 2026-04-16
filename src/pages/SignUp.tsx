@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Eye, EyeOff, RefreshCw, Copy, Check } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -52,6 +53,7 @@ const PENDING_SIGNUP_KEY = "pendingSignUpV2";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -89,6 +91,13 @@ const SignUp = () => {
     }
   }, [formData.password]);
 
+  const submittingRef = useRef(false);
+
+  // Redirect already-authenticated users (after all hooks)
+  if (!authLoading && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   const validateField = (fieldName: string, value: any) => {
     try {
       const fieldSchema = (signUpSchema.shape as any)[fieldName];
@@ -107,7 +116,7 @@ const SignUp = () => {
     }
   };
 
-  const submittingRef = useRef(false);
+  // submittingRef already declared above
 
   const handleSignUp = async (e: React.FormEvent) => {
     console.count("[SIGNUP] handleSignUp invoked");

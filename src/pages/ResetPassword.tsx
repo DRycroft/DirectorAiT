@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getUserFriendlyError } from "@/lib/errorHandling";
+import { passwordSchema, PASSWORD_REQUIREMENTS_TEXT } from "@/lib/passwordSchema";
 import { Loader2 } from "lucide-react";
 
 const ResetPassword = () => {
@@ -34,8 +35,10 @@ const ResetPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!password.trim()) {
-      toast.error("Please enter a new password");
+    // Validate password with shared policy
+    const passwordResult = passwordSchema.safeParse(password);
+    if (!passwordResult.success) {
+      toast.error(passwordResult.error.errors[0].message);
       return;
     }
 
@@ -138,6 +141,7 @@ const ResetPassword = () => {
                     )}
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">{PASSWORD_REQUIREMENTS_TEXT}</p>
               </div>
 
               <div className="space-y-2">
