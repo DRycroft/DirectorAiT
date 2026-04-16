@@ -77,41 +77,29 @@ const ExecutiveDashboard = () => {
         <div className="space-y-8 mt-8">
           <Separator />
 
-          {/* Financial Health — placeholder data */}
-          <div id="financial-section" className="relative">
-            <div className="absolute top-2 right-2 z-10">
-              <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Sample data</span>
-            </div>
+          {/* Financial Health */}
+          <div id="financial-section">
             <FinancialSection />
           </div>
 
           <Separator />
 
-          {/* People & HR — placeholder data */}
-          <div id="people-section" className="relative">
-            <div className="absolute top-2 right-2 z-10">
-              <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Sample data</span>
-            </div>
+          {/* People & HR */}
+          <div id="people-section">
             <PeopleSection />
           </div>
 
           <Separator />
 
-          {/* Health & Safety — placeholder data */}
-          <div id="health-safety-section" className="relative">
-            <div className="absolute top-2 right-2 z-10">
-              <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Sample data</span>
-            </div>
+          {/* Health & Safety */}
+          <div id="health-safety-section">
             <HealthSafetySection />
           </div>
 
           <Separator />
 
-          {/* Customers & Sales — placeholder data */}
-          <div id="customers-sales-section" className="relative">
-            <div className="absolute top-2 right-2 z-10">
-              <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Sample data</span>
-            </div>
+          {/* Customers & Sales */}
+          <div id="customers-sales-section">
             <CustomersSalesSection />
           </div>
 
