@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { getUserFriendlyError } from '@/lib/errorHandling';
 
 interface CommitteeMember {
   id: string;
@@ -139,7 +140,7 @@ export default function CommitteeMembersDialog({
       fetchData();
     } catch (error: any) {
       console.error("Error adding member:", error);
-      toast.error(error.message || "Failed to add member");
+      toast.error(getUserFriendlyError(error));
     }
   };
 
@@ -156,7 +157,7 @@ export default function CommitteeMembersDialog({
       fetchData();
     } catch (error: any) {
       console.error("Error removing member:", error);
-      toast.error(error.message || "Failed to remove member");
+      toast.error(getUserFriendlyError(error));
     }
   };
 

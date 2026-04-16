@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, UserPlus, Trash2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { logError } from "@/lib/errorHandling";
+import { logError, getUserFriendlyError } from '@/lib/errorHandling';
 import { UserRoleWithProfile, Profile, AppRole } from "@/types/database";
 import { toast } from "sonner";
 
@@ -131,7 +131,7 @@ export const RoleManagement = () => {
       await fetchData();
     } catch (error: any) {
       logError("RoleManagement - Assign role", error);
-      toast.error(error.message || "Failed to assign role");
+      toast.error(getUserFriendlyError(error));
     }
   };
 

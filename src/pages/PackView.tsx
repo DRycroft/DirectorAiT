@@ -23,6 +23,7 @@ import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle, Lock, 
 import { supabase } from '@/integrations/supabase/client';
 import { fetchGovernanceSnapshot, type GovernanceSnapshot } from '@/lib/packAutoPopulate';
 import { toast } from "sonner";
+import { getUserFriendlyError } from '@/lib/errorHandling';
 
 interface PackDetails {
   id: string;
@@ -189,7 +190,7 @@ export default function PackView() {
         }
       }
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     } finally {
       setIsLoading(false);
     }
@@ -204,7 +205,7 @@ export default function PackView() {
       toast.success("This board pack is now locked and ready for distribution.");
       loadAssembledPack();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     } finally {
       setIsFinalising(false);
     }
@@ -219,7 +220,7 @@ export default function PackView() {
       toast.success("This board pack has been returned to draft status.");
       loadAssembledPack();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     } finally {
       setIsUnlocking(false);
     }
@@ -262,7 +263,7 @@ export default function PackView() {
       toast.success(`Sent to ${memberships.length} board member(s).`);
       loadAssembledPack();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     } finally {
       setIsDistributing(false);
     }
@@ -292,7 +293,7 @@ export default function PackView() {
       toast.success("You have confirmed reading this pack.");
       loadAssembledPack();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     }
   };
 
@@ -307,7 +308,7 @@ export default function PackView() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     }
   };
 

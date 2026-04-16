@@ -123,7 +123,7 @@ export default function BoardsManagement() {
       setParentBoards(activeBoards || []);
     } catch (error: any) {
       logError("BoardsManagement.fetchBoards", error);
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     } finally {
       setLoading(false);
     }
@@ -291,7 +291,7 @@ export default function BoardsManagement() {
       setSelectedBoard(null);
       fetchBoards();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     }
   };
 
@@ -348,7 +348,7 @@ export default function BoardsManagement() {
       setSelectedBoard(null);
       fetchBoards();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     }
   };
 

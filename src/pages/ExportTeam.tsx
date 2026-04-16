@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Download, FileText, Table, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { getUserFriendlyError } from '@/lib/errorHandling';
 
 const ExportTeam = () => {
   const { boardId } = useParams();
@@ -32,7 +33,7 @@ const ExportTeam = () => {
 
       toast.success(`Exported ${data.memberCount} members`);
     } catch (error: any) {
-      toast.error(error.message || "Failed to export team data");
+      toast.error(getUserFriendlyError(error));
     }
   };
 

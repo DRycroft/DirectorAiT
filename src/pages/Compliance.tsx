@@ -16,6 +16,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from "sonner";
 import { Plus, AlertCircle, CheckCircle, Clock, Building2, ChevronDown, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
+import { getUserFriendlyError } from '@/lib/errorHandling';
 
 interface ComplianceItem {
   id: string;
@@ -168,7 +169,7 @@ const Compliance = () => {
       fetchData();
     } catch (error: any) {
       console.error("Error:", error);
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     }
   };
 
@@ -192,7 +193,7 @@ const Compliance = () => {
       fetchData();
     } catch (error: any) {
       console.error("Error:", error);
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     }
   };
 
@@ -219,7 +220,7 @@ const Compliance = () => {
       fetchData();
     } catch (error: any) {
       console.error("Error scanning compliance:", error);
-      toast.error(error.message || "Failed to scan compliance requirements");
+      toast.error(getUserFriendlyError(error));
     } finally {
       setScanning(false);
     }

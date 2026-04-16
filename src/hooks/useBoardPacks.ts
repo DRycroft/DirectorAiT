@@ -8,6 +8,7 @@ import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
+import { getUserFriendlyError } from '@/lib/errorHandling';
 
 export interface BoardTemplate {
   id: string;
@@ -152,7 +153,7 @@ export function useBoardPacks(boardId?: string) {
       toast.success("Your board template has been saved successfully.");
     },
     onError: (error: Error) => {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     },
   });
 
@@ -215,7 +216,7 @@ export function useBoardPacks(boardId?: string) {
       toast.success("Board pack created from template successfully.");
     },
     onError: (error: Error) => {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     },
   });
 
@@ -312,7 +313,7 @@ export function useBoardPacks(boardId?: string) {
       toast.success("Your report has been submitted successfully.");
     },
     onError: (error: Error) => {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     },
   });
 

@@ -14,6 +14,7 @@ import { ArrowLeft, Save, FileText, Lock } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
+import { getUserFriendlyError } from '@/lib/errorHandling';
 
 interface SectionDetails {
   id: string;
@@ -76,7 +77,7 @@ export default function ReportSubmission() {
         setCurrentVersion(docData.version_number || 0);
       }
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     } finally {
       setIsLoading(false);
     }
@@ -103,7 +104,7 @@ export default function ReportSubmission() {
         navigate(-1);
       }, 1500);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to submit report.');
+      toast.error(getUserFriendlyError(error));
     }
   };
 

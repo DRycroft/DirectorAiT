@@ -20,6 +20,7 @@ import { ArrowLeft, FileText, CheckCircle2, Clock, Edit, Eye, Lock, ShieldCheck,
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
+import { getUserFriendlyError } from '@/lib/errorHandling';
 
 interface PackWithSections {
   id: string;
@@ -69,7 +70,7 @@ export default function PackSections() {
       const sectionsData = await fetchPackSections(packId);
       setSections(sectionsData || []);
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +92,7 @@ export default function PackSections() {
       setShowAddSection(false);
       loadPackData();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     }
   };
 
@@ -102,7 +103,7 @@ export default function PackSections() {
       toast.success("Section removed");
       loadPackData();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
     }
   };
 

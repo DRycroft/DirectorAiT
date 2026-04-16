@@ -23,6 +23,7 @@ import { BOARD_POSITIONS, EXECUTIVE_POSITIONS, KEY_STAFF_POSITIONS } from "@/con
 
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+import { getUserFriendlyError } from '@/lib/errorHandling';
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -721,7 +722,7 @@ const Settings = () => {
       }
     } catch (error: any) {
       console.error("Error analyzing business:", error);
-      toast.error(error.message || "Failed to analyze business description");
+      toast.error(getUserFriendlyError(error));
     } finally {
       setAnalyzing(false);
     }
@@ -767,7 +768,7 @@ const Settings = () => {
       .insert([templateData]);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(getUserFriendlyError(error));
       return;
     }
 

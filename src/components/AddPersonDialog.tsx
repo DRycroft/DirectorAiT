@@ -38,7 +38,7 @@ import { getPositionsByType } from "@/config/positions";
 import { Combobox } from "@/components/ui/combobox";
 import { Card } from "@/components/ui/card";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { logError } from "@/lib/errorHandling";
+import { logError, getUserFriendlyError } from '@/lib/errorHandling';
 import { TemplateField, BoardMemberInsert } from "@/types/database";
 import { toast } from "sonner";
 
@@ -461,7 +461,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
       onSuccess();
     } catch (error: any) {
       logError("AddPersonDialog - Add member", error);
-      toast.error(error.message || "Failed to add team member");
+      toast.error(getUserFriendlyError(error));
     } finally {
       setLoading(false);
     }
