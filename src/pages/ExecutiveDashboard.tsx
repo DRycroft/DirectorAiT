@@ -77,36 +77,48 @@ const ExecutiveDashboard = () => {
         <div className="space-y-8 mt-8">
           <Separator />
 
-          {/* Financial Health */}
-          <div id="financial-section" className="border-4 border-red-500 rounded-lg p-4">
+          {/* Financial Health — placeholder data */}
+          <div id="financial-section" className="relative">
+            <div className="absolute top-2 right-2 z-10">
+              <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Sample data</span>
+            </div>
             <FinancialSection />
           </div>
 
           <Separator />
 
-          {/* People & HR */}
-          <div id="people-section" className="border-4 border-amber-500 rounded-lg p-4">
+          {/* People & HR — placeholder data */}
+          <div id="people-section" className="relative">
+            <div className="absolute top-2 right-2 z-10">
+              <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Sample data</span>
+            </div>
             <PeopleSection />
           </div>
 
           <Separator />
 
-          {/* Health & Safety */}
-          <div id="health-safety-section" className="border-4 border-green-500 rounded-lg p-4">
+          {/* Health & Safety — placeholder data */}
+          <div id="health-safety-section" className="relative">
+            <div className="absolute top-2 right-2 z-10">
+              <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Sample data</span>
+            </div>
             <HealthSafetySection />
           </div>
 
           <Separator />
 
-          {/* Customers & Sales */}
-          <div id="customers-sales-section" className="border-4 border-amber-500 rounded-lg p-4">
+          {/* Customers & Sales — placeholder data */}
+          <div id="customers-sales-section" className="relative">
+            <div className="absolute top-2 right-2 z-10">
+              <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Sample data</span>
+            </div>
             <CustomersSalesSection />
           </div>
 
           <Separator />
 
-          {/* Governance & Board Actions */}
-          <div id="governance-section" className="border-4 border-green-500 rounded-lg p-4">
+          {/* Governance & Board Actions — live data */}
+          <div id="governance-section">
             <GovernanceSection />
           </div>
         </div>
