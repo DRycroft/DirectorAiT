@@ -346,6 +346,7 @@ const MeetingDetail = () => {
     }
   };
 
+  if (loading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
