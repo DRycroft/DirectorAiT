@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Calendar, Edit2, CalendarDays, ArrowRight } from "lucide-react";
+import { Plus, Calendar, Edit2, CalendarDays, ArrowRight, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
 
