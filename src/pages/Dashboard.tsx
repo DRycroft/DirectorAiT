@@ -76,7 +76,7 @@ interface PackRow {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { isBootstrapping } = useAuth();
+  const { isBootstrapping, user } = useAuth();
   const governanceAI = useGovernanceAI();
   const [askQuestion, setAskQuestion] = useState("");
   const [loading, setLoading] = useState(true);
