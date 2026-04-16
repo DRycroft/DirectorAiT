@@ -1789,15 +1789,6 @@ const Settings = () => {
             <AdminManagement />
           </TabsContent>
 
-          {/* Two-Person Approval Tab */}
-          <TabsContent value="approvals">
-            <TwoPersonApproval />
-          </TabsContent>
-
-          {/* COI Management Tab */}
-          <TabsContent value="coi">
-            <COIManagement />
-          </TabsContent>
 
           {/* Audit History Tab */}
           <TabsContent value="audit">

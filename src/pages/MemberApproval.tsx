@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, XCircle, Loader2, ArrowLeft } from "lucide-react";
 import MemberProfileTabs from "@/components/MemberProfileTabs";
-import COIManagement from "@/components/COIManagement";
+
 import AuditHistory from "@/components/AuditHistory";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
