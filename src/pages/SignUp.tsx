@@ -72,11 +72,6 @@ const SignUp = () => {
     userRole: "",
   });
 
-  // Redirect already-authenticated users (after all hooks)
-  if (!authLoading && user) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   useEffect(() => {
     // Clean up old V1 data if present
     sessionStorage.removeItem("pendingSignUpV1");
@@ -95,6 +90,13 @@ const SignUp = () => {
       setPasswordStrength(null);
     }
   }, [formData.password]);
+
+  const submittingRef = useRef(false);
+
+  // Redirect already-authenticated users (after all hooks)
+  if (!authLoading && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const validateField = (fieldName: string, value: any) => {
     try {
