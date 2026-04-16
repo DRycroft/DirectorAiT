@@ -18,5 +18,8 @@ verify_jwt = true
 [functions.analyze-business]
 verify_jwt = true
 
+[functions.governance-ai]
+verify_jwt = false
+
 [functions.send-invite-email]
 verify_jwt = false
