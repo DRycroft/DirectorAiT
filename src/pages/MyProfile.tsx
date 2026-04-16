@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface BoardMemberRecord {
   id: string;
@@ -124,10 +125,10 @@ const MyProfile = () => {
       setMember(found);
       localStorage.setItem(LAST_BOARD_KEY, memberId);
 
-      // Load sensitive data
+      // Load sensitive data (including rejection notes)
       const { data: sensitive } = await supabase
         .from("board_members_sensitive")
-        .select("personal_mobile, personal_email, emergency_contact_name, emergency_contact_phone")
+        .select("personal_mobile, personal_email, emergency_contact_name, emergency_contact_phone, sensitive_notes")
         .eq("member_id", memberId)
         .maybeSingle();
 
