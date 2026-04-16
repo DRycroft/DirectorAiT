@@ -45,6 +45,7 @@ const MyProfile = () => {
   const [allMembers, setAllMembers] = useState<BoardMemberWithBoard[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [member, setMember] = useState<BoardMemberRecord | null>(null);
+  const [rejectionNotes, setRejectionNotes] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     full_name: "",
     preferred_title: "",
@@ -118,6 +119,7 @@ const MyProfile = () => {
   const loadMemberDetail = useCallback(async (memberId: string) => {
     setLoading(true);
     setSaved(false);
+    setRejectionNotes(null);
     try {
       const found = allMembers.find((m) => m.id === memberId);
       if (!found) return;
