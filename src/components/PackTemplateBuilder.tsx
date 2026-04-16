@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { GripVertical, Save, Plus, Trash2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from "sonner";
 
 interface Section {
   id?: string;
@@ -41,7 +41,6 @@ interface PackTemplateBuilderProps {
 }
 
 export function PackTemplateBuilder({ boardId, onTemplateSaved }: PackTemplateBuilderProps) {
-  const { toast } = useToast();
   const { createTemplate, isCreatingTemplate } = useBoardPacks(boardId);
   
   const [templateName, setTemplateName] = useState('Default Board Pack Template');
@@ -54,11 +53,7 @@ export function PackTemplateBuilder({ boardId, onTemplateSaved }: PackTemplateBu
   const handleToggleSection = (index: number) => {
     const section = sections[index];
     if (section.is_required) {
-      toast({
-        title: 'Cannot disable',
-        description: 'This section is required and cannot be disabled.',
-        variant: 'destructive',
-      });
+      toast.error("This section is required and cannot be disabled.");
       return;
     }
     
@@ -80,11 +75,7 @@ export function PackTemplateBuilder({ boardId, onTemplateSaved }: PackTemplateBu
   const handleRemoveSection = (index: number) => {
     const section = sections[index];
     if (section.is_required) {
-      toast({
-        title: 'Cannot remove',
-        description: 'This section is required and cannot be removed.',
-        variant: 'destructive',
-      });
+      toast.error("This section is required and cannot be removed.");
       return;
     }
     setSections(prev => prev.filter((_, i) => i !== index).map((s, i) => ({ ...s, order_index: i })));
@@ -119,11 +110,7 @@ export function PackTemplateBuilder({ boardId, onTemplateSaved }: PackTemplateBu
 
   const handleSaveTemplate = () => {
     if (!templateName.trim()) {
-      toast({
-        title: 'Template name required',
-        description: 'Please enter a name for your template.',
-        variant: 'destructive',
-      });
+      toast.error("Please enter a name for your template.");
       return;
     }
 

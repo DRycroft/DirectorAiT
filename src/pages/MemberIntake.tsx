@@ -6,11 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 // supabase client available when member-intake edge function is implemented
 import { z } from "zod";
 import { UserPlus, Shield, Link as LinkIcon } from "lucide-react";
+import { toast } from "sonner";
 
 const memberIntakeSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -23,7 +23,6 @@ const memberIntakeSchema = z.object({
 });
 
 const MemberIntake = () => {
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -43,21 +42,13 @@ const MemberIntake = () => {
       memberIntakeSchema.parse(formData);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        toast({
-          title: "Validation Error",
-          description: error.errors[0].message,
-          variant: "destructive",
-        });
+        toast.error(error.errors[0].message);
         return;
       }
     }
 
     if (!formData.consentGiven) {
-      toast({
-        title: "Consent Required",
-        description: "Please provide consent to scan your public profile",
-        variant: "destructive",
-      });
+      toast.error("Please provide consent to scan your public profile");
       return;
     }
 
@@ -66,18 +57,11 @@ const MemberIntake = () => {
     try {
       // member-intake edge function is not yet implemented
       // Guard against runtime crash until the function is built
-      toast({
-        title: "Coming Soon",
-        description: "Automated member intake scanning is not yet available. Please add members manually via Board Settings.",
-        variant: "default",
-      });
+      toast.success("Automated member intake scanning is not yet available. Please add members manually via Board Settings.");
       setLoading(false);
       return;
 
-      toast({
-        title: "Profile Scan Initiated",
-        description: "We'll scan your public information and notify you when complete.",
-      });
+      toast.success("We");
 
       // Reset form
       setFormData({
@@ -91,11 +75,7 @@ const MemberIntake = () => {
       });
     } catch (error: any) {
       logError("MemberIntake.handleSubmit", error);
-      toast({
-        title: "Error",
-        description: getUserFriendlyError(error),
-        variant: "destructive",
-      });
+      toast.error(getUserFriendlyError(error));
     } finally {
       setLoading(false);
     }

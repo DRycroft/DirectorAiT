@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Copy, Check, X, Sparkles } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from "sonner";
 
 interface AIResultPanelProps {
   title: string;
@@ -22,16 +22,15 @@ interface AIResultPanelProps {
 
 export default function AIResultPanel({ title, result, generatedAt, disclaimer, onClose }: AIResultPanelProps) {
   const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(result);
       setCopied(true);
-      toast({ title: 'Copied', description: 'AI output copied to clipboard' });
+      toast.success("AI output copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast({ title: 'Copy failed', variant: 'destructive' });
+      toast.error("Copy failed");
     }
   };
 

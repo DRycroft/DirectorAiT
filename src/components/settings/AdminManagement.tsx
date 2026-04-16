@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 import { Shield, Crown, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 interface OrgAdmin {
   id: string;
@@ -39,7 +39,6 @@ export default function AdminManagement() {
   const [loading, setLoading] = useState(true);
   const [selectedPrimaryAdmin, setSelectedPrimaryAdmin] = useState("");
   const [selectedSecondaryAdmin, setSelectedSecondaryAdmin] = useState("");
-  const { toast } = useToast();
 
   useEffect(() => {
     fetchAdmins();
@@ -79,11 +78,7 @@ export default function AdminManagement() {
       if (secondary) setSelectedSecondaryAdmin(secondary.user_id);
     } catch (error) {
       logError("AdminManagement.fetchAdmins", error);
-      toast({
-        title: "Error",
-        description: getUserFriendlyError(error),
-        variant: "destructive",
-      });
+      toast.error(getUserFriendlyError(error));
     } finally {
       setLoading(false);
     }
@@ -117,11 +112,7 @@ export default function AdminManagement() {
 
   const handleAssignAdmin = async (adminType: "primary" | "secondary", userId: string) => {
     if (!userId) {
-      toast({
-        title: "Error",
-        description: "Please select a user",
-        variant: "destructive",
-      });
+      toast.error("Please select a user");
       return;
     }
 
@@ -143,11 +134,7 @@ export default function AdminManagement() {
       );
 
       if (existingAssignment) {
-        toast({
-          title: "Error",
-          description: "This user is already assigned as another admin type",
-          variant: "destructive",
-        });
+        toast.error("This user is already assigned as another admin type");
         return;
       }
 
@@ -178,19 +165,12 @@ export default function AdminManagement() {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: `${adminType === "primary" ? "Primary" : "Secondary"} admin assigned successfully`,
-      });
+      toast.success(`${adminType === "primary" ? "Primary" : "Secondary");
 
       fetchAdmins();
     } catch (error) {
       logError("AdminManagement.handleAssignAdmin", error);
-      toast({
-        title: "Error",
-        description: getUserFriendlyError(error),
-        variant: "destructive",
-      });
+      toast.error(getUserFriendlyError(error));
     }
   };
 
@@ -207,19 +187,12 @@ export default function AdminManagement() {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Admin assignment removed successfully",
-      });
+      toast.success("Admin assignment removed successfully");
 
       fetchAdmins();
     } catch (error) {
       logError("AdminManagement.handleRemoveAdmin", error);
-      toast({
-        title: "Error",
-        description: getUserFriendlyError(error),
-        variant: "destructive",
-      });
+      toast.error(getUserFriendlyError(error));
     }
   };
 

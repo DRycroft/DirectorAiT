@@ -19,7 +19,7 @@ import {
 import { ArrowLeft, FileText, CheckCircle2, Clock, Edit, Eye, Lock, ShieldCheck, Plus, Trash2 } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from "sonner";
 
 interface PackWithSections {
   id: string;
@@ -31,7 +31,6 @@ interface PackWithSections {
 export default function PackSections() {
   const { packId } = useParams<{ packId: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { fetchPackSections } = useBoardPacks();
   
   const [pack, setPack] = useState<PackWithSections | null>(null);
@@ -70,7 +69,7 @@ export default function PackSections() {
       const sectionsData = await fetchPackSections(packId);
       setSections(sectionsData || []);
     } catch (error: any) {
-      toast({ title: 'Error loading pack', description: error.message, variant: 'destructive' });
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -87,12 +86,12 @@ export default function PackSections() {
         status: 'pending',
       });
       if (error) throw error;
-      toast({ title: 'Section added' });
+      toast.success("Section added");
       setNewSectionTitle('');
       setShowAddSection(false);
       loadPackData();
     } catch (error: any) {
-      toast({ title: 'Error adding section', description: error.message, variant: 'destructive' });
+      toast.error(error.message);
     }
   };
 
@@ -100,10 +99,10 @@ export default function PackSections() {
     try {
       const { error } = await supabase.from('pack_sections').delete().eq('id', sectionId);
       if (error) throw error;
-      toast({ title: 'Section removed' });
+      toast.success("Section removed");
       loadPackData();
     } catch (error: any) {
-      toast({ title: 'Error removing section', description: error.message, variant: 'destructive' });
+      toast.error(error.message);
     }
   };
 
@@ -117,7 +116,7 @@ export default function PackSections() {
 
   const handleSectionClick = (sectionId: string) => {
     if (isFinalised) {
-      toast({ title: 'Pack is finalised', description: 'Unlock the pack from the View Pack screen before editing sections.' });
+      toast.success("Unlock the pack from the View Pack screen before editing sections.");
       return;
     }
     navigate(`/report-submission/${sectionId}`);

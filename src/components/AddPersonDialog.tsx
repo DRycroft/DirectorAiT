@@ -34,13 +34,13 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { getPositionsByType } from "@/config/positions";
 import { Combobox } from "@/components/ui/combobox";
 import { Card } from "@/components/ui/card";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { logError } from "@/lib/errorHandling";
 import { TemplateField, BoardMemberInsert } from "@/types/database";
+import { toast } from "sonner";
 
 // Fields that should always be optional (for new additions, not terminations)
 const ALWAYS_OPTIONAL_FIELDS = [
@@ -190,7 +190,6 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
   const [existingMembers, setExistingMembers] = useState<Array<{ id: string; full_name: string; position: string | null }>>([]);
   const [formTemplate, setFormTemplate] = useState<TemplateField[]>([]);
   const [loadingTemplate, setLoadingTemplate] = useState(false);
-  const { toast } = useToast();
 
   const isEditMode = !!editMember;
 
@@ -453,21 +452,14 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
         }
       }
 
-      toast({
-        title: "Success",
-        description: isEditMode ? "Team member updated successfully" : "Team member added successfully",
-      });
+      toast.success(isEditMode ? "Team member updated successfully" : "Team member added successfully");
 
       form.reset();
       setOpen(false);
       onSuccess();
     } catch (error: any) {
       logError("AddPersonDialog - Add member", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add team member",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to add team member");
     } finally {
       setLoading(false);
     }

@@ -9,8 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { 
+import { toast } from "sonner";
   BarChart3, TrendingUp, Users, DollarSign, 
   AlertTriangle, FileText, Target, Shield, Activity, Briefcase,
   UserCheck, Scale, Building2, CheckCircle2, Calendar
@@ -341,7 +341,6 @@ const VISUALIZATION_LABELS: Record<string, string> = {
 
 const DashboardBuilder = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [templateName, setTemplateName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedMetrics, setSelectedMetrics] = useState<SelectedMetric[]>([]);
@@ -402,29 +401,17 @@ const DashboardBuilder = () => {
 
   const saveTemplate = async () => {
     if (!templateName.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a template name",
-        variant: "destructive"
-      });
+      toast.error("Please enter a template name");
       return;
     }
 
     if (selectedMetrics.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one metric",
-        variant: "destructive"
-      });
+      toast.error("Please select at least one metric");
       return;
     }
 
     if (!userId || !orgId) {
-      toast({
-        title: "Error",
-        description: "Authentication required",
-        variant: "destructive"
-      });
+      toast.error("Authentication required");
       return;
     }
 
@@ -463,18 +450,11 @@ const DashboardBuilder = () => {
         if (widgetsError) throw widgetsError;
       }
 
-      toast({
-        title: "Success",
-        description: "Dashboard template saved successfully"
-      });
+      toast.success("Dashboard template saved successfully");
 
       navigate("/settings");
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast.error(error.message);
     }
   };
 

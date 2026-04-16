@@ -21,8 +21,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle, Lock, Unlock, ShieldCheck, Printer, Send, Users, ListChecks, Gavel, Shield, Sparkles, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { fetchGovernanceSnapshot, type GovernanceSnapshot } from '@/lib/packAutoPopulate';
+import { toast } from "sonner";
 
 interface PackDetails {
   id: string;
@@ -68,7 +68,6 @@ interface AckRecord {
 export default function PackView() {
   const { packId } = useParams<{ packId: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const [pack, setPack] = useState<PackDetails | null>(null);
   const [sections, setSections] = useState<SectionWithContent[]>([]);
@@ -190,7 +189,7 @@ export default function PackView() {
         }
       }
     } catch (error: any) {
-      toast({ title: 'Error loading pack', description: error.message, variant: 'destructive' });
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -202,10 +201,10 @@ export default function PackView() {
     try {
       const { error } = await supabase.rpc('finalise_board_pack', { _pack_id: packId });
       if (error) throw error;
-      toast({ title: 'Pack finalised', description: 'This board pack is now locked and ready for distribution.' });
+      toast.success("This board pack is now locked and ready for distribution.");
       loadAssembledPack();
     } catch (error: any) {
-      toast({ title: 'Error finalising pack', description: error.message, variant: 'destructive' });
+      toast.error(error.message);
     } finally {
       setIsFinalising(false);
     }
@@ -217,10 +216,10 @@ export default function PackView() {
     try {
       const { error } = await supabase.rpc('unlock_board_pack', { _pack_id: packId });
       if (error) throw error;
-      toast({ title: 'Pack unlocked', description: 'This board pack has been returned to draft status.' });
+      toast.success("This board pack has been returned to draft status.");
       loadAssembledPack();
     } catch (error: any) {
-      toast({ title: 'Error unlocking pack', description: error.message, variant: 'destructive' });
+      toast.error(error.message);
     } finally {
       setIsUnlocking(false);
     }
@@ -237,7 +236,7 @@ export default function PackView() {
         .eq('board_id', pack.board_id);
 
       if (!memberships || memberships.length === 0) {
-        toast({ title: 'No members', description: 'No board members to distribute to.', variant: 'destructive' });
+        toast.error("No board members to distribute to.");
         return;
       }
 
@@ -260,10 +259,10 @@ export default function PackView() {
       const { error } = await supabase.from('document_acknowledgements').insert(acks);
       if (error) throw error;
 
-      toast({ title: 'Pack distributed', description: `Sent to ${memberships.length} board member(s).` });
+      toast.success(`Sent to ${memberships.length);
       loadAssembledPack();
     } catch (error: any) {
-      toast({ title: 'Distribution failed', description: error.message, variant: 'destructive' });
+      toast.error(error.message);
     } finally {
       setIsDistributing(false);
     }
@@ -290,10 +289,10 @@ export default function PackView() {
         ack_type: 'read',
       });
       if (error) throw error;
-      toast({ title: 'Acknowledged', description: 'You have confirmed reading this pack.' });
+      toast.success("You have confirmed reading this pack.");
       loadAssembledPack();
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast.error(error.message);
     }
   };
 
@@ -308,7 +307,7 @@ export default function PackView() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (error: any) {
-      toast({ title: 'Download failed', description: error.message, variant: 'destructive' });
+      toast.error(error.message);
     }
   };
 

@@ -6,13 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Download, FileText, Table, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 const ExportTeam = () => {
   const { boardId } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [includeConfidential, setIncludeConfidential] = useState(false);
 
   const handleExportCSV = async () => {
@@ -31,16 +30,9 @@ const ExportTeam = () => {
       a.click();
       window.URL.revokeObjectURL(url);
 
-      toast({
-        title: "Export complete",
-        description: `Exported ${data.memberCount} members to CSV`,
-      });
+      toast.success(`Exported ${data.memberCount);
     } catch (error: any) {
-      toast({
-        title: "Export failed",
-        description: error.message || "Failed to export team data",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to export team data");
     }
   };
 

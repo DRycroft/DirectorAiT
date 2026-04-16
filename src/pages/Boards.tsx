@@ -3,15 +3,14 @@ import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Users, Calendar } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { logError } from "@/lib/errorHandling";
+import { toast } from "sonner";
 
 const Boards = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [boards, setBoards] = useState<any[]>([]);
 
@@ -47,11 +46,7 @@ const Boards = () => {
       setBoards(data || []);
     } catch (error: any) {
       logError("Boards - Fetch boards", error);
-      toast({
-        title: "Error",
-        description: "Failed to load boards",
-        variant: "destructive",
-      });
+      toast.error("Failed to load boards");
     } finally {
       setLoading(false);
     }

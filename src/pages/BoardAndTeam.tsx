@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Users, Briefcase, UserCog, Eye, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { logError } from "@/lib/errorHandling";
 import { BoardWithOrg, BoardMember, ViewerRole } from "@/types/database";
+import { toast } from "sonner";
 
 // Extended type with sensitive data joined
 interface BoardMemberWithSensitive extends BoardMember {
@@ -32,7 +32,6 @@ interface BoardMemberWithSensitive extends BoardMember {
 const BoardAndTeam = () => {
   const { boardId } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [board, setBoard] = useState<BoardWithOrg | null>(null);
   const [boardMembers, setBoardMembers] = useState<BoardMemberWithSensitive[]>([]);
@@ -115,11 +114,7 @@ const BoardAndTeam = () => {
 
     } catch (error: any) {
       logError("BoardAndTeam - Fetch board data", error);
-      toast({
-        title: "Error",
-        description: "Failed to load board data",
-        variant: "destructive",
-      });
+      toast.error("Failed to load board data");
     } finally {
       setLoading(false);
     }
