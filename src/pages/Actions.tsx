@@ -193,6 +193,68 @@ const Actions = () => {
     );
   };
 
+  // Fetch profiles for owner picker
+  const fetchProfiles = async () => {
+    const { data } = await supabase.from("profiles").select("id, name").order("name");
+    if (data) setAllProfiles(data.map((p) => ({ id: p.id, name: p.name ?? p.id })));
+  };
+
+  const resetForm = () => {
+    setEditingItem(null);
+    setFormTitle("");
+    setFormDesc("");
+    setFormOwnerId("");
+    setFormDueDate("");
+    setFormStatus("pending");
+  };
+
+  const openCreate = () => {
+    resetForm();
+    fetchProfiles();
+    setDialogOpen(true);
+  };
+
+  const openEdit = (item: ActionItem) => {
+    setEditingItem(item);
+    setFormTitle(item.title);
+    setFormDesc(item.description ?? "");
+    setFormOwnerId(item.owner_id ?? "");
+    setFormDueDate(item.due_date ?? "");
+    setFormStatus(item.status ?? "pending");
+    fetchProfiles();
+    setDialogOpen(true);
+  };
+
+  const handleSaveAction = async () => {
+    if (!formTitle.trim()) { toast.error("Title is required"); return; }
+    setFormSaving(true);
+    try {
+      const payload = {
+        title: formTitle.trim(),
+        description: formDesc.trim() || null,
+        owner_id: formOwnerId || null,
+        due_date: formDueDate || null,
+        status: formStatus,
+      };
+      if (editingItem) {
+        const { error } = await supabase.from("action_items").update(payload).eq("id", editingItem.id);
+        if (error) throw error;
+        toast.success("Action updated");
+      } else {
+        const { error } = await supabase.from("action_items").insert(payload);
+        if (error) throw error;
+        toast.success("Action created");
+      }
+      setDialogOpen(false);
+      resetForm();
+      fetchActions();
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed to save action");
+    } finally {
+      setFormSaving(false);
+    }
+  };
+
   // Filters
   const filtered = items.filter((item) => {
     if (filterStatus !== "all" && item.status !== filterStatus) return false;
