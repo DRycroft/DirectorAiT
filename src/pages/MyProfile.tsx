@@ -274,6 +274,17 @@ const MyProfile = () => {
             </Card>
           )}
 
+          {rejectionNotes && member?.status === "rejected" && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Changes Requested</AlertTitle>
+              <AlertDescription>
+                {rejectionNotes.replace(/^Rejected:\s*/i, "")}
+                <p className="mt-2 text-sm font-medium">Please update your profile and resubmit.</p>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>
