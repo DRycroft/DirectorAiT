@@ -56,8 +56,10 @@ const PilotProgram = () => {
                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="flex-1">
-                  Schedule a Demo
+                <Button size="lg" variant="outline" className="flex-1" asChild>
+                  <Link to="/contact">
+                    Schedule a Demo
+                  </Link>
                 </Button>
               </div>
             </CardContent>
