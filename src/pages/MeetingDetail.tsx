@@ -5,6 +5,8 @@ import Navigation from "@/components/Navigation";
 import AgendaItemActions from "@/components/meetings/AgendaItemActions";
 import MeetingAttendance from "@/components/meetings/MeetingAttendance";
 import Footer from "@/components/Footer";
+import { useGovernanceAI } from "@/hooks/useGovernanceAI";
+import AIResultPanel from "@/components/AIResultPanel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +43,7 @@ import {
   Save,
   Lock,
   ClipboardList,
+  Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -120,6 +123,9 @@ const MeetingDetail = () => {
   const [minutesContent, setMinutesContent] = useState("");
   const [minutesSaving, setMinutesSaving] = useState(false);
   const [minutesDirty, setMinutesDirty] = useState(false);
+  const [transcriptInput, setTranscriptInput] = useState("");
+  const [showTranscriptInput, setShowTranscriptInput] = useState(false);
+  const governanceAI = useGovernanceAI();
 
   // Item form state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -520,6 +526,75 @@ const MeetingDetail = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* AI Transcript Tools */}
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">AI Tools</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowTranscriptInput(!showTranscriptInput)}>
+                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                {showTranscriptInput ? 'Hide Transcript Input' : 'Paste Transcript'}
+              </Button>
+              {showTranscriptInput && transcriptInput.trim() && (
+                <>
+                  <Button
+                    variant="outline" size="sm"
+                    disabled={governanceAI.isProcessing}
+                    onClick={async () => {
+                      const res = await governanceAI.execute({
+                        action: 'transcript-to-minutes',
+                        agendaId: meetingId,
+                        transcript: transcriptInput,
+                      });
+                      if (res?.result) {
+                        setMinutesContent(res.result);
+                        setMinutesDirty(true);
+                      }
+                    }}
+                  >
+                    <FileText className="h-3.5 w-3.5 mr-1.5" />
+                    {governanceAI.isProcessing ? 'Processing…' : 'Generate Minutes'}
+                  </Button>
+                  <Button
+                    variant="outline" size="sm"
+                    disabled={governanceAI.isProcessing}
+                    onClick={() => governanceAI.execute({
+                      action: 'transcript-to-actions',
+                      transcript: transcriptInput,
+                    })}
+                  >
+                    <ClipboardList className="h-3.5 w-3.5 mr-1.5" />
+                    Extract Actions & Decisions
+                  </Button>
+                </>
+              )}
+            </div>
+            {showTranscriptInput && (
+              <Card>
+                <CardContent className="pt-4">
+                  <Textarea
+                    placeholder="Paste your meeting transcript or notes here…"
+                    value={transcriptInput}
+                    onChange={(e) => setTranscriptInput(e.target.value)}
+                    rows={6}
+                    className="resize-y min-h-[120px]"
+                  />
+                </CardContent>
+              </Card>
+            )}
+            {governanceAI.result && (
+              <AIResultPanel
+                title={governanceAI.result.action.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase())}
+                result={governanceAI.result.result}
+                generatedAt={governanceAI.result.generated_at}
+                disclaimer={governanceAI.result.disclaimer}
+                onClose={governanceAI.clearResult}
+              />
+            )}
+          </div>
         </div>
 
         {/* ===== DECISIONS ===== */}

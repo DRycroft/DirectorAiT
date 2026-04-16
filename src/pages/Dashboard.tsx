@@ -7,6 +7,8 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useGovernanceAI } from "@/hooks/useGovernanceAI";
+import AIResultPanel from "@/components/AIResultPanel";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,8 +19,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
   Users, FileText, CheckCircle2, AlertCircle, Loader2,
-  AlertTriangle, Clock, Gavel, ShieldCheck, BookOpen, RefreshCw,
+  AlertTriangle, Clock, Gavel, ShieldCheck, BookOpen, RefreshCw, Sparkles, Send,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { logError } from "@/lib/errorHandling";
 import { useAuth } from "@/contexts/AuthContext";
@@ -75,6 +78,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isBootstrapping } = useAuth();
+  const governanceAI = useGovernanceAI();
+  const [askQuestion, setAskQuestion] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userOrgs, setUserOrgs] = useState<UserOrg[]>([]);
@@ -635,6 +640,61 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Ask History */}
+        <Card className="mb-8">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" /> Ask Governance History
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <Input
+                placeholder="e.g. What was decided about the budget in the last meeting?"
+                value={askQuestion}
+                onChange={(e) => setAskQuestion(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && askQuestion.trim()) {
+                    // Use first board from stats or skip
+                    // Get first board for this org to scope AI query
+                    // We need to get a board ID - use the boards query
+                    supabase.from("boards").select("id").eq("org_id", selectedOrgId).limit(1).then(({ data }) => {
+                      if (data?.[0]) {
+                        governanceAI.execute({ action: 'ask-history', boardId: data[0].id, question: askQuestion });
+                      }
+                    });
+                  }
+                }}
+              />
+              <Button
+                size="sm"
+                disabled={governanceAI.isProcessing || !askQuestion.trim()}
+                onClick={() => {
+                  supabase.from("boards").select("id").eq("org_id", selectedOrgId).limit(1).then(({ data }) => {
+                    if (data?.[0]) {
+                      governanceAI.execute({ action: 'ask-history', boardId: data[0].id, question: askQuestion });
+                    }
+                  });
+                }}
+              >
+                <Send className="h-4 w-4 mr-1" />
+                {governanceAI.isProcessing ? 'Asking…' : 'Ask'}
+              </Button>
+            </div>
+            {governanceAI.result && (
+              <div className="mt-4">
+                <AIResultPanel
+                  title="Governance History Answer"
+                  result={governanceAI.result.result}
+                  generatedAt={governanceAI.result.generated_at}
+                  disclaimer={governanceAI.result.disclaimer}
+                  onClose={governanceAI.clearResult}
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

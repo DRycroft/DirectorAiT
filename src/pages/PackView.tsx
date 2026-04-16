@@ -7,6 +7,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useGovernanceAI } from '@/hooks/useGovernanceAI';
+import AIResultPanel from '@/components/AIResultPanel';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +19,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle, Lock, Unlock, ShieldCheck, Printer, Send, Users, ListChecks, Gavel, Shield } from 'lucide-react';
+import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle, Lock, Unlock, ShieldCheck, Printer, Send, Users, ListChecks, Gavel, Shield, Sparkles, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { fetchGovernanceSnapshot, type GovernanceSnapshot } from '@/lib/packAutoPopulate';
@@ -80,6 +82,22 @@ export default function PackView() {
   const [canManagePack, setCanManagePack] = useState(false);
 
   const isFinalised = pack?.status === 'finalised';
+  const governanceAI = useGovernanceAI();
+
+  const handleSummarisePack = async () => {
+    if (!packId) return;
+    await governanceAI.execute({ action: 'summarise-pack', packId });
+  };
+
+  const handleHighlightRisks = async () => {
+    if (!pack?.board_id) return;
+    await governanceAI.execute({ action: 'highlight-risks', boardId: pack.board_id });
+  };
+
+  const handleDirectorBriefing = async () => {
+    if (!pack?.board_id) return;
+    await governanceAI.execute({ action: 'director-briefing', boardId: pack.board_id });
+  };
 
   useEffect(() => {
     if (packId) loadAssembledPack();
@@ -479,7 +497,40 @@ export default function PackView() {
 
         <Separator className="mb-8" />
 
-        {/* Auto-Populated Governance Sections */}
+        {/* AI Tools */}
+        <div className="mb-8 print:hidden">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">AI Governance Tools</h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={handleSummarisePack} disabled={governanceAI.isProcessing}>
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              {governanceAI.isProcessing ? 'Processing…' : 'Summarise Pack'}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleHighlightRisks} disabled={governanceAI.isProcessing}>
+              <AlertTriangle className="h-3.5 w-3.5 mr-1.5" />
+              Highlight Risks
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleDirectorBriefing} disabled={governanceAI.isProcessing}>
+              <Users className="h-3.5 w-3.5 mr-1.5" />
+              New Director Briefing
+            </Button>
+          </div>
+
+          {governanceAI.result && (
+            <div className="mt-4">
+              <AIResultPanel
+                title={governanceAI.result.action.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase())}
+                result={governanceAI.result.result}
+                generatedAt={governanceAI.result.generated_at}
+                disclaimer={governanceAI.result.disclaimer}
+                onClose={governanceAI.clearResult}
+              />
+            </div>
+          )}
+        </div>
+
         {governance && (
           <div className="space-y-6 mb-8" id="pack-governance">
             {/* Attendance */}
