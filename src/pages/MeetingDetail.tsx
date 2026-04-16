@@ -359,6 +359,26 @@ const MeetingDetail = () => {
   }
 
   const totalDuration = items.reduce((sum, i) => sum + (i.estimated_duration ?? 0), 0);
+  const isFinalised = agenda?.status === "finalised";
+
+  const handleCloseMeeting = async () => {
+    if (!agenda || !meetingId) return;
+    const confirmed = window.confirm(
+      "Close this meeting? This will mark it as finalised. You can still unlock it later if needed."
+    );
+    if (!confirmed) return;
+    try {
+      const { error } = await supabase
+        .from("agendas")
+        .update({ status: "finalised" })
+        .eq("id", meetingId);
+      if (error) throw error;
+      toast.success("Meeting closed and finalised");
+      fetchData();
+    } catch {
+      toast.error("Failed to close meeting");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
