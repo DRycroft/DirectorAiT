@@ -497,7 +497,40 @@ export default function PackView() {
 
         <Separator className="mb-8" />
 
-        {/* Auto-Populated Governance Sections */}
+        {/* AI Tools */}
+        <div className="mb-8 print:hidden">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">AI Governance Tools</h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={handleSummarisePack} disabled={governanceAI.isProcessing}>
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              {governanceAI.isProcessing ? 'Processing…' : 'Summarise Pack'}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleHighlightRisks} disabled={governanceAI.isProcessing}>
+              <AlertTriangle className="h-3.5 w-3.5 mr-1.5" />
+              Highlight Risks
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleDirectorBriefing} disabled={governanceAI.isProcessing}>
+              <Users className="h-3.5 w-3.5 mr-1.5" />
+              New Director Briefing
+            </Button>
+          </div>
+
+          {governanceAI.result && (
+            <div className="mt-4">
+              <AIResultPanel
+                title={governanceAI.result.action.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase())}
+                result={governanceAI.result.result}
+                generatedAt={governanceAI.result.generated_at}
+                disclaimer={governanceAI.result.disclaimer}
+                onClose={governanceAI.clearResult}
+              />
+            </div>
+          )}
+        </div>
+
         {governance && (
           <div className="space-y-6 mb-8" id="pack-governance">
             {/* Attendance */}
