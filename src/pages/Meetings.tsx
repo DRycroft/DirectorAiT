@@ -181,7 +181,19 @@ const Meetings = () => {
     }
   };
 
-  return (
+  const handleDeleteMeeting = async (id: string, title: string) => {
+    const confirmed = window.confirm(`Delete meeting "${title}"? This will also remove all agenda items, decisions, and attendance records.`);
+    if (!confirmed) return;
+    try {
+      const { error } = await supabase.from("agendas").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Meeting deleted");
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed to delete meeting");
+    }
+  };
+
     <div className="min-h-screen bg-background">
       <Navigation />
       <main className="container mx-auto px-4 pt-24 pb-12">
