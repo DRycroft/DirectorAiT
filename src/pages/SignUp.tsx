@@ -53,7 +53,13 @@ const PENDING_SIGNUP_KEY = "pendingSignUpV2";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
+
+  // Redirect already-authenticated users
+  if (!authLoading && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
