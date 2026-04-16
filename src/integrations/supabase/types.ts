@@ -1915,6 +1915,51 @@ export type Database = {
           },
         ]
       }
+      meeting_attendance: {
+        Row: {
+          agenda_id: string
+          apologies: string | null
+          attended: boolean
+          created_at: string
+          id: string
+          member_id: string
+          updated_at: string
+        }
+        Insert: {
+          agenda_id: string
+          apologies?: string | null
+          attended?: boolean
+          created_at?: string
+          id?: string
+          member_id: string
+          updated_at?: string
+        }
+        Update: {
+          agenda_id?: string
+          apologies?: string | null
+          attended?: boolean
+          created_at?: string
+          id?: string
+          member_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_attendance_agenda_id_fkey"
+            columns: ["agenda_id"]
+            isOneToOne: false
+            referencedRelation: "agendas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_attendance_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "board_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meeting_decisions: {
         Row: {
           agenda_id: string
