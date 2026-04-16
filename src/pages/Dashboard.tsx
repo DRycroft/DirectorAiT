@@ -76,7 +76,7 @@ interface PackRow {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { isBootstrapping } = useAuth();
+  const { isBootstrapping, user } = useAuth();
   const governanceAI = useGovernanceAI();
   const [askQuestion, setAskQuestion] = useState("");
   const [loading, setLoading] = useState(true);
@@ -99,16 +99,13 @@ const Dashboard = () => {
     unreadPacks: 0,
   });
 
+  
+
   useEffect(() => {
     if (isBootstrapping) return;
-    checkAuth();
-  }, [isBootstrapping]);
-
-  const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) { navigate("/auth"); return; }
-    await fetchUserOrgs(user.id);
-  };
+    fetchUserOrgs(user.id);
+  }, [isBootstrapping, user]);
 
   const fetchUserOrgs = async (userId: string) => {
     try {
@@ -141,10 +138,8 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (selectedOrgId && !isBootstrapping) {
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        if (user) fetchDashboardData(selectedOrgId, user.id);
-      });
+    if (selectedOrgId && !isBootstrapping && user) {
+      fetchDashboardData(selectedOrgId, user.id);
     }
   }, [selectedOrgId]);
 
@@ -321,7 +316,6 @@ const Dashboard = () => {
   };
 
   const handleRefresh = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
     if (user && selectedOrgId) await fetchDashboardData(selectedOrgId, user.id);
   };
 
