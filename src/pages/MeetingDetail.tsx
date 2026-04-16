@@ -122,6 +122,9 @@ const MeetingDetail = () => {
   const [minutesContent, setMinutesContent] = useState("");
   const [minutesSaving, setMinutesSaving] = useState(false);
   const [minutesDirty, setMinutesDirty] = useState(false);
+  const [transcriptInput, setTranscriptInput] = useState("");
+  const [showTranscriptInput, setShowTranscriptInput] = useState(false);
+  const governanceAI = useGovernanceAI();
 
   // Item form state
   const [dialogOpen, setDialogOpen] = useState(false);
