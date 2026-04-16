@@ -12,10 +12,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { getUserFriendlyError } from "@/lib/errorHandling";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
 
 const PENDING_SIGNUP_KEY = "pendingSignUpV2";
 
