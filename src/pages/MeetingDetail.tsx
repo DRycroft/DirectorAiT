@@ -5,6 +5,8 @@ import Navigation from "@/components/Navigation";
 import AgendaItemActions from "@/components/meetings/AgendaItemActions";
 import MeetingAttendance from "@/components/meetings/MeetingAttendance";
 import Footer from "@/components/Footer";
+import { useGovernanceAI } from "@/hooks/useGovernanceAI";
+import AIResultPanel from "@/components/AIResultPanel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
