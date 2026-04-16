@@ -137,6 +137,13 @@ const Navigation = () => {
                 {item.label}
               </Link>
             ))}
+            <a
+              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(FEEDBACK_SUBJECT)}`}
+              onClick={() => setMobileOpen(false)}
+              className="block px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            >
+              Help & Feedback
+            </a>
             <Button
               variant="ghost"
               className="w-full justify-start text-destructive hover:text-destructive px-3"
