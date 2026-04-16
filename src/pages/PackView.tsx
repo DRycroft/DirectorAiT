@@ -17,7 +17,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle, Lock, Unlock, ShieldCheck, Printer, Send, Users, ListChecks, Gavel, ClipboardList, Shield } from 'lucide-react';
+import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle, Lock, Unlock, ShieldCheck, Printer, Send, Users, ListChecks, Gavel, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { fetchGovernanceSnapshot, type GovernanceSnapshot } from '@/lib/packAutoPopulate';
