@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import AgendaItemActions from "@/components/meetings/AgendaItemActions";
+import MeetingAttendance from "@/components/meetings/MeetingAttendance";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +39,7 @@ import {
   FileText,
   Gavel,
   Save,
+  Lock,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -357,6 +359,26 @@ const MeetingDetail = () => {
   }
 
   const totalDuration = items.reduce((sum, i) => sum + (i.estimated_duration ?? 0), 0);
+  const isFinalised = agenda?.status === "finalised";
+
+  const handleCloseMeeting = async () => {
+    if (!agenda || !meetingId) return;
+    const confirmed = window.confirm(
+      "Close this meeting? This will mark it as finalised. You can still unlock it later if needed."
+    );
+    if (!confirmed) return;
+    try {
+      const { error } = await supabase
+        .from("agendas")
+        .update({ status: "finalised" })
+        .eq("id", meetingId);
+      if (error) throw error;
+      toast.success("Meeting closed and finalised");
+      fetchData();
+    } catch {
+      toast.error("Failed to close meeting");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -384,7 +406,26 @@ const MeetingDetail = () => {
               )}
             </div>
           </div>
+          {!isFinalised && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleCloseMeeting}
+            >
+              <Lock className="h-4 w-4 mr-1" /> Close Meeting
+            </Button>
+          )}
           <Badge variant={statusVariant(agenda.status)}>{statusLabel(agenda.status)}</Badge>
+        </div>
+
+        {/* ===== ATTENDANCE & QUORUM ===== */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Attendance & Quorum</h2>
+          <MeetingAttendance
+            agendaId={agenda.id}
+            boardId={agenda.board_id}
+            isFinalised={isFinalised}
+          />
         </div>
 
         {/* ===== AGENDA ITEMS ===== */}

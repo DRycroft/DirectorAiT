@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Calendar, Edit2, CalendarDays, ArrowRight } from "lucide-react";
+import { Plus, Calendar, Edit2, CalendarDays, ArrowRight, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
 
@@ -181,6 +181,19 @@ const Meetings = () => {
     }
   };
 
+  const handleDeleteMeeting = async (id: string, title: string) => {
+    const confirmed = window.confirm(`Delete meeting "${title}"? This will also remove all agenda items, decisions, and attendance records.`);
+    if (!confirmed) return;
+    try {
+      const { error } = await supabase.from("agendas").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Meeting deleted");
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed to delete meeting");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -316,6 +329,14 @@ const Meetings = () => {
                       onClick={() => openEdit(m)}
                     >
                       <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() => handleDeleteMeeting(m.id, m.title)}
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardHeader>
