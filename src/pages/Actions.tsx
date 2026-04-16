@@ -5,6 +5,17 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -21,7 +32,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { AlertTriangle, ClipboardList, Clock, Loader2, User } from "lucide-react";
+import { AlertTriangle, ClipboardList, Clock, Edit2, Loader2, Plus, User } from "lucide-react";
 import { format, isPast, isToday, differenceInCalendarDays } from "date-fns";
 import { Link } from "react-router-dom";
 
@@ -88,6 +99,17 @@ const Actions = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterOwner, setFilterOwner] = useState<string>("all");
   const [filterOverdue, setFilterOverdue] = useState(false);
+
+  // Create/Edit dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
+  const [formTitle, setFormTitle] = useState("");
+  const [formDesc, setFormDesc] = useState("");
+  const [formOwnerId, setFormOwnerId] = useState("");
+  const [formDueDate, setFormDueDate] = useState("");
+  const [formStatus, setFormStatus] = useState("pending");
+  const [formSaving, setFormSaving] = useState(false);
+  const [allProfiles, setAllProfiles] = useState<OwnerOption[]>([]);
 
   const fetchActions = async () => {
     setLoading(true);
@@ -171,6 +193,68 @@ const Actions = () => {
     );
   };
 
+  // Fetch profiles for owner picker
+  const fetchProfiles = async () => {
+    const { data } = await supabase.from("profiles").select("id, name").order("name");
+    if (data) setAllProfiles(data.map((p) => ({ id: p.id, name: p.name ?? p.id })));
+  };
+
+  const resetForm = () => {
+    setEditingItem(null);
+    setFormTitle("");
+    setFormDesc("");
+    setFormOwnerId("");
+    setFormDueDate("");
+    setFormStatus("pending");
+  };
+
+  const openCreate = () => {
+    resetForm();
+    fetchProfiles();
+    setDialogOpen(true);
+  };
+
+  const openEdit = (item: ActionItem) => {
+    setEditingItem(item);
+    setFormTitle(item.title);
+    setFormDesc(item.description ?? "");
+    setFormOwnerId(item.owner_id ?? "");
+    setFormDueDate(item.due_date ?? "");
+    setFormStatus(item.status ?? "pending");
+    fetchProfiles();
+    setDialogOpen(true);
+  };
+
+  const handleSaveAction = async () => {
+    if (!formTitle.trim()) { toast.error("Title is required"); return; }
+    setFormSaving(true);
+    try {
+      const payload = {
+        title: formTitle.trim(),
+        description: formDesc.trim() || null,
+        owner_id: formOwnerId || null,
+        due_date: formDueDate || null,
+        status: formStatus,
+      };
+      if (editingItem) {
+        const { error } = await supabase.from("action_items").update(payload).eq("id", editingItem.id);
+        if (error) throw error;
+        toast.success("Action updated");
+      } else {
+        const { error } = await supabase.from("action_items").insert(payload);
+        if (error) throw error;
+        toast.success("Action created");
+      }
+      setDialogOpen(false);
+      resetForm();
+      fetchActions();
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed to save action");
+    } finally {
+      setFormSaving(false);
+    }
+  };
+
   // Filters
   const filtered = items.filter((item) => {
     if (filterStatus !== "all" && item.status !== filterStatus) return false;
@@ -219,11 +303,16 @@ const Actions = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       <main className="container mx-auto px-4 pt-24 pb-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Actions</h1>
-          <p className="text-muted-foreground mt-1">
-            Track action items across all meetings
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Actions</h1>
+            <p className="text-muted-foreground mt-1">
+              Track action items across all meetings
+            </p>
+          </div>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4 mr-2" /> New Action
+          </Button>
         </div>
 
         {/* Accountability summary cards */}
@@ -376,6 +465,7 @@ const Actions = () => {
                   <TableHead>Age</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-[160px]">Update</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -467,6 +557,11 @@ const Actions = () => {
                           </SelectContent>
                         </Select>
                       </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(item)}>
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -474,6 +569,58 @@ const Actions = () => {
             </Table>
           </div>
         )}
+
+        {/* Create/Edit Action Dialog */}
+        <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingItem ? "Edit Action" : "New Action"}</DialogTitle>
+              <DialogDescription>{editingItem ? "Update this action item." : "Create a standalone action item."}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="action-title">Title *</Label>
+                <Input id="action-title" placeholder="e.g. Follow up with auditor" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="action-desc">Description</Label>
+                <Textarea id="action-desc" placeholder="Optional details" value={formDesc} onChange={(e) => setFormDesc(e.target.value)} rows={2} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="action-owner">Owner</Label>
+                  <Select value={formOwnerId} onValueChange={setFormOwnerId}>
+                    <SelectTrigger id="action-owner"><SelectValue placeholder="Select owner" /></SelectTrigger>
+                    <SelectContent>
+                      {allProfiles.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="action-status">Status</Label>
+                  <Select value={formStatus} onValueChange={setFormStatus}>
+                    <SelectTrigger id="action-status"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map((s) => (
+                        <SelectItem key={s} value={s}>{s.replace("_", " ").replace(/^\w/, (c) => c.toUpperCase())}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="action-due">Due Date</Label>
+                <Input id="action-due" type="date" value={formDueDate} onChange={(e) => setFormDueDate(e.target.value)} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
+              <Button onClick={handleSaveAction} disabled={formSaving}>{formSaving ? "Saving…" : editingItem ? "Update" : "Create"}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
       <Footer />
     </div>

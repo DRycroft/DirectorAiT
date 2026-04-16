@@ -40,6 +40,7 @@ import {
   Gavel,
   Save,
   Lock,
+  ClipboardList,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -329,6 +330,22 @@ const MeetingDetail = () => {
     }
   };
 
+  const handleCreateActionFromDecision = async (decision: Decision) => {
+    if (!meetingId) return;
+    try {
+      const { error } = await supabase.from("action_items").insert({
+        title: `Action: ${decision.title}`,
+        description: decision.description,
+        extracted_decision_id: decision.id,
+        status: "pending",
+      });
+      if (error) throw error;
+      toast.success("Action created from decision");
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed to create action");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -541,6 +558,7 @@ const MeetingDetail = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Create action from decision" onClick={() => handleCreateActionFromDecision(d)}><ClipboardList className="h-3.5 w-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditDecision(d)}><Edit2 className="h-3.5 w-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteDecision(d.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                     </div>
