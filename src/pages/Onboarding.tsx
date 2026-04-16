@@ -17,8 +17,10 @@ const PENDING_SIGNUP_KEY = "pendingSignUpV2";
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [checkingComplete, setCheckingComplete] = useState(true);
   const [orgData, setOrgData] = useState({
     name: "",
     type: "",
@@ -28,6 +30,26 @@ const Onboarding = () => {
     jobTitle: "",
     phone: "" as string | undefined,
   });
+
+  // Guard: redirect if onboarding already complete
+  useEffect(() => {
+    if (authLoading || !user) {
+      setCheckingComplete(false);
+      return;
+    }
+    supabase
+      .from("profiles")
+      .select("onboarding_complete")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.onboarding_complete) {
+          navigate("/dashboard", { replace: true });
+        } else {
+          setCheckingComplete(false);
+        }
+      });
+  }, [authLoading, user, navigate]);
 
   useEffect(() => {
     // Pre-fill org name from bootstrap session data if available
