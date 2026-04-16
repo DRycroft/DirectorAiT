@@ -40,6 +40,7 @@ import {
   Gavel,
   Save,
   Lock,
+  ClipboardList,
 } from "lucide-react";
 import { format } from "date-fns";
 
