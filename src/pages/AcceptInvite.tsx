@@ -130,10 +130,12 @@ export default function AcceptInvite() {
       }
 
       // (c) Update board_members row — clear token for single-use enforcement
+      // Set status to "pending" so the member must complete their profile
+      // and receive admin approval before becoming "active"
       const { error: updateError } = await supabase
         .from("board_members")
         .update({
-          status: "active",
+          status: "pending",
           user_id: userId,
           invite_token: null,
           invite_expires_at: null,

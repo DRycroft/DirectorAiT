@@ -111,7 +111,7 @@ const App = () => {
                   <Route path="/compliance" element={<ProtectedRoute><Compliance /></ProtectedRoute>} />
                   <Route path="/library" element={<ProtectedRoute><BoardLibrary /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                  <Route path="/member-intake" element={<ProtectedRoute><MemberIntake /></ProtectedRoute>} />
+                  <Route path="/member-intake" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/member-invite" element={<ProtectedRoute><MemberInvite /></ProtectedRoute>} />
                   <Route path="/my-profile" element={<ProtectedRoute><MyProfile /></ProtectedRoute>} />
                   <Route path="/member-approval/:memberId" element={<ProtectedRoute><MemberApproval /></ProtectedRoute>} />
