@@ -125,13 +125,13 @@ export default function PackView() {
         const [execRes, minutesRes, specialRes] = await Promise.all([
           supabase.from('executive_reports').select('id, file_name, file_path, uploaded_at, report_type, status').eq('org_id', orgId).order('uploaded_at', { ascending: false }).limit(10),
           supabase.from('meeting_minutes').select('id, file_name, file_path, uploaded_at, meeting_type, status').eq('org_id', orgId).order('uploaded_at', { ascending: false }).limit(10),
-          supabase.from('special_papers').select('id, file_name, file_path, uploaded_at, paper_type, status').eq('org_id', orgId).order('uploaded_at', { ascending: false }).limit(10),
+          supabase.from('special_papers').select('id, file_name, file_path, uploaded_at, category, status').eq('org_id', orgId).order('uploaded_at', { ascending: false }).limit(10),
         ]);
 
         const docs: SupportingDoc[] = [
           ...(execRes.data || []).map((d: any) => ({ id: d.id, file_name: d.file_name, file_path: d.file_path, uploaded_at: d.uploaded_at, source: 'executive_reports' as const, type_label: `Executive Report – ${d.report_type || 'General'}`, status: d.status })),
           ...(minutesRes.data || []).map((d: any) => ({ id: d.id, file_name: d.file_name, file_path: d.file_path, uploaded_at: d.uploaded_at, source: 'meeting_minutes' as const, type_label: `Meeting Minutes – ${d.meeting_type || 'General'}`, status: d.status })),
-          ...(specialRes.data || []).map((d: any) => ({ id: d.id, file_name: d.file_name, file_path: d.file_path, uploaded_at: d.uploaded_at, source: 'special_papers' as const, type_label: `Special Paper – ${d.paper_type || 'General'}`, status: d.status })),
+          ...(specialRes.data || []).map((d: any) => ({ id: d.id, file_name: d.file_name, file_path: d.file_path, uploaded_at: d.uploaded_at, source: 'special_papers' as const, type_label: `Special Paper – ${d.category || 'General'}`, status: d.status })),
         ];
         setSupportingDocs(docs);
       }

@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
-import { supabase } from "@/integrations/supabase/client";
+// supabase client available when member-intake edge function is implemented
 import { z } from "zod";
 import { UserPlus, Shield, Link as LinkIcon } from "lucide-react";
 
@@ -64,20 +64,15 @@ const MemberIntake = () => {
     setLoading(true);
 
     try {
-      // This would call an edge function to initiate member scanning
-      const { error } = await supabase.functions.invoke("member-intake", {
-        body: {
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          linkedinUrl: formData.linkedinUrl.trim(),
-          organizationUrl: formData.organizationUrl.trim(),
-          additionalLinks: formData.additionalLinks.trim(),
-          consentGiven: formData.consentGiven,
-          consentPublicData: formData.consentPublicData,
-        },
+      // member-intake edge function is not yet implemented
+      // Guard against runtime crash until the function is built
+      toast({
+        title: "Coming Soon",
+        description: "Automated member intake scanning is not yet available. Please add members manually via Board Settings.",
+        variant: "default",
       });
-
-      if (error) throw error;
+      setLoading(false);
+      return;
 
       toast({
         title: "Profile Scan Initiated",
