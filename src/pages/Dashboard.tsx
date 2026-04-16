@@ -8,7 +8,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,8 +16,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Users, FileText, CheckCircle2, AlertCircle, Calendar, Loader2,
-  AlertTriangle, Clock, Gavel, Send, ShieldCheck, BookOpen, RefreshCw,
+  Users, FileText, CheckCircle2, AlertCircle, Loader2,
+  AlertTriangle, Clock, Gavel, ShieldCheck, BookOpen, RefreshCw,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { logError } from "@/lib/errorHandling";
