@@ -124,10 +124,7 @@ export async function fetchGovernanceSnapshot(
     })),
     minutes: closestAgenda?.minutes_content || null,
     coi: (coiRes.data || [])
-      .filter((c: any) => {
-        // Only include COIs from board members on this board
-        return true; // We already limited by the join
-      })
+      
       .map((c: any) => ({
         member_name: c.member?.full_name || 'Unknown',
         interest: c.declared_interest,
