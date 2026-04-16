@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getUserFriendlyError } from "@/lib/errorHandling";
+import { passwordSchema, PASSWORD_REQUIREMENTS_TEXT } from "@/lib/passwordSchema";
 import { Loader2 } from "lucide-react";
 
 const ResetPassword = () => {
