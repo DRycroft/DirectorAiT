@@ -32,7 +32,7 @@ const Boards = lazy(() => import("./pages/Boards"));
 const BoardDetail = lazy(() => import("./pages/BoardDetail"));
 const BoardAndTeam = lazy(() => import("./pages/BoardAndTeam"));
 const TeamOverview = lazy(() => import("./pages/TeamOverview"));
-const MemberIntake = lazy(() => import("./pages/MemberIntake"));
+
 const MemberInvite = lazy(() => import("./pages/MemberInvite"));
 const MyProfile = lazy(() => import("./pages/MyProfile"));
 const MemberApproval = lazy(() => import("./pages/MemberApproval"));
