@@ -9,7 +9,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, CheckCircle2, Clock, Edit, Eye, Lock, ShieldCheck } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { ArrowLeft, FileText, CheckCircle2, Clock, Edit, Eye, Lock, ShieldCheck, Plus, Trash2 } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +37,8 @@ export default function PackSections() {
   const [pack, setPack] = useState<PackWithSections | null>(null);
   const [sections, setSections] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAddSection, setShowAddSection] = useState(false);
+  const [newSectionTitle, setNewSectionTitle] = useState('');
 
   const isFinalised = pack?.status === 'finalised';
 
@@ -64,6 +73,37 @@ export default function PackSections() {
       toast({ title: 'Error loading pack', description: error.message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAddSection = async () => {
+    if (!packId || !newSectionTitle.trim()) return;
+    try {
+      const maxOrder = sections.reduce((max, s) => Math.max(max, s.order_index || 0), -1);
+      const { error } = await supabase.from('pack_sections').insert({
+        pack_id: packId,
+        title: newSectionTitle.trim(),
+        order_index: maxOrder + 1,
+        status: 'pending',
+      });
+      if (error) throw error;
+      toast({ title: 'Section added' });
+      setNewSectionTitle('');
+      setShowAddSection(false);
+      loadPackData();
+    } catch (error: any) {
+      toast({ title: 'Error adding section', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleRemoveSection = async (sectionId: string) => {
+    try {
+      const { error } = await supabase.from('pack_sections').delete().eq('id', sectionId);
+      if (error) throw error;
+      toast({ title: 'Section removed' });
+      loadPackData();
+    } catch (error: any) {
+      toast({ title: 'Error removing section', description: error.message, variant: 'destructive' });
     }
   };
 
@@ -143,11 +183,39 @@ export default function PackSections() {
         </div>
 
         <Card className="p-6">
-          <h2 className="text-2xl font-bold mb-6">Pack Sections</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Pack Sections</h2>
+            {!isFinalised && (
+              <Dialog open={showAddSection} onOpenChange={setShowAddSection}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Section
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add Section</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <Input
+                      placeholder="Section title, e.g. CEO Report"
+                      value={newSectionTitle}
+                      onChange={(e) => setNewSectionTitle(e.target.value)}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setShowAddSection(false)}>Cancel</Button>
+                      <Button onClick={handleAddSection} disabled={!newSectionTitle.trim()}>Add</Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
           
           {sections.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No sections in this pack.
+              No sections in this pack. {!isFinalised && 'Add sections above.'}
             </div>
           ) : (
             <div className="space-y-3">
@@ -180,14 +248,39 @@ export default function PackSections() {
                           </div>
                         </div>
                       </div>
-                      {isFinalised ? (
-                        <Lock className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4 mr-2" />
-                          {section.status === 'submitted' ? 'Edit' : 'Add Report'}
-                        </Button>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {isFinalised ? (
+                          <Lock className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleSectionClick(section.id); }}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              {section.status === 'submitted' ? 'Edit' : 'Add Report'}
+                            </Button>
+                            {section.status !== 'submitted' && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="text-destructive" onClick={(e) => e.stopPropagation()}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Remove section?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This will permanently remove "{section.title}" from the pack.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleRemoveSection(section.id)}>Remove</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </Card>
                 );
