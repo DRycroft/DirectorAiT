@@ -277,7 +277,7 @@ const MemberApproval = () => {
         <div className="space-y-6">
           <MemberProfileTabs member={member} sensitiveData={sensitiveData} isAdmin={true} />
           
-          <COIManagement memberId={member.id} isEditable={false} />
+          
           
           <AuditHistory memberId={member.id} />
 
