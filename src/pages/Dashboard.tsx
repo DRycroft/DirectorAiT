@@ -78,6 +78,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isBootstrapping } = useAuth();
+  const governanceAI = useGovernanceAI();
+  const [askQuestion, setAskQuestion] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userOrgs, setUserOrgs] = useState<UserOrg[]>([]);
