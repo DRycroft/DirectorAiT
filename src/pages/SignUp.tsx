@@ -55,11 +55,6 @@ const SignUp = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
-
-  // Redirect already-authenticated users
-  if (!authLoading && user) {
-    return <Navigate to="/dashboard" replace />;
-  }
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
@@ -76,6 +71,11 @@ const SignUp = () => {
     companyName: "",
     userRole: "",
   });
+
+  // Redirect already-authenticated users (after all hooks)
+  if (!authLoading && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   useEffect(() => {
     // Clean up old V1 data if present
