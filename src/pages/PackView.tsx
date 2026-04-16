@@ -82,8 +82,22 @@ export default function PackView() {
   const [canManagePack, setCanManagePack] = useState(false);
 
   const isFinalised = pack?.status === 'finalised';
+  const governanceAI = useGovernanceAI();
 
-  useEffect(() => {
+  const handleSummarisePack = async () => {
+    if (!packId) return;
+    await governanceAI.execute({ action: 'summarise-pack', packId });
+  };
+
+  const handleHighlightRisks = async () => {
+    if (!pack?.board_id) return;
+    await governanceAI.execute({ action: 'highlight-risks', boardId: pack.board_id });
+  };
+
+  const handleDirectorBriefing = async () => {
+    if (!pack?.board_id) return;
+    await governanceAI.execute({ action: 'director-briefing', boardId: pack.board_id });
+  };
     if (packId) loadAssembledPack();
   }, [packId]);
 
