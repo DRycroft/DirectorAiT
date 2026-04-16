@@ -465,6 +465,7 @@ const Actions = () => {
                   <TableHead>Age</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-[160px]">Update</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
