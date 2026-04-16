@@ -11,8 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { TemplateSectionEditor, TemplateSection } from "@/components/TemplateSectionEditor";
 import { StaffFormTemplateEditor, FormField } from "@/components/StaffFormTemplateEditor";
 import RoleManagement from "@/components/settings/RoleManagement";
-import TwoPersonApproval from "@/components/TwoPersonApproval";
-import COIManagement from "@/components/COIManagement";
 import AuditHistory from "@/components/AuditHistory";
 import AdminManagement from "@/components/settings/AdminManagement";
 import { useState, useEffect } from "react";
@@ -1789,15 +1787,6 @@ const Settings = () => {
             <AdminManagement />
           </TabsContent>
 
-          {/* Two-Person Approval Tab */}
-          <TabsContent value="approvals">
-            <TwoPersonApproval />
-          </TabsContent>
-
-          {/* COI Management Tab */}
-          <TabsContent value="coi">
-            <COIManagement />
-          </TabsContent>
 
           {/* Audit History Tab */}
           <TabsContent value="audit">

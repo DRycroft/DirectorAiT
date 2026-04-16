@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, XCircle, Loader2, ArrowLeft } from "lucide-react";
 import MemberProfileTabs from "@/components/MemberProfileTabs";
-import COIManagement from "@/components/COIManagement";
+
 import AuditHistory from "@/components/AuditHistory";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -277,7 +277,7 @@ const MemberApproval = () => {
         <div className="space-y-6">
           <MemberProfileTabs member={member} sensitiveData={sensitiveData} isAdmin={true} />
           
-          <COIManagement memberId={member.id} isEditable={false} />
+          
           
           <AuditHistory memberId={member.id} />
 
