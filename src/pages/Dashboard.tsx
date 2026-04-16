@@ -183,7 +183,7 @@ const Dashboard = () => {
 
       // Resolve owner names for actions
       const ownerIds = [...new Set((actionsRes.data ?? []).map(a => a.owner_id).filter(Boolean))] as string[];
-      let ownerMap = new Map<string, string>();
+      const ownerMap = new Map<string, string>();
       if (ownerIds.length > 0) {
         const { data: profiles } = await supabase.from("profiles").select("id, name").in("id", ownerIds);
         profiles?.forEach(p => ownerMap.set(p.id, p.name ?? "Unknown"));

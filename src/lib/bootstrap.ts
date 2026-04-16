@@ -89,7 +89,7 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
   const contactPhone: string | null = user.user_metadata?.phone || null;
 
   // Try to get company name from V2 storage (minimal data approach)
-  let raw = sessionStorage.getItem("pendingSignUpV2");
+  const raw = sessionStorage.getItem("pendingSignUpV2");
   if (raw) {
     try {
       const pending = JSON.parse(raw);

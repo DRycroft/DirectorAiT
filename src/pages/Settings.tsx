@@ -972,7 +972,7 @@ const Settings = () => {
               </TabsTrigger>
               <TabsTrigger value="templates">Document Templates</TabsTrigger>
             </TabsList>
-            <TabsList className="grid w-full grid-cols-5 h-auto">
+            <TabsList className="grid w-full grid-cols-3 h-auto">
               <TabsTrigger value="roles">
                 <Shield className="mr-2 h-4 w-4" />
                 Roles
@@ -980,14 +980,6 @@ const Settings = () => {
               <TabsTrigger value="admins">
                 <Shield className="mr-2 h-4 w-4" />
                 Admins
-              </TabsTrigger>
-              <TabsTrigger value="approvals">
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Approvals
-              </TabsTrigger>
-              <TabsTrigger value="coi">
-                <AlertCircle className="mr-2 h-4 w-4" />
-                COI Management
               </TabsTrigger>
               <TabsTrigger value="audit">
                 <Clock className="mr-2 h-4 w-4" />

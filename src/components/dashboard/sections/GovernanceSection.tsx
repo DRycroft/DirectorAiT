@@ -70,7 +70,7 @@ export const GovernanceSection = () => {
 
       // Resolve owner names
       const ownerIds = [...new Set((actions ?? []).map(a => a.owner_id).filter(Boolean))] as string[];
-      let ownerMap = new Map<string, string>();
+      const ownerMap = new Map<string, string>();
       if (ownerIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
@@ -104,7 +104,7 @@ export const GovernanceSection = () => {
         .limit(5);
 
       const boardIds = [...new Set((meetings ?? []).map(m => m.board_id))];
-      let boardMap = new Map<string, string>();
+      const boardMap = new Map<string, string>();
       if (boardIds.length > 0) {
         const { data: boards } = await supabase
           .from("boards")
