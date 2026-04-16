@@ -430,6 +430,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
 
         if (sensitiveError) {
           logError("AddPersonDialog - Update sensitive data", sensitiveError);
+          toast.error("Member saved but some sensitive details could not be updated.");
         }
       } else {
         // INSERT new member
@@ -449,6 +450,7 @@ export function AddPersonDialog({ boardId, organizationName, onSuccess, trigger,
 
         if (sensitiveError) {
           logError("AddPersonDialog - Insert sensitive data", sensitiveError);
+          toast.error("Member created but some sensitive details could not be saved.");
         }
       }
 
