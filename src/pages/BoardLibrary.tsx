@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,13 +17,60 @@ import {
   Eye,
   Trash2,
   Brain,
-  CheckCircle2
+  CheckCircle2,
+  Loader2
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface LibraryDocument {
+  id: string;
+  file_name: string;
+  file_type: string;
+  uploaded_at: string;
+  processing_status: string | null;
+  confidential_level: string | null;
+}
 
 const BoardLibrary = () => {
+  const { user } = useAuth();
   const [dragActive, setDragActive] = useState(false);
+  const [documents, setDocuments] = useState<LibraryDocument[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      if (!user) return;
+      
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("org_id")
+        .eq("id", user.id)
+        .single();
+      
+      if (!profile?.org_id) {
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("archived_documents")
+        .select("id, file_name, file_type, uploaded_at, processing_status, confidential_level")
+        .eq("org_id", profile.org_id)
+        .order("uploaded_at", { ascending: false })
+        .limit(50);
+
+      if (!error && data) {
+        setDocuments(data);
+      }
+      setLoading(false);
+    };
+
+    fetchDocuments();
+  }, [user]);
+
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -57,37 +104,12 @@ const BoardLibrary = () => {
       });
     }
   };
-  
-  // Mock data for demonstration
-  const documents = [
-    {
-      id: 1,
-      title: "Q3 2024 Financial Review",
-      date: "2024-09-15",
-      category: "Financials",
-      pages: 24,
-      processed: true,
-      keywords: ["revenue", "expenses", "forecast"]
-    },
-    {
-      id: 2,
-      title: "Product Strategy 2025",
-      date: "2024-08-20",
-      category: "Strategy",
-      pages: 18,
-      processed: true,
-      keywords: ["roadmap", "innovation", "market"]
-    },
-    {
-      id: 3,
-      title: "Risk Register Update",
-      date: "2024-07-10",
-      category: "Risk",
-      pages: 12,
-      processed: true,
-      keywords: ["compliance", "security", "operations"]
-    }
-  ];
+
+  const processedCount = documents.filter(d => d.processing_status === "completed").length;
+
+  const filteredDocuments = searchQuery
+    ? documents.filter(d => d.file_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : documents;
   
   return (
     <div className="min-h-screen bg-background">
@@ -109,7 +131,7 @@ const BoardLibrary = () => {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Total Documents</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">247</div>
+                <div className="text-3xl font-bold">{loading ? "—" : documents.length}</div>
                 <p className="text-sm text-muted-foreground mt-1">Across all boards</p>
               </CardContent>
             </Card>
@@ -119,18 +141,18 @@ const BoardLibrary = () => {
                 <CardTitle className="text-sm font-medium text-muted-foreground">AI Processed</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-success">243</div>
+                <div className="text-3xl font-bold text-success">{loading ? "—" : processedCount}</div>
                 <p className="text-sm text-muted-foreground mt-1">Ready for insights</p>
               </CardContent>
             </Card>
             
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Storage Used</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Pending Processing</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">2.4 GB</div>
-                <p className="text-sm text-muted-foreground mt-1">of 100 GB available</p>
+                <div className="text-3xl font-bold">{loading ? "—" : documents.length - processedCount}</div>
+                <p className="text-sm text-muted-foreground mt-1">In queue</p>
               </CardContent>
             </Card>
           </div>
@@ -242,8 +264,10 @@ const BoardLibrary = () => {
                     <div className="flex-1 relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input 
-                        placeholder="Search documents, keywords, decisions..." 
+                        placeholder="Search documents..." 
                         className="pl-9"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                       />
                     </div>
                     <Button variant="outline">
@@ -254,61 +278,73 @@ const BoardLibrary = () => {
                 </CardContent>
               </Card>
               
-              {/* Documents Grid */}
-              <div className="space-y-4">
-                {documents.map((doc) => (
-                  <Card key={doc.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="pt-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-4 flex-1">
-                          <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center text-accent flex-shrink-0">
-                            <FileText className="w-6 h-6" />
+              {/* Documents list */}
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : filteredDocuments.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold mb-2">No documents yet</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Upload your first board paper to get started
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {filteredDocuments.map((doc) => (
+                    <Card key={doc.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-4 flex-1">
+                            <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center text-accent flex-shrink-0">
+                              <FileText className="w-6 h-6" />
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-semibold text-lg">{doc.file_name}</h3>
+                                {doc.processing_status === "completed" && (
+                                  <CheckCircle2 className="w-4 h-4 text-success" />
+                                )}
+                              </div>
+                              
+                              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="w-4 h-4" />
+                                  {new Date(doc.uploaded_at).toLocaleDateString()}
+                                </div>
+                                <Badge variant="secondary">{doc.file_type}</Badge>
+                                {doc.confidential_level && (
+                                  <Badge variant="outline">
+                                    <Tag className="w-3 h-3 mr-1" />
+                                    {doc.confidential_level}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
                           </div>
                           
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="font-semibold text-lg">{doc.title}</h3>
-                              {doc.processed && (
-                                <CheckCircle2 className="w-4 h-4 text-success" />
-                              )}
-                            </div>
-                            
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-4 h-4" />
-                                {new Date(doc.date).toLocaleDateString()}
-                              </div>
-                              <Badge variant="secondary">{doc.category}</Badge>
-                              <span>{doc.pages} pages</span>
-                            </div>
-                            
-                            <div className="flex flex-wrap gap-2">
-                              {doc.keywords.map((keyword, i) => (
-                                <Badge key={i} variant="outline" className="text-xs">
-                                  <Tag className="w-3 h-3 mr-1" />
-                                  {keyword}
-                                </Badge>
-                              ))}
-                            </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <Button size="sm" variant="ghost">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost">
+                              <Download className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Button size="sm" variant="ghost">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost">
-                            <Download className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>

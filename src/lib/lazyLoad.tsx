@@ -25,18 +25,7 @@ const DefaultLoadingFallback = () => (
   </div>
 );
 
-/**
- * Create a lazy-loaded component with custom loading fallback
- * 
- * @param importFn - Dynamic import function
- * @param fallback - Optional custom loading fallback
- * @returns Lazy-loaded component wrapped in Suspense
- * 
- * @example
- * ```typescript
- * const Dashboard = lazyLoad(() => import('@/pages/Dashboard'));
- * ```
- */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function lazyLoad<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>,
   fallback?: React.ReactNode
@@ -50,15 +39,7 @@ export function lazyLoad<T extends ComponentType<any>>(
   );
 }
 
-/**
- * Create a lazy-loaded component with retry logic
- * Useful for handling network errors during chunk loading
- * 
- * @param importFn - Dynamic import function
- * @param retries - Number of retries (default: 3)
- * @param fallback - Optional custom loading fallback
- * @returns Lazy-loaded component with retry logic
- */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function lazyLoadWithRetry<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>,
   retries: number = 3,
@@ -79,7 +60,6 @@ export function lazyLoadWithRetry<T extends ComponentType<any>>(
               `Failed to load component, retrying... (${retriesLeft} attempts left)`
             );
             
-            // Retry after a delay
             setTimeout(() => {
               attemptImport(retriesLeft - 1);
             }, 1000);
@@ -97,40 +77,19 @@ export function lazyLoadWithRetry<T extends ComponentType<any>>(
   );
 }
 
-/**
- * Preload a lazy component
- * Useful for prefetching components before they're needed
- * 
- * @param importFn - Dynamic import function
- * 
- * @example
- * ```typescript
- * // Preload on hover
- * <button onMouseEnter={() => preloadComponent(() => import('@/pages/Dashboard'))}>
- *   Go to Dashboard
- * </button>
- * ```
- */
-export function preloadComponent(importFn: () => Promise<any>): void {
+export function preloadComponent(importFn: () => Promise<{ default: ComponentType<unknown> }>): void {
   importFn().catch((error) => {
     console.error('Failed to preload component:', error);
   });
 }
 
-/**
- * Create a lazy-loaded route component
- * Optimized for React Router with better error handling
- */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function lazyRoute<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>
 ) {
   return lazyLoadWithRetry(importFn, 3, <DefaultLoadingFallback />);
 }
 
-/**
- * Image lazy loading component
- * Uses Intersection Observer for efficient lazy loading
- */
 export const LazyImage = React.memo(({
   src,
   alt,
