@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
-import { supabase } from "@/integrations/supabase/client";
+// supabase client available when member-intake edge function is implemented
 import { z } from "zod";
 import { UserPlus, Shield, Link as LinkIcon } from "lucide-react";
 
