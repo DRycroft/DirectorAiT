@@ -262,7 +262,7 @@ export default function BoardsManagement() {
 
       if (error) throw error;
 
-      toast.success(`Board status changed to ${newStatus);
+      toast.success(`Board status changed to ${newStatus}`);
       
       fetchBoards();
     } catch (error: any) {

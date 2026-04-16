@@ -130,9 +130,9 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
         if (emailError) {
           logError("MembersList - Resend email", emailError);
           const inviteUrl = `${window.location.origin}/invite/${token}`;
-          toast.success(`New invite created but email failed to send. Share this link manually: ${inviteUrl);
+          toast.success(`New invite created but email failed to send. Share this link manually: ${inviteUrl}`);
         } else {
-          toast.success(`Invite email sent to ${inviteEmail);
+          toast.success(`Invite email sent to ${inviteEmail}`);
         }
       } else {
         // No email on file — copy link to clipboard as fallback

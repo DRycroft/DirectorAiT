@@ -771,7 +771,7 @@ const Settings = () => {
       return;
     }
 
-    toast.success(`${selectedType);
+    toast.success(`${selectedType} template created`);
 
     // Reset form
     setSelectedType("");

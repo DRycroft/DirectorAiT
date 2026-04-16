@@ -30,7 +30,7 @@ const ExportTeam = () => {
       a.click();
       window.URL.revokeObjectURL(url);
 
-      toast.success(`Exported ${data.memberCount);
+      toast.success(`Exported ${data.memberCount} members`);
     } catch (error: any) {
       toast.error(error.message || "Failed to export team data");
     }

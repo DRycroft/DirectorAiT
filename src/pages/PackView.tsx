@@ -259,7 +259,7 @@ export default function PackView() {
       const { error } = await supabase.from('document_acknowledgements').insert(acks);
       if (error) throw error;
 
-      toast.success(`Sent to ${memberships.length);
+      toast.success(`Sent to ${memberships.length} board member(s).`);
       loadAssembledPack();
     } catch (error: any) {
       toast.error(error.message);

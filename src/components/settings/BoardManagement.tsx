@@ -183,9 +183,9 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
 
       if (emailError) {
         logError("BoardManagement.sendInviteEmail", emailError);
-        toast.success(`Member record created but invite email failed to send. Please share this link manually: ${inviteUrl);
+        toast.success(`Member record created but invite email failed to send. Please share this link manually: ${inviteUrl}`);
       } else {
-        toast.success(`Invite email sent to ${formData.personal_email);
+        toast.success(`Invite email sent to ${formData.personal_email}`);
       }
 
       setFormData({

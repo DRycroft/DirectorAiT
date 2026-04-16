@@ -165,7 +165,7 @@ export default function AdminManagement() {
 
       if (error) throw error;
 
-      toast.success(`${adminType === "primary" ? "Primary" : "Secondary");
+      toast.success(`${adminType === "primary" ? "Primary" : "Secondary"} admin assigned successfully`);
 
       fetchAdmins();
     } catch (error) {
