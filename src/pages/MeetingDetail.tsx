@@ -330,7 +330,22 @@ const MeetingDetail = () => {
     }
   };
 
-  if (loading) {
+  const handleCreateActionFromDecision = async (decision: Decision) => {
+    if (!meetingId) return;
+    try {
+      const { error } = await supabase.from("action_items").insert({
+        title: `Action: ${decision.title}`,
+        description: decision.description,
+        extracted_decision_id: decision.id,
+        status: "pending",
+      });
+      if (error) throw error;
+      toast.success("Action created from decision");
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed to create action");
+    }
+  };
+
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
