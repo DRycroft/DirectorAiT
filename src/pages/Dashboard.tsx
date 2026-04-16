@@ -99,7 +99,7 @@ const Dashboard = () => {
     unreadPacks: 0,
   });
 
-  const { user } = useAuth();
+  
 
   useEffect(() => {
     if (isBootstrapping) return;
