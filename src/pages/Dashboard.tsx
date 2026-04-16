@@ -144,18 +144,16 @@ const Dashboard = () => {
     }
   }, [selectedOrgId]);
 
-  const fetchDashboardData = async (orgId: string, userId: string) => {
+  const fetchDashboardData = async (orgId: string, _userId: string) => {
     try {
       if (!loading) setRefreshing(true);
       const now = new Date();
       const today = now.toISOString().split('T')[0];
-      const sevenDaysOut = addDays(now, 7).toISOString();
       const thirtyDaysOut = addDays(now, 30).toISOString().split('T')[0];
 
       // Get boards for this org
       const { data: boardsData } = await supabase
         .from("boards").select("id, title").eq("org_id", orgId);
-      const boardIds = boardsData?.map(b => b.id) || [];
       const boardMap = new Map((boardsData || []).map(b => [b.id, b.title]));
 
       // Parallel fetches
