@@ -14,7 +14,6 @@ import { logError } from "@/lib/errorHandling";
 import { UserRoleWithProfile, Profile, AppRole } from "@/types/database";
 
 const AVAILABLE_ROLES = [
-  { value: "super_admin", label: "Super Admin", description: "Full system access" },
   { value: "org_admin", label: "Organization Admin", description: "Manage organization settings and users" },
   { value: "chair", label: "Board Chair", description: "Lead board meetings and decisions" },
   { value: "director", label: "Director", description: "Board member with voting rights" },
