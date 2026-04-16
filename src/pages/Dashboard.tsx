@@ -19,8 +19,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
   Users, FileText, CheckCircle2, AlertCircle, Loader2,
-  AlertTriangle, Clock, Gavel, ShieldCheck, BookOpen, RefreshCw,
+  AlertTriangle, Clock, Gavel, ShieldCheck, BookOpen, RefreshCw, Sparkles, Send,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { logError } from "@/lib/errorHandling";
 import { useAuth } from "@/contexts/AuthContext";
