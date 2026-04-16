@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -89,6 +89,32 @@ export default function PackManagement() {
   const viewPackSections = async (packId: string) => {
     navigate(`/pack/${packId}/sections`);
   };
+
+  if (boards.length === 0 && !isLoadingPacks) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto py-8 px-4">
+          <h1 className="text-4xl font-bold mb-2">Board Pack Management</h1>
+          <p className="text-muted-foreground mb-8">
+            Create templates and manage board packs for meetings
+          </p>
+          <Card className="p-6">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
+              <h3 className="text-lg font-semibold mb-1">No boards found</h3>
+              <p className="text-muted-foreground mb-4 max-w-sm">
+                You need at least one board before you can create board packs. Head to Boards & Committees to create one.
+              </p>
+              <Button onClick={() => navigate("/boards-committees")}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create a Board
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
