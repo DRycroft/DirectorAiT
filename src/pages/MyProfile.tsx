@@ -134,6 +134,11 @@ const MyProfile = () => {
         .eq("member_id", memberId)
         .maybeSingle();
 
+      // Show rejection feedback if member was rejected
+      if (found.status === "rejected" && sensitive?.sensitive_notes) {
+        setRejectionNotes(sensitive.sensitive_notes);
+      }
+
       const prefs = (found.publish_preferences as Record<string, boolean>) || {};
 
       setFormData({
