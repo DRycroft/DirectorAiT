@@ -2,7 +2,8 @@
  * Pack View Page
  * 
  * Assembled board-pack view: renders all pack sections in order
- * with their submitted content. Supports finalisation and lock controls.
+ * with their submitted content, plus auto-populated governance data.
+ * Supports finalisation, lock controls, and distribution tracking.
  */
 
 import { useState, useEffect } from 'react';
@@ -10,14 +11,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle, Lock, Unlock, ShieldCheck, Printer } from 'lucide-react';
+import { ArrowLeft, FileText, Download, CheckCircle2, Clock, AlertCircle, Lock, Unlock, ShieldCheck, Printer, Send, Users, ListChecks, Gavel, ClipboardList, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { fetchGovernanceSnapshot, type GovernanceSnapshot } from '@/lib/packAutoPopulate';
 
 interface PackDetails {
   id: string;
@@ -53,6 +56,13 @@ interface SupportingDoc {
   status: string;
 }
 
+interface AckRecord {
+  user_id: string;
+  user_name: string;
+  ack_type: string;
+  created_at: string;
+}
+
 export default function PackView() {
   const { packId } = useParams<{ packId: string }>();
   const navigate = useNavigate();
@@ -61,9 +71,12 @@ export default function PackView() {
   const [pack, setPack] = useState<PackDetails | null>(null);
   const [sections, setSections] = useState<SectionWithContent[]>([]);
   const [supportingDocs, setSupportingDocs] = useState<SupportingDoc[]>([]);
+  const [governance, setGovernance] = useState<GovernanceSnapshot | null>(null);
+  const [acknowledgements, setAcknowledgements] = useState<AckRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFinalising, setIsFinalising] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const [isDistributing, setIsDistributing] = useState(false);
   const [canManagePack, setCanManagePack] = useState(false);
 
   const isFinalised = pack?.status === 'finalised';
@@ -95,6 +108,10 @@ export default function PackView() {
       if (sectionsError) throw sectionsError;
       setSections((sectionsData as any[]) || []);
 
+      // Auto-populate governance data
+      const govData = await fetchGovernanceSnapshot(packData.board_id, packData.meeting_date);
+      setGovernance(govData);
+
       // Get org for supporting docs + role check
       const { data: boardData } = await supabase
         .from('boards')
@@ -105,7 +122,7 @@ export default function PackView() {
       if (boardData?.org_id) {
         const orgId = boardData.org_id;
 
-        // Check user roles for finalise/unlock permission
+        // Check user roles
         const { data: userData } = await supabase.auth.getUser();
         if (userData?.user) {
           const { data: orgRoles } = await supabase
@@ -134,6 +151,25 @@ export default function PackView() {
           ...(specialRes.data || []).map((d: any) => ({ id: d.id, file_name: d.file_name, file_path: d.file_path, uploaded_at: d.uploaded_at, source: 'special_papers' as const, type_label: `Special Paper – ${d.category || 'General'}`, status: d.status })),
         ];
         setSupportingDocs(docs);
+
+        // Load acknowledgements
+        const { data: ackData } = await supabase
+          .from('document_acknowledgements')
+          .select('user_id, ack_type, created_at')
+          .eq('pack_id', packId)
+          .eq('org_id', orgId);
+
+        if (ackData && ackData.length > 0) {
+          const userIds = [...new Set(ackData.map(a => a.user_id))];
+          const { data: profiles } = await supabase.from('profiles').select('id, name').in('id', userIds);
+          const nameMap = new Map((profiles || []).map(p => [p.id, p.name || 'Unknown']));
+          setAcknowledgements(ackData.map(a => ({
+            user_id: a.user_id,
+            user_name: nameMap.get(a.user_id) || 'Unknown',
+            ack_type: a.ack_type,
+            created_at: a.created_at,
+          })));
+        }
       }
     } catch (error: any) {
       toast({ title: 'Error loading pack', description: error.message, variant: 'destructive' });
@@ -172,6 +208,77 @@ export default function PackView() {
     }
   };
 
+  const handleDistribute = async () => {
+    if (!packId || !pack) return;
+    setIsDistributing(true);
+    try {
+      // Get board members for this board
+      const { data: memberships } = await supabase
+        .from('board_memberships')
+        .select('user_id')
+        .eq('board_id', pack.board_id);
+
+      if (!memberships || memberships.length === 0) {
+        toast({ title: 'No members', description: 'No board members to distribute to.', variant: 'destructive' });
+        return;
+      }
+
+      const { data: boardData } = await supabase
+        .from('boards')
+        .select('org_id')
+        .eq('id', pack.board_id)
+        .single();
+
+      if (!boardData?.org_id) throw new Error('Board org not found');
+
+      // Create acknowledgement records for each member (type = 'distributed')
+      const acks = memberships.map(m => ({
+        user_id: m.user_id,
+        pack_id: packId,
+        org_id: boardData.org_id,
+        ack_type: 'distributed',
+      }));
+
+      const { error } = await supabase.from('document_acknowledgements').insert(acks);
+      if (error) throw error;
+
+      toast({ title: 'Pack distributed', description: `Sent to ${memberships.length} board member(s).` });
+      loadAssembledPack();
+    } catch (error: any) {
+      toast({ title: 'Distribution failed', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsDistributing(false);
+    }
+  };
+
+  const handleAcknowledge = async () => {
+    if (!packId || !pack) return;
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return;
+
+      const { data: boardData } = await supabase
+        .from('boards')
+        .select('org_id')
+        .eq('id', pack.board_id)
+        .single();
+
+      if (!boardData?.org_id) return;
+
+      const { error } = await supabase.from('document_acknowledgements').insert({
+        user_id: userData.user.id,
+        pack_id: packId,
+        org_id: boardData.org_id,
+        ack_type: 'read',
+      });
+      if (error) throw error;
+      toast({ title: 'Acknowledged', description: 'You have confirmed reading this pack.' });
+      loadAssembledPack();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
   const handleDownload = async (filePath: string, fileName: string, bucket: string) => {
     try {
       const { data, error } = await supabase.storage.from(bucket).download(filePath);
@@ -205,6 +312,8 @@ export default function PackView() {
   };
 
   const submittedCount = sections.filter(s => s.status === 'submitted').length;
+  const distributedCount = acknowledgements.filter(a => a.ack_type === 'distributed').length;
+  const readCount = acknowledgements.filter(a => a.ack_type === 'read').length;
 
   if (isLoading) {
     return (
@@ -228,10 +337,6 @@ export default function PackView() {
     );
   }
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
     <div className={`min-h-screen bg-background ${!isFinalised ? 'print-draft-watermark' : ''}`}>
       <div className="container mx-auto py-8 px-4 max-w-4xl">
@@ -240,10 +345,24 @@ export default function PackView() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Sections
           </Button>
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="h-4 w-4 mr-2" />
-            Export PDF
-          </Button>
+          <div className="flex items-center gap-2">
+            {isFinalised && canManagePack && distributedCount === 0 && (
+              <Button variant="outline" onClick={handleDistribute} disabled={isDistributing}>
+                <Send className="h-4 w-4 mr-2" />
+                {isDistributing ? 'Distributing…' : 'Distribute to Board'}
+              </Button>
+            )}
+            {isFinalised && (
+              <Button variant="outline" size="sm" onClick={handleAcknowledge}>
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Acknowledge Read
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => window.print()}>
+              <Printer className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
+          </div>
         </div>
 
         {/* Finalised banner */}
@@ -270,19 +389,39 @@ export default function PackView() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Unlock this pack?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will return the pack to draft status, allowing further edits. Any distributed copies will no longer match the current version.
+                      This will return the pack to draft status, allowing further edits.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleUnlockPack}>
-                      Unlock Pack
-                    </AlertDialogAction>
+                    <AlertDialogAction onClick={handleUnlockPack}>Unlock Pack</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
             )}
           </div>
+        )}
+
+        {/* Distribution & Acknowledgement Tracking */}
+        {isFinalised && (distributedCount > 0 || readCount > 0) && (
+          <Card className="p-4 mb-6 print:hidden">
+            <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+              <Send className="h-4 w-4" /> Distribution Status
+            </h3>
+            <div className="flex items-center gap-4 text-sm">
+              <span className="text-muted-foreground">Distributed: <strong>{distributedCount}</strong></span>
+              <span className="text-muted-foreground">Read: <strong>{readCount}</strong></span>
+            </div>
+            {acknowledgements.filter(a => a.ack_type === 'read').length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {acknowledgements.filter(a => a.ack_type === 'read').map(a => (
+                  <Badge key={a.user_id} variant="secondary" className="text-xs">
+                    {a.user_name} • {new Date(a.created_at).toLocaleDateString()}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </Card>
         )}
 
         {/* Pack Header */}
@@ -319,19 +458,17 @@ export default function PackView() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Finalise this board pack?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Once finalised, sections cannot be edited until the pack is unlocked by an administrator.
+                        Once finalised, sections cannot be edited until unlocked.
                         {submittedCount < sections.length && (
                           <span className="block mt-2 text-warning font-medium">
-                            Warning: {sections.length - submittedCount} section(s) have not been submitted yet.
+                            Warning: {sections.length - submittedCount} section(s) not submitted.
                           </span>
                         )}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleFinalisePack}>
-                        Finalise Pack
-                      </AlertDialogAction>
+                      <AlertDialogAction onClick={handleFinalisePack}>Finalise Pack</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -342,7 +479,111 @@ export default function PackView() {
 
         <Separator className="mb-8" />
 
-        {/* Assembled Sections */}
+        {/* Auto-Populated Governance Sections */}
+        {governance && (
+          <div className="space-y-6 mb-8" id="pack-governance">
+            {/* Attendance */}
+            {governance.attendance.length > 0 && (
+              <div className="break-inside-avoid">
+                <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" /> Attendance
+                </h2>
+                <Card className="p-4">
+                  <div className="grid grid-cols-3 gap-2 text-sm font-medium border-b pb-2 mb-2">
+                    <span>Member</span><span>Position</span><span>Status</span>
+                  </div>
+                  {governance.attendance.map((a, i) => (
+                    <div key={i} className="grid grid-cols-3 gap-2 text-sm py-1">
+                      <span>{a.name}</span>
+                      <span className="text-muted-foreground">{a.position || '—'}</span>
+                      <span>{a.attended ? <Badge variant="default" className="text-xs">Present</Badge> : <Badge variant="outline" className="text-xs">{a.apologies || 'Absent'}</Badge>}</span>
+                    </div>
+                  ))}
+                </Card>
+              </div>
+            )}
+
+            {/* Previous Meeting Minutes */}
+            {governance.minutes && (
+              <div className="break-inside-avoid">
+                <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" /> Minutes of Previous Meeting
+                </h2>
+                <Card className="p-4">
+                  <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
+                    {governance.minutes}
+                  </div>
+                </Card>
+              </div>
+            )}
+
+            {/* Declarations of Interest */}
+            {governance.coi.length > 0 && (
+              <div className="break-inside-avoid">
+                <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" /> Declarations of Interest
+                </h2>
+                <Card className="p-4">
+                  {governance.coi.map((c, i) => (
+                    <div key={i} className="flex items-start justify-between py-1 text-sm border-b last:border-0">
+                      <div>
+                        <span className="font-medium">{c.member_name}</span>
+                        <span className="text-muted-foreground ml-2">({c.type})</span>
+                      </div>
+                      <span className="text-muted-foreground max-w-[50%] text-right">{c.interest}</span>
+                    </div>
+                  ))}
+                </Card>
+              </div>
+            )}
+
+            {/* Decisions & Resolutions */}
+            {governance.decisions.length > 0 && (
+              <div className="break-inside-avoid">
+                <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+                  <Gavel className="h-5 w-5 text-primary" /> Decisions & Resolutions
+                </h2>
+                <Card className="p-4">
+                  {governance.decisions.map((d, i) => (
+                    <div key={i} className="flex items-center justify-between py-1.5 text-sm border-b last:border-0">
+                      <span className="font-medium">{d.title}</span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={d.outcome === 'approved' ? 'default' : 'outline'} className="text-xs capitalize">{d.outcome || 'Noted'}</Badge>
+                        {d.proposer && <span className="text-xs text-muted-foreground">{d.proposer}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </Card>
+              </div>
+            )}
+
+            {/* Action Log */}
+            {governance.actions.length > 0 && (
+              <div className="break-inside-avoid">
+                <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+                  <ListChecks className="h-5 w-5 text-primary" /> Action Log
+                </h2>
+                <Card className="p-4">
+                  <div className="grid grid-cols-4 gap-2 text-sm font-medium border-b pb-2 mb-2">
+                    <span>Action</span><span>Owner</span><span>Due</span><span>Status</span>
+                  </div>
+                  {governance.actions.map((a, i) => (
+                    <div key={i} className="grid grid-cols-4 gap-2 text-sm py-1">
+                      <span>{a.title}</span>
+                      <span className="text-muted-foreground">{a.owner || '—'}</span>
+                      <span className="text-muted-foreground">{a.due_date ? new Date(a.due_date).toLocaleDateString() : '—'}</span>
+                      <Badge variant={a.status === 'completed' ? 'default' : 'outline'} className="text-xs capitalize w-fit">{a.status || 'Pending'}</Badge>
+                    </div>
+                  ))}
+                </Card>
+              </div>
+            )}
+
+            <Separator />
+          </div>
+        )}
+
+        {/* Assembled Sections (manual content) */}
         <div className="space-y-8" id="pack-content">
           {sections.length === 0 ? (
             <Card className="p-8 text-center text-muted-foreground">
