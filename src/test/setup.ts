@@ -23,6 +23,7 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock IntersectionObserver
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).IntersectionObserver = class IntersectionObserver {
   constructor() {}
   disconnect() {}
@@ -31,4 +32,5 @@ Object.defineProperty(window, 'matchMedia', {
     return [];
   }
   unobserve() {}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any;
