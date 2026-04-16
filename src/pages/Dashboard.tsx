@@ -657,7 +657,7 @@ const Dashboard = () => {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && askQuestion.trim()) {
                     // Use first board from stats or skip
-                    const firstBoardId = (recentPacks[0] as any)?.board_id;
+                    // Get first board for this org to scope AI query
                     // We need to get a board ID - use the boards query
                     supabase.from("boards").select("id").eq("org_id", selectedOrgId).limit(1).then(({ data }) => {
                       if (data?.[0]) {
