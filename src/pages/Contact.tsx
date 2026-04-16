@@ -80,6 +80,12 @@ const Contact = () => {
               New Zealand-based governance technology company building
               AI-powered tools for modern boards and committees.
             </p>
+            <p className="text-muted-foreground mt-4">
+              <strong>Support:</strong>{" "}
+              <a href="mailto:support@aigentia.co.nz" className="text-accent hover:underline">
+                support@aigentia.co.nz
+              </a>
+            </p>
           </div>
         </div>
       </main>
