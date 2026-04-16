@@ -19,6 +19,9 @@ const NAV_ITEMS = [
   { path: '/settings', label: 'Settings' },
 ] as const;
 
+const SUPPORT_EMAIL = "support@aigentia.co.nz";
+const FEEDBACK_SUBJECT = "DirectorAiT Feedback";
+
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -81,6 +84,13 @@ const Navigation = () => {
           <div className="flex items-center gap-2 py-3">
             {user ? (
               <>
+                <a
+                  href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(FEEDBACK_SUBJECT)}`}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50"
+                  title="Send feedback or get help"
+                >
+                  Help & Feedback
+                </a>
                 <Button variant="ghost" onClick={handleSignOut} className="hidden sm:inline-flex">
                   Sign Out
                 </Button>
