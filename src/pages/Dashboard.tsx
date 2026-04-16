@@ -16,7 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import {
   Users, FileText, CheckCircle2, AlertCircle, Loader2,
   AlertTriangle, Clock, Gavel, ShieldCheck, BookOpen, RefreshCw, Sparkles, Send,
@@ -26,6 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { logError } from "@/lib/errorHandling";
 import { useAuth } from "@/contexts/AuthContext";
 import { format, isPast, isToday, differenceInCalendarDays, addDays } from "date-fns";
+import { toast } from "sonner";
 
 interface UserOrg {
   org_id: string;
@@ -76,7 +76,6 @@ interface PackRow {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { isBootstrapping } = useAuth();
   const governanceAI = useGovernanceAI();
   const [askQuestion, setAskQuestion] = useState("");
@@ -314,7 +313,7 @@ const Dashboard = () => {
       });
     } catch (error: any) {
       logError("Dashboard - fetchDashboardData", error);
-      toast({ title: "Error", description: "Failed to load dashboard data", variant: "destructive" });
+      toast.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
       setRefreshing(false);

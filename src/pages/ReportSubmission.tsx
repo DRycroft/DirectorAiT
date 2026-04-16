@@ -12,8 +12,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Save, FileText, Lock } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from "sonner";
+import { getUserFriendlyError } from '@/lib/errorHandling';
 
 interface SectionDetails {
   id: string;
@@ -30,7 +31,6 @@ interface SectionDetails {
 export default function ReportSubmission() {
   const { sectionId } = useParams<{ sectionId: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { submitReport, isSubmittingReport } = useBoardPacks();
   
   const [section, setSection] = useState<SectionDetails | null>(null);
@@ -77,11 +77,7 @@ export default function ReportSubmission() {
         setCurrentVersion(docData.version_number || 0);
       }
     } catch (error: any) {
-      toast({
-        title: 'Error loading section',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error(getUserFriendlyError(error));
     } finally {
       setIsLoading(false);
     }
@@ -89,11 +85,7 @@ export default function ReportSubmission() {
 
   const handleSubmit = async () => {
     if (!sectionId || !content.trim()) {
-      toast({
-        title: 'Content required',
-        description: 'Please enter your report content before submitting.',
-        variant: 'destructive',
-      });
+      toast.error("Please enter your report content before submitting.");
       return;
     }
 
@@ -108,18 +100,11 @@ export default function ReportSubmission() {
 
       // Wait for the mutation to complete, then navigate back
       setTimeout(() => {
-        toast({
-          title: 'Success',
-          description: 'Report submitted and pack updated.',
-        });
+        toast.success("Report submitted and pack updated.");
         navigate(-1);
       }, 1500);
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to submit report.',
-        variant: 'destructive',
-      });
+      toast.error(getUserFriendlyError(error));
     }
   };
 

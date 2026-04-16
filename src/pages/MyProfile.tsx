@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 interface BoardMemberRecord {
   id: string;
@@ -38,7 +38,6 @@ const LAST_BOARD_KEY = "myprofile_last_board_member";
 const MyProfile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -84,11 +83,7 @@ const MyProfile = () => {
       if (error) throw error;
 
       if (!data || data.length === 0) {
-        toast({
-          title: "No board membership found",
-          description: "You don't have any board member profiles to complete.",
-          variant: "destructive",
-        });
+        toast.error("You don");
         navigate("/dashboard", { replace: true });
         return;
       }
@@ -105,7 +100,7 @@ const MyProfile = () => {
       setSelectedMemberId(preferred.id);
     } catch (error) {
       console.error("Error fetching memberships:", error);
-      toast({ title: "Error", description: "Failed to load profile details", variant: "destructive" });
+      toast.error("Failed to load profile details");
     }
   };
 
@@ -164,7 +159,7 @@ const MyProfile = () => {
       });
     } catch (error) {
       console.error("Error loading member detail:", error);
-      toast({ title: "Error", description: "Failed to load profile details", variant: "destructive" });
+      toast.error("Failed to load profile details");
     } finally {
       setLoading(false);
     }
@@ -225,10 +220,10 @@ const MyProfile = () => {
       );
 
       setSaved(true);
-      toast({ title: "Profile saved", description: "Your board member profile has been updated." });
+      toast.success("Your board member profile has been updated.");
     } catch (error) {
       console.error("Error saving profile:", error);
-      toast({ title: "Error", description: "Failed to save profile", variant: "destructive" });
+      toast.error("Failed to save profile");
     } finally {
       setSaving(false);
     }

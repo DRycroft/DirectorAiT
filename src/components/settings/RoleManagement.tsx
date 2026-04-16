@@ -7,11 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Shield, UserPlus, Trash2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { logError } from "@/lib/errorHandling";
+import { logError, getUserFriendlyError } from '@/lib/errorHandling';
 import { UserRoleWithProfile, Profile, AppRole } from "@/types/database";
+import { toast } from "sonner";
 
 const AVAILABLE_ROLES = [
   { value: "org_admin", label: "Organization Admin", description: "Manage organization settings and users" },
@@ -22,7 +22,6 @@ const AVAILABLE_ROLES = [
 ];
 
 export const RoleManagement = () => {
-  const { toast } = useToast();
   const [userRoles, setUserRoles] = useState<UserRoleWithProfile[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,11 +91,7 @@ export const RoleManagement = () => {
 
     } catch (error: any) {
       logError("RoleManagement - Fetch data", error);
-      toast({
-        title: "Error",
-        description: "Failed to load role data",
-        variant: "destructive",
-      });
+      toast.error("Failed to load role data");
     } finally {
       setLoading(false);
     }
@@ -104,20 +99,12 @@ export const RoleManagement = () => {
 
   const handleAssignRole = async () => {
     if (!selectedUserId || !selectedRole) {
-      toast({
-        title: "Error",
-        description: "Please select both a user and a role",
-        variant: "destructive",
-      });
+      toast.error("Please select both a user and a role");
       return;
     }
 
     if (!currentOrgId) {
-      toast({
-        title: "Error",
-        description: "Organization not found",
-        variant: "destructive",
-      });
+      toast.error("Organization not found");
       return;
     }
 
@@ -136,10 +123,7 @@ export const RoleManagement = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Role assigned successfully",
-      });
+      toast.success("Role assigned successfully");
 
       setDialogOpen(false);
       setSelectedUserId("");
@@ -147,11 +131,7 @@ export const RoleManagement = () => {
       await fetchData();
     } catch (error: any) {
       logError("RoleManagement - Assign role", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to assign role",
-        variant: "destructive",
-      });
+      toast.error(getUserFriendlyError(error));
     }
   };
 
@@ -166,19 +146,12 @@ export const RoleManagement = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Role removed successfully",
-      });
+      toast.success("Role removed successfully");
 
       await fetchData();
     } catch (error: any) {
       logError("RoleManagement - Remove role", error);
-      toast({
-        title: "Error",
-        description: "Failed to remove role",
-        variant: "destructive",
-      });
+      toast.error("Failed to remove role");
     }
   };
 

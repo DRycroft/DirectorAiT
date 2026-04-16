@@ -3,7 +3,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 import { Settings } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,11 +15,11 @@ import { CustomersSalesSection } from "@/components/dashboard/sections/Customers
 import { GovernanceSection } from "@/components/dashboard/sections/GovernanceSection";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
 
 const BoardDetail = () => {
   const { boardId } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [board, setBoard] = useState<any>(null);
   const [period, setPeriod] = useState<TemporalPeriod>('month');
@@ -78,11 +77,7 @@ const BoardDetail = () => {
     } catch (error: any) {
       logError("BoardDetail - Fetch board data", error);
       const errorMessage = getUserFriendlyError(error);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -7,17 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, XCircle, Loader2, ArrowLeft } from "lucide-react";
 import MemberProfileTabs from "@/components/MemberProfileTabs";
 import COIManagement from "@/components/COIManagement";
 import AuditHistory from "@/components/AuditHistory";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 const MemberApproval = () => {
   const { memberId } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [member, setMember] = useState<any>(null);
@@ -110,11 +109,7 @@ const MemberApproval = () => {
       }
     } catch (error: any) {
       console.error("Error fetching member:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load member details",
-        variant: "destructive",
-      });
+      toast.error("Failed to load member details");
     } finally {
       setLoading(false);
     }
@@ -147,19 +142,12 @@ const MemberApproval = () => {
       });
       if (auditError) console.error("Audit log failed:", auditError);
 
-      toast({
-        title: "Member approved",
-        description: "The member profile has been approved and is now active",
-      });
+      toast.success("The member profile has been approved and is now active");
 
       navigate(-1);
     } catch (error: any) {
       console.error("Error approving member:", error);
-      toast({
-        title: "Error",
-        description: "Failed to approve member",
-        variant: "destructive",
-      });
+      toast.error("Failed to approve member");
     } finally {
       setProcessing(false);
     }
@@ -169,11 +157,7 @@ const MemberApproval = () => {
     if (!memberId) return;
     
     if (!comments.trim()) {
-      toast({
-        title: "Comments required",
-        description: "Please provide feedback for rejection",
-        variant: "destructive",
-      });
+      toast.error("Please provide feedback for rejection");
       return;
     }
 
@@ -213,19 +197,12 @@ const MemberApproval = () => {
       });
       if (auditError) console.error("Audit log failed:", auditError);
 
-      toast({
-        title: "Profile rejected",
-        description: "The member will be notified to make changes",
-      });
+      toast.success("The member will be notified to make changes");
 
       navigate(-1);
     } catch (error: any) {
       console.error("Error rejecting member:", error);
-      toast({
-        title: "Error",
-        description: "Failed to reject profile",
-        variant: "destructive",
-      });
+      toast.error("Failed to reject profile");
     } finally {
       setProcessing(false);
     }

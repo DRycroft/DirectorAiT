@@ -15,13 +15,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, FileText, Calendar, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { PackTemplateBuilder } from '@/components/PackTemplateBuilder';
 import { DocumentUploads } from '@/components/DocumentUploads';
+import { toast } from "sonner";
 
 export default function PackManagement() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [boardId, setBoardId] = useState<string>('');
   const [boards, setBoards] = useState<any[]>([]);
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
@@ -53,11 +52,7 @@ export default function PackManagement() {
 
   const handleCreatePack = () => {
     if (!newPackTitle.trim() || !newPackDate || !selectedTemplateId) {
-      toast({
-        title: 'Missing information',
-        description: 'Please fill in all fields to create a pack.',
-        variant: 'destructive',
-      });
+      toast.error("Please fill in all fields to create a pack.");
       return;
     }
 

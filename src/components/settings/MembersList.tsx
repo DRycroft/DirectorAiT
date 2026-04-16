@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Mail, Copy, Loader2, XCircle, Pencil, Eye } from "lucide-react";
@@ -9,6 +8,7 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { logError } from "@/lib/errorHandling";
 import { AddPersonDialog } from "@/components/AddPersonDialog";
+import { toast } from "sonner";
 
 interface Member {
   id: string;
@@ -38,7 +38,6 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
   const [showArchived, setShowArchived] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const { toast } = useToast();
 
   const loadMembers = async () => {
     try {
@@ -54,11 +53,7 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
       setMembers(data || []);
     } catch (error: any) {
       logError("MembersList - Load members", error);
-      toast({
-        title: "Error",
-        description: "Failed to load members",
-        variant: "destructive",
-      });
+      toast.error("Failed to load members");
     } finally {
       setLoading(false);
     }
@@ -135,34 +130,21 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
         if (emailError) {
           logError("MembersList - Resend email", emailError);
           const inviteUrl = `${window.location.origin}/invite/${token}`;
-          toast({
-            title: "Token refreshed — email failed",
-            description: `New invite created but email failed to send. Share this link manually: ${inviteUrl}`,
-          });
+          toast.success(`New invite created but email failed to send. Share this link manually: ${inviteUrl}`);
         } else {
-          toast({
-            title: "Invite resent",
-            description: `Invite email sent to ${inviteEmail}. Expires in 7 days.`,
-          });
+          toast.success(`Invite email sent to ${inviteEmail}`);
         }
       } else {
         // No email on file — copy link to clipboard as fallback
         const inviteUrl = `${window.location.origin}/invite/${token}`;
         await navigator.clipboard.writeText(inviteUrl);
-        toast({
-          title: "Invite link copied",
-          description: "No email on file. The invite link has been copied to your clipboard.",
-        });
+        toast.success("No email on file. The invite link has been copied to your clipboard.");
       }
 
       loadMembers();
     } catch (error: any) {
       logError("MembersList - Generate invite", error);
-      toast({
-        title: "Error",
-        description: "Failed to generate invite link",
-        variant: "destructive",
-      });
+      toast.error("Failed to generate invite link");
     } finally {
       setGeneratingInvite(null);
     }
@@ -183,18 +165,11 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
 
       if (error) throw error;
 
-      toast({
-        title: "Invite revoked",
-        description: "The invitation link is no longer valid.",
-      });
+      toast.success("The invitation link is no longer valid.");
       loadMembers();
     } catch (error: any) {
       logError("MembersList - Revoke invite", error);
-      toast({
-        title: "Error",
-        description: "Failed to revoke invite",
-        variant: "destructive",
-      });
+      toast.error("Failed to revoke invite");
     } finally {
       setRevokingInvite(null);
     }
@@ -224,11 +199,7 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
       });
     } catch (error) {
       logError("MembersList - Load member for edit", error);
-      toast({
-        title: "Error",
-        description: "Failed to load member data for editing",
-        variant: "destructive",
-      });
+      toast.error("Failed to load member data for editing");
     }
   };
 

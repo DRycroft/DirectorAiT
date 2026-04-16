@@ -16,8 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Download, Clock, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { logError } from '@/lib/errorHandling';
+import { toast } from "sonner";
 
 interface ExecutiveReport {
   id: string;
@@ -68,7 +68,6 @@ const SPECIAL_CATEGORIES = [
 ];
 
 export function DocumentUploads() {
-  const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
 
   // Executive reports state
@@ -150,13 +149,13 @@ export function DocumentUploads() {
       document.body.removeChild(a);
     } catch (error) {
       logError('download', error);
-      toast({ title: "Download Failed", variant: "destructive" });
+      toast.error("Download Failed");
     }
   };
 
   const handleUploadExecReport = async () => {
     if (!execFile || !execType || !execPeriod) {
-      toast({ title: "Missing Information", description: "Please fill in all fields.", variant: "destructive" });
+      toast.error("Please fill in all fields.");
       return;
     }
     setIsUploading(true);
@@ -174,7 +173,7 @@ export function DocumentUploads() {
         status: 'pending',
       });
       if (error) throw error;
-      toast({ title: "Report Uploaded" });
+      toast.success("Report Uploaded");
       setExecDialogOpen(false);
       setExecFile(null);
       setExecType('');
@@ -182,7 +181,7 @@ export function DocumentUploads() {
       fetchAll();
     } catch (error) {
       logError('uploadExecReport', error);
-      toast({ title: "Upload Failed", variant: "destructive" });
+      toast.error("Upload Failed");
     } finally {
       setIsUploading(false);
     }
@@ -190,7 +189,7 @@ export function DocumentUploads() {
 
   const handleUploadMinutes = async () => {
     if (!minutesFile || !minutesDate) {
-      toast({ title: "Missing Information", description: "Please select a file and meeting date.", variant: "destructive" });
+      toast.error("Please select a file and meeting date.");
       return;
     }
     setIsUploading(true);
@@ -208,7 +207,7 @@ export function DocumentUploads() {
         status: 'draft',
       });
       if (error) throw error;
-      toast({ title: "Minutes Uploaded" });
+      toast.success("Minutes Uploaded");
       setMinutesDialogOpen(false);
       setMinutesFile(null);
       setMinutesDate('');
@@ -216,7 +215,7 @@ export function DocumentUploads() {
       fetchAll();
     } catch (error) {
       logError('uploadMinutes', error);
-      toast({ title: "Upload Failed", variant: "destructive" });
+      toast.error("Upload Failed");
     } finally {
       setIsUploading(false);
     }
@@ -224,7 +223,7 @@ export function DocumentUploads() {
 
   const handleUploadSpecialPaper = async () => {
     if (!specialFile || !specialTitle || !specialCategory) {
-      toast({ title: "Missing Information", description: "Please fill in all required fields.", variant: "destructive" });
+      toast.error("Please fill in all required fields.");
       return;
     }
     setIsUploading(true);
@@ -243,7 +242,7 @@ export function DocumentUploads() {
         status: 'pending',
       });
       if (error) throw error;
-      toast({ title: "Special Paper Uploaded" });
+      toast.success("Special Paper Uploaded");
       setSpecialDialogOpen(false);
       setSpecialFile(null);
       setSpecialTitle('');
@@ -252,7 +251,7 @@ export function DocumentUploads() {
       fetchAll();
     } catch (error) {
       logError('uploadSpecialPaper', error);
-      toast({ title: "Upload Failed", variant: "destructive" });
+      toast.error("Upload Failed");
     } finally {
       setIsUploading(false);
     }

@@ -7,7 +7,8 @@
 import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from "sonner";
+import { getUserFriendlyError } from '@/lib/errorHandling';
 
 export interface BoardTemplate {
   id: string;
@@ -59,7 +60,6 @@ export interface SectionDocument {
 }
 
 export function useBoardPacks(boardId?: string) {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   /**
@@ -150,17 +150,10 @@ export function useBoardPacks(boardId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['board-templates', boardId] });
-      toast({
-        title: 'Template created',
-        description: 'Your board template has been saved successfully.',
-      });
+      toast.success("Your board template has been saved successfully.");
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Error creating template',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error(getUserFriendlyError(error));
     },
   });
 
@@ -220,17 +213,10 @@ export function useBoardPacks(boardId?: string) {
       if (boardId) {
         queryClient.invalidateQueries({ queryKey: ['board-packs', boardId] });
       }
-      toast({
-        title: 'Pack created',
-        description: 'Board pack created from template successfully.',
-      });
+      toast.success("Board pack created from template successfully.");
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Error creating pack',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error(getUserFriendlyError(error));
     },
   });
 
@@ -324,17 +310,10 @@ export function useBoardPacks(boardId?: string) {
       return document;
     },
     onSuccess: () => {
-      toast({
-        title: 'Report submitted',
-        description: 'Your report has been submitted successfully.',
-      });
+      toast.success("Your report has been submitted successfully.");
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Error submitting report',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error(getUserFriendlyError(error));
     },
   });
 

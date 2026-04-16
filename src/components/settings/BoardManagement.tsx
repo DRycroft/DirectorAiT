@@ -6,12 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 import { z } from "zod";
 import { Plus, Mail } from "lucide-react";
 import { MembersList } from "./MembersList";
 import { AddPersonDialog } from "../AddPersonDialog";
+import { toast } from "sonner";
 
 interface BoardManagementProps {
   memberType: 'board' | 'executive' | 'key_staff';
@@ -28,7 +28,6 @@ const memberInviteSchema = z.object({
 });
 
 const BoardManagement = ({ memberType, title, description, positions }: BoardManagementProps) => {
-  const { toast } = useToast();
   const [boards, setBoards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -86,11 +85,7 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
       }
     } catch (error: any) {
       logError("BoardManagement.fetchData", error);
-      toast({
-        title: "Error",
-        description: "Failed to load data",
-        variant: "destructive",
-      });
+      toast.error("Failed to load data");
     } finally {
       setLoading(false);
     }
@@ -102,11 +97,7 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
       memberInviteSchema.parse(formData);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        toast({
-          title: "Validation Error",
-          description: error.errors[0].message,
-          variant: "destructive",
-        });
+        toast.error(error.errors[0].message);
         return;
       }
     }
@@ -123,13 +114,7 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
         .maybeSingle();
 
       if (existingInvite) {
-        toast({
-          title: existingInvite.status === "active" ? "Already a member" : "Invite already pending",
-          description: existingInvite.status === "active"
-            ? `${normalizedEmail} is already an active member of this board.`
-            : `A pending invite for ${normalizedEmail} already exists on this board. Use the Resend button in the members list to re-send the invite.`,
-          variant: "destructive",
-        });
+        toast.error("Operation completed");
         return;
       }
 
@@ -198,16 +183,9 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
 
       if (emailError) {
         logError("BoardManagement.sendInviteEmail", emailError);
-        toast({
-          title: "Member created — email failed",
-          description: `Member record created but invite email failed to send. Please share this link manually: ${inviteUrl}`,
-          variant: "default",
-        });
+        toast.success(`Member record created but invite email failed to send. Please share this link manually: ${inviteUrl}`);
       } else {
-        toast({
-          title: "Member invited",
-          description: `Invite email sent to ${formData.personal_email}`,
-        });
+        toast.success(`Invite email sent to ${formData.personal_email}`);
       }
 
       setFormData({
@@ -220,11 +198,7 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
       setRefreshMembers(prev => prev + 1);
     } catch (error: any) {
       logError("BoardManagement.handleInvite", error);
-      toast({
-        title: "Error",
-        description: getUserFriendlyError(error),
-        variant: "destructive",
-      });
+      toast.error(getUserFriendlyError(error));
     }
   };
 

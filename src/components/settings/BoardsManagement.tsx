@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +15,7 @@ import { Plus, Archive, ArchiveRestore, Edit, Users, Trash2 } from "lucide-react
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import CommitteeMembersDialog from "./CommitteeMembersDialog";
+import { toast } from "sonner";
 
 interface Board {
   id: string;
@@ -58,7 +58,6 @@ export default function BoardsManagement() {
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
   const [selectedCommittee, setSelectedCommittee] = useState<Board | null>(null);
   const [showArchived, setShowArchived] = useState(false);
-  const { toast } = useToast();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -124,11 +123,7 @@ export default function BoardsManagement() {
       setParentBoards(activeBoards || []);
     } catch (error: any) {
       logError("BoardsManagement.fetchBoards", error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error(getUserFriendlyError(error));
     } finally {
       setLoading(false);
     }
@@ -140,11 +135,7 @@ export default function BoardsManagement() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast({
-          title: "Authentication Error",
-          description: "You must be signed in to create boards",
-          variant: "destructive",
-        });
+        toast.error("You must be signed in to create boards");
         return;
       }
 
@@ -156,11 +147,7 @@ export default function BoardsManagement() {
 
       if (profileError) {
         logError("BoardsManagement.handleSubmit", profileError);
-        toast({
-          title: "Error",
-          description: getUserFriendlyError(profileError),
-          variant: "destructive",
-        });
+        toast.error(getUserFriendlyError(profileError));
         return;
       }
 
@@ -182,11 +169,7 @@ export default function BoardsManagement() {
 
         if (orgError) {
           logError("BoardsManagement.createOrganization", orgError);
-          toast({
-            title: "Error",
-            description: "Failed to create organization. Please try again.",
-            variant: "destructive",
-          });
+          toast.error("Failed to create organization. Please try again.");
           return;
         }
 
@@ -198,20 +181,13 @@ export default function BoardsManagement() {
 
         if (updateError) {
           logError("BoardsManagement.updateProfile", updateError);
-          toast({
-            title: "Error",
-            description: "Failed to update profile. Please try again.",
-            variant: "destructive",
-          });
+          toast.error("Failed to update profile. Please try again.");
           return;
         }
 
         orgId = newOrg.id;
 
-        toast({
-          title: "Organization Created",
-          description: "Your organization has been set up successfully.",
-        });
+        toast.success("Your organization has been set up successfully.");
       }
 
       // Validate input
@@ -224,11 +200,7 @@ export default function BoardsManagement() {
         });
       } catch (error) {
         if (error instanceof z.ZodError) {
-          toast({
-            title: "Validation Error",
-            description: error.errors[0].message,
-            variant: "destructive",
-          });
+          toast.error(error.errors[0].message);
           return;
         }
       }
@@ -253,10 +225,7 @@ export default function BoardsManagement() {
           throw error;
         }
 
-        toast({
-          title: "Success",
-          description: "Board updated successfully",
-        });
+        toast.success("Board updated successfully");
       } else {
         const { error } = await supabase
           .from("boards")
@@ -269,10 +238,7 @@ export default function BoardsManagement() {
           throw error;
         }
 
-        toast({
-          title: "Success",
-          description: "Board created successfully",
-        });
+        toast.success("Board created successfully");
       }
 
       setDialogOpen(false);
@@ -280,11 +246,7 @@ export default function BoardsManagement() {
       fetchBoards();
     } catch (error: any) {
       logError("BoardsManagement.handleSubmit", error);
-      toast({
-        title: "Error",
-        description: getUserFriendlyError(error),
-        variant: "destructive",
-      });
+      toast.error(getUserFriendlyError(error));
     }
   };
 
@@ -300,19 +262,12 @@ export default function BoardsManagement() {
 
       if (error) throw error;
 
-      toast({
-        title: "Status Updated",
-        description: `Board status changed to ${newStatus}.`,
-      });
+      toast.success(`Board status changed to ${newStatus}`);
       
       fetchBoards();
     } catch (error: any) {
       logError("BoardsManagement.handleStatusChange", error);
-      toast({
-        title: "Error",
-        description: getUserFriendlyError(error),
-        variant: "destructive",
-      });
+      toast.error(getUserFriendlyError(error));
     }
   };
 
@@ -330,20 +285,13 @@ export default function BoardsManagement() {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: selectedBoard.status === 'active' ? "Board archived successfully" : "Board restored successfully",
-      });
+      toast.success(selectedBoard.status === 'active' ? "Board archived successfully" : "Board restored successfully");
 
       setArchiveDialogOpen(false);
       setSelectedBoard(null);
       fetchBoards();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error(getUserFriendlyError(error));
     }
   };
 
@@ -363,21 +311,13 @@ export default function BoardsManagement() {
         .eq("board_id", selectedBoard.id);
 
       if (memberCount && memberCount > 0) {
-        toast({
-          title: "Cannot Delete",
-          description: "This board has members. Please remove all members before deleting, or archive the board instead.",
-          variant: "destructive",
-        });
+        toast.error("This board has members. Please remove all members before deleting, or archive the board instead.");
         setDeleteDialogOpen(false);
         return;
       }
 
       if (paperCount && paperCount > 0) {
-        toast({
-          title: "Cannot Delete",
-          description: "This board has board papers or reports. Please archive the board instead of deleting it.",
-          variant: "destructive",
-        });
+        toast.error("This board has board papers or reports. Please archive the board instead of deleting it.");
         setDeleteDialogOpen(false);
         return;
       }
@@ -389,11 +329,7 @@ export default function BoardsManagement() {
         .eq("parent_board_id", selectedBoard.id);
 
       if (childCount && childCount > 0) {
-        toast({
-          title: "Cannot Delete",
-          description: "This board has sub-committees. Please delete or reassign them first.",
-          variant: "destructive",
-        });
+        toast.error("This board has sub-committees. Please delete or reassign them first.");
         setDeleteDialogOpen(false);
         return;
       }
@@ -406,20 +342,13 @@ export default function BoardsManagement() {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Board deleted successfully",
-      });
+      toast.success("Board deleted successfully");
 
       setDeleteDialogOpen(false);
       setSelectedBoard(null);
       fetchBoards();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error(getUserFriendlyError(error));
     }
   };
 
