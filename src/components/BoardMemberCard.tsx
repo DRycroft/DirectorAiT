@@ -42,6 +42,10 @@ const BoardMemberCard = ({ member, sensitiveData, onClick }: BoardMemberCardProp
         return "secondary";
       case "invited":
         return "outline";
+      case "rejected":
+        return "destructive";
+      case "revoked":
+        return "outline";
       default:
         return "secondary";
     }
@@ -55,6 +59,10 @@ const BoardMemberCard = ({ member, sensitiveData, onClick }: BoardMemberCardProp
         return "Pending Approval";
       case "invited":
         return "Invited";
+      case "rejected":
+        return "Changes Requested";
+      case "revoked":
+        return "Revoked";
       default:
         return status;
     }

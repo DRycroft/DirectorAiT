@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface BoardMemberRecord {
   id: string;
@@ -44,6 +45,7 @@ const MyProfile = () => {
   const [allMembers, setAllMembers] = useState<BoardMemberWithBoard[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [member, setMember] = useState<BoardMemberRecord | null>(null);
+  const [rejectionNotes, setRejectionNotes] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     full_name: "",
     preferred_title: "",
@@ -117,6 +119,7 @@ const MyProfile = () => {
   const loadMemberDetail = useCallback(async (memberId: string) => {
     setLoading(true);
     setSaved(false);
+    setRejectionNotes(null);
     try {
       const found = allMembers.find((m) => m.id === memberId);
       if (!found) return;
@@ -124,12 +127,17 @@ const MyProfile = () => {
       setMember(found);
       localStorage.setItem(LAST_BOARD_KEY, memberId);
 
-      // Load sensitive data
+      // Load sensitive data (including rejection notes)
       const { data: sensitive } = await supabase
         .from("board_members_sensitive")
-        .select("personal_mobile, personal_email, emergency_contact_name, emergency_contact_phone")
+        .select("personal_mobile, personal_email, emergency_contact_name, emergency_contact_phone, sensitive_notes")
         .eq("member_id", memberId)
         .maybeSingle();
+
+      // Show rejection feedback if member was rejected
+      if (found.status === "rejected" && sensitive?.sensitive_notes) {
+        setRejectionNotes(sensitive.sensitive_notes);
+      }
 
       const prefs = (found.publish_preferences as Record<string, boolean>) || {};
 
@@ -264,6 +272,17 @@ const MyProfile = () => {
                 </Select>
               </CardContent>
             </Card>
+          )}
+
+          {rejectionNotes && member?.status === "rejected" && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Changes Requested</AlertTitle>
+              <AlertDescription>
+                {rejectionNotes.replace(/^Rejected:\s*/i, "")}
+                <p className="mt-2 text-sm font-medium">Please update your profile and resubmit.</p>
+              </AlertDescription>
+            </Alert>
           )}
 
           <Card>
