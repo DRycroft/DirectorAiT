@@ -556,6 +556,11 @@ const Actions = () => {
                           </SelectContent>
                         </Select>
                       </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(item)}>
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -563,6 +568,58 @@ const Actions = () => {
             </Table>
           </div>
         )}
+
+        {/* Create/Edit Action Dialog */}
+        <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingItem ? "Edit Action" : "New Action"}</DialogTitle>
+              <DialogDescription>{editingItem ? "Update this action item." : "Create a standalone action item."}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="action-title">Title *</Label>
+                <Input id="action-title" placeholder="e.g. Follow up with auditor" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="action-desc">Description</Label>
+                <Textarea id="action-desc" placeholder="Optional details" value={formDesc} onChange={(e) => setFormDesc(e.target.value)} rows={2} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="action-owner">Owner</Label>
+                  <Select value={formOwnerId} onValueChange={setFormOwnerId}>
+                    <SelectTrigger id="action-owner"><SelectValue placeholder="Select owner" /></SelectTrigger>
+                    <SelectContent>
+                      {allProfiles.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="action-status">Status</Label>
+                  <Select value={formStatus} onValueChange={setFormStatus}>
+                    <SelectTrigger id="action-status"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map((s) => (
+                        <SelectItem key={s} value={s}>{s.replace("_", " ").replace(/^\w/, (c) => c.toUpperCase())}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="action-due">Due Date</Label>
+                <Input id="action-due" type="date" value={formDueDate} onChange={(e) => setFormDueDate(e.target.value)} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
+              <Button onClick={handleSaveAction} disabled={formSaving}>{formSaving ? "Saving…" : editingItem ? "Update" : "Create"}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
       <Footer />
     </div>
