@@ -95,9 +95,14 @@ const Navigation = () => {
                 </Button>
               </>
             ) : (
-              <Button variant="ghost" asChild>
-                <Link to="/auth">Sign In</Link>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" asChild>
+                  <Link to="/pricing">Pricing</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link to="/auth">Sign In</Link>
+                </Button>
+              </div>
             )}
           </div>
         </div>

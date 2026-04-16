@@ -15,32 +15,30 @@ const Footer = () => {
           <div className="flex items-start gap-2">
             <h3 className="font-semibold text-xs whitespace-nowrap">Product:</h3>
             <div className="flex flex-col gap-0.5 text-muted-foreground">
-              <Link to="#features" className="hover:text-foreground transition-colors">Features</Link>
-              <Link to="#security" className="hover:text-foreground transition-colors">Security</Link>
-              <Link to="#pilot" className="hover:text-foreground transition-colors">Pilot Program</Link>
+              <Link to="/#features" className="hover:text-foreground transition-colors">Features</Link>
+              <Link to="/#security" className="hover:text-foreground transition-colors">Security</Link>
+              <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
             </div>
           </div>
           
           <div className="flex items-start gap-2">
             <h3 className="font-semibold text-xs whitespace-nowrap">Company:</h3>
             <div className="flex flex-col gap-0.5 text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors">About Aigentia</a>
-              <a href="#" className="hover:text-foreground transition-colors">Contact</a>
+              <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
             </div>
           </div>
           
           <div className="flex items-start gap-2">
             <h3 className="font-semibold text-xs whitespace-nowrap">Legal:</h3>
             <div className="flex flex-col gap-0.5 text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-foreground transition-colors">Security</a>
+              <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
             </div>
           </div>
         </div>
         
         <div className="mt-2 pt-2 border-t border-border text-center text-xs text-muted-foreground">
-          © 2025 Aigentia Ltd.
+          © {new Date().getFullYear()} Aigentia Ltd.
         </div>
       </div>
     </footer>
