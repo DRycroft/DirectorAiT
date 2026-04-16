@@ -37,7 +37,7 @@ const DefaultLoadingFallback = () => (
  * const Dashboard = lazyLoad(() => import('@/pages/Dashboard'));
  * ```
  */
-export function lazyLoad<T extends ComponentType<any>>(
+export function lazyLoad<T extends ComponentType<Record<string, unknown>>>(
   importFn: () => Promise<{ default: T }>,
   fallback?: React.ReactNode
 ): React.FC<React.ComponentProps<T>> {
@@ -59,7 +59,7 @@ export function lazyLoad<T extends ComponentType<any>>(
  * @param fallback - Optional custom loading fallback
  * @returns Lazy-loaded component with retry logic
  */
-export function lazyLoadWithRetry<T extends ComponentType<any>>(
+export function lazyLoadWithRetry<T extends ComponentType<Record<string, unknown>>>(
   importFn: () => Promise<{ default: T }>,
   retries: number = 3,
   fallback?: React.ReactNode
@@ -111,7 +111,7 @@ export function lazyLoadWithRetry<T extends ComponentType<any>>(
  * </button>
  * ```
  */
-export function preloadComponent(importFn: () => Promise<any>): void {
+export function preloadComponent(importFn: () => Promise<{ default: ComponentType<unknown> }>): void {
   importFn().catch((error) => {
     console.error('Failed to preload component:', error);
   });
@@ -121,7 +121,7 @@ export function preloadComponent(importFn: () => Promise<any>): void {
  * Create a lazy-loaded route component
  * Optimized for React Router with better error handling
  */
-export function lazyRoute<T extends ComponentType<any>>(
+export function lazyRoute<T extends ComponentType<Record<string, unknown>>>(
   importFn: () => Promise<{ default: T }>
 ) {
   return lazyLoadWithRetry(importFn, 3, <DefaultLoadingFallback />);
