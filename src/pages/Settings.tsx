@@ -16,7 +16,6 @@ import AuditHistory from "@/components/AuditHistory";
 import AdminManagement from "@/components/settings/AdminManagement";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCircle, Plus, X, Shield, LayoutDashboard } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import BoardManagement from "@/components/settings/BoardManagement";
@@ -303,7 +302,6 @@ const industryCategories: Record<string, string[]> = {
 };
 
 const Settings = () => {
-  const { toast } = useToast();
   const [selectedType, setSelectedType] = useState<string>("");
   const [sections, setSections] = useState<TemplateSection[]>([]);
   const [selectedStaffFormType, setSelectedStaffFormType] = useState<string>("");
@@ -576,11 +574,7 @@ const Settings = () => {
 
       // Don't save if there are validation errors
       if (!companyPhoneValidation.valid || !primaryPhoneValidation.valid || !adminPhoneValidation.valid) {
-        toast({
-          title: "Validation Error",
-          description: "Please fix phone number formatting errors before saving",
-          variant: "destructive",
-        });
+        toast.error("Please fix phone number formatting errors before saving");
         return;
       }
 
@@ -698,11 +692,7 @@ const Settings = () => {
 
   const handleAnalyzeBusiness = async () => {
     if (!businessDescription.trim()) {
-      toast({
-        title: "Description required",
-        description: "Please describe what your business does",
-        variant: "destructive",
-      });
+      toast.error("Please describe what your business does");
       return;
     }
 
@@ -727,18 +717,11 @@ const Settings = () => {
           industry_sector: allSuggestedIndustries,
           business_category: data.recommended_categories || []
         });
-        toast({
-          title: "Analysis complete!",
-          description: data.reasoning,
-        });
+        toast.success(data.reasoning);
       }
     } catch (error: any) {
       console.error("Error analyzing business:", error);
-      toast({
-        title: "Analysis failed",
-        description: error.message || "Failed to analyze business description",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to analyze business description");
     } finally {
       setAnalyzing(false);
     }
@@ -762,11 +745,7 @@ const Settings = () => {
 
   const handleSaveTemplate = async () => {
     if (!selectedType) {
-      toast({
-        title: "Template type required",
-        description: "Please select a template type",
-        variant: "destructive",
-      });
+      toast.error("Please select a template type");
       return;
     }
 
@@ -788,18 +767,11 @@ const Settings = () => {
       .insert([templateData]);
 
     if (error) {
-      toast({
-        title: "Error creating template",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error(error.message);
       return;
     }
 
-    toast({
-      title: "Template created",
-      description: `${selectedType} template has been saved to Board Papers`,
-    });
+    toast.success(`${selectedType);
 
     // Reset form
     setSelectedType("");
@@ -878,11 +850,7 @@ const Settings = () => {
 
   const handleSaveStaffFormTemplate = async () => {
     if (!selectedStaffFormType) {
-      toast({
-        title: "Form type required",
-        description: "Please select a form type",
-        variant: "destructive",
-      });
+      toast.error("Please select a form type");
       return;
     }
 

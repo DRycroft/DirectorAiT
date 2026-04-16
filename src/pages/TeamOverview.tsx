@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Users, Briefcase, UserCog, Eye, FileText, GitBranch, Clock, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -16,10 +15,10 @@ import { getPositionsByType } from "@/config/positions";
 import { AddPersonDialog } from "@/components/AddPersonDialog";
 import { logError } from "@/lib/errorHandling";
 import { BoardWithOrg, BoardMemberWithBoard } from "@/types/database";
+import { toast } from "sonner";
 
 const TeamOverview = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [boards, setBoards] = useState<BoardWithOrg[]>([]);
   const [allBoardMembers, setAllBoardMembers] = useState<BoardMemberWithBoard[]>([]);
@@ -87,11 +86,7 @@ const TeamOverview = () => {
 
     } catch (error: any) {
       logError("TeamOverview - Fetch team data", error);
-      toast({
-        title: "Error",
-        description: "Failed to load team data",
-        variant: "destructive",
-      });
+      toast.error("Failed to load team data");
     } finally {
       setLoading(false);
     }
