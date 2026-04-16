@@ -116,7 +116,7 @@ const SignUp = () => {
     }
   };
 
-  const submittingRef = useRef(false);
+  // submittingRef already declared above
 
   const handleSignUp = async (e: React.FormEvent) => {
     console.count("[SIGNUP] handleSignUp invoked");
