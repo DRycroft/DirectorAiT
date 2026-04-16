@@ -35,8 +35,10 @@ const ResetPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!password.trim()) {
-      toast.error("Please enter a new password");
+    // Validate password with shared policy
+    const passwordResult = passwordSchema.safeParse(password);
+    if (!passwordResult.success) {
+      toast.error(passwordResult.error.errors[0].message);
       return;
     }
 
