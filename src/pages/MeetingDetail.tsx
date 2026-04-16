@@ -43,6 +43,7 @@ import {
   Save,
   Lock,
   ClipboardList,
+  Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 
