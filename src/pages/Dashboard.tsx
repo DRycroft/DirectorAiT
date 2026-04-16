@@ -420,7 +420,26 @@ const Dashboard = () => {
           </div>
         )}
 
-        {alerts.length === 0 && (
+        {alerts.length === 0 && stats.totalBoards === 0 && (
+          <Card className="mb-6 border border-dashed">
+            <CardContent className="py-10 text-center space-y-4">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground/50" />
+              <div>
+                <h3 className="text-lg font-semibold mb-1">Welcome to DirectorAiT</h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  Get started by creating your first board, inviting members, and scheduling a meeting.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Button onClick={() => navigate("/boards-committees")}>Create a Board</Button>
+                <Button variant="outline" onClick={() => navigate("/meetings")}>Schedule a Meeting</Button>
+                <Button variant="outline" onClick={() => navigate("/settings")}>Organisation Settings</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {alerts.length === 0 && stats.totalBoards > 0 && (
           <Card className="mb-6 border-l-4 border-l-success bg-success/5">
             <CardContent className="p-4 flex items-center gap-3">
               <ShieldCheck className="h-5 w-5 text-success" />
