@@ -303,11 +303,16 @@ const Actions = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       <main className="container mx-auto px-4 pt-24 pb-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Actions</h1>
-          <p className="text-muted-foreground mt-1">
-            Track action items across all meetings
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Actions</h1>
+            <p className="text-muted-foreground mt-1">
+              Track action items across all meetings
+            </p>
+          </div>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4 mr-2" /> New Action
+          </Button>
         </div>
 
         {/* Accountability summary cards */}
