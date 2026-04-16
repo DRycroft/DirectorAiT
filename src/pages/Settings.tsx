@@ -22,8 +22,8 @@ import BoardManagement from "@/components/settings/BoardManagement";
 import { BOARD_POSITIONS, EXECUTIVE_POSITIONS, KEY_STAFF_POSITIONS } from "@/config/positions";
 
 import { Checkbox } from "@/components/ui/checkbox";
-import {
 import { getUserFriendlyError } from '@/lib/errorHandling';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,

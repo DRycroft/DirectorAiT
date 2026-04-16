@@ -10,8 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
 import { getUserFriendlyError } from '@/lib/errorHandling';
+import {
   BarChart3, TrendingUp, Users, DollarSign,
   AlertTriangle, FileText, Target, Shield, Activity, Briefcase,
   UserCheck, Scale, Building2, CheckCircle2, Calendar
