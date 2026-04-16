@@ -330,6 +330,14 @@ const Meetings = () => {
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() => handleDeleteMeeting(m.id, m.title)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="flex items-center justify-between">
