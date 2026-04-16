@@ -100,6 +100,17 @@ const Actions = () => {
   const [filterOwner, setFilterOwner] = useState<string>("all");
   const [filterOverdue, setFilterOverdue] = useState(false);
 
+  // Create/Edit dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
+  const [formTitle, setFormTitle] = useState("");
+  const [formDesc, setFormDesc] = useState("");
+  const [formOwnerId, setFormOwnerId] = useState("");
+  const [formDueDate, setFormDueDate] = useState("");
+  const [formStatus, setFormStatus] = useState("pending");
+  const [formSaving, setFormSaving] = useState(false);
+  const [allProfiles, setAllProfiles] = useState<OwnerOption[]>([]);
+
   const fetchActions = async () => {
     setLoading(true);
     try {
