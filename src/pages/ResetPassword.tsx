@@ -142,6 +142,7 @@ const ResetPassword = () => {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">{PASSWORD_REQUIREMENTS_TEXT}</p>
+              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
