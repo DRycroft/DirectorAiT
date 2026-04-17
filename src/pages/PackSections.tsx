@@ -275,11 +275,21 @@ export default function PackSections() {
           ) : (
             <div className="space-y-3">
               {sections.map((section) => {
-                const document = section.document?.[0];
-                const versionNumber = document?.version_number || null;
-                const isAutoSource = document?.source === 'auto';
+                const docs: any[] = Array.isArray(section.document) ? section.document : (section.document ? [section.document] : []);
+                const sortedDocs = [...docs].sort((a, b) => (b?.version_number || 0) - (a?.version_number || 0));
+                const latestDoc = sortedDocs[0];
+                const versionNumber = latestDoc?.version_number || null;
+                const latestSource = latestDoc?.source as 'auto' | 'human' | undefined;
+                const hasAutoDoc = sortedDocs.some(d => d?.source === 'auto');
+                const isOverride = latestSource === 'human' && hasAutoDoc;
                 const updatedAt = section.updated_at ? new Date(section.updated_at) : null;
-                
+
+                let label: 'Pending' | 'Auto' | 'Human' | 'Manual Override' = 'Pending';
+                let labelClass = 'bg-warning/10 text-warning';
+                if (isOverride) { label = 'Manual Override'; labelClass = 'bg-primary/10 text-primary'; }
+                else if (latestSource === 'human') { label = 'Human'; labelClass = 'bg-success/10 text-success'; }
+                else if (latestSource === 'auto') { label = 'Auto'; labelClass = 'bg-primary/10 text-primary'; }
+
                 return (
                   <Card
                     key={section.id}
@@ -292,18 +302,10 @@ export default function PackSections() {
                         <div>
                           <h3 className="font-semibold">{section.title}</h3>
                           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                              section.status === 'submitted' 
-                                ? 'bg-success/10 text-success' 
-                                : 'bg-warning/10 text-warning'
-                            }`}>
-                              {section.status === 'submitted' ? 'Submitted' : 'Pending'}
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium inline-flex items-center gap-1 ${labelClass}`}>
+                              {label === 'Auto' && <Sparkles className="h-3 w-3" />}
+                              {label}
                             </span>
-                            {isAutoSource && (
-                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary inline-flex items-center gap-1">
-                                <Sparkles className="h-3 w-3" /> Auto
-                              </span>
-                            )}
                             {versionNumber && <span>v{versionNumber}</span>}
                             {updatedAt && <span>Updated {updatedAt.toLocaleDateString()}</span>}
                           </div>
