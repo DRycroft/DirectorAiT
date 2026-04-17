@@ -1,8 +1,33 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/components/ui/sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
 import { runBootstrapFromLocalStorage } from '@/lib/bootstrap';
+
+/** Public/auth paths where forceReauth must NOT redirect (avoid loops / breaking flows). */
+const PUBLIC_AUTH_PATHS = [
+  '/auth',
+  '/signup',
+  '/auth/callback',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/invite/',
+  '/action/',
+  '/',
+  '/pricing',
+  '/contact',
+  '/terms',
+  '/privacy',
+  '/health',
+];
+
+function isPublicAuthPath(pathname: string): boolean {
+  return PUBLIC_AUTH_PATHS.some((p) =>
+    p.endsWith('/') ? pathname.startsWith(p) : pathname === p
+  );
+}
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +45,8 @@ interface AuthContextType {
   onboardingComplete: boolean | null;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  /** Phase 4: forced re-auth on true auth death (expired/invalid refresh). De-duplicated. */
+  forceReauth: (reason?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
