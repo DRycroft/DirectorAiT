@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
+import { resolvePostAuthRoute } from "@/lib/postAuthRoute";
 
 const signInSchema = z.object({
   email: z.string()
@@ -50,20 +51,12 @@ const Auth = () => {
 
       toast.success("Signed in successfully!");
 
-      // Check onboarding status before navigating
       if (data.user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("onboarding_complete")
-          .eq("id", data.user.id)
-          .maybeSingle();
-
-        if (!profile?.onboarding_complete) {
-          navigate("/onboarding", { replace: true });
-          return;
-        }
+        const target = await resolvePostAuthRoute(data.user.id);
+        navigate(target, { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
       }
-      navigate("/dashboard", { replace: true });
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
