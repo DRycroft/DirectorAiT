@@ -2734,6 +2734,7 @@ export type Database = {
         Returns: string
       }
       get_member_invite_email: { Args: { _member_id: string }; Returns: string }
+      get_pending_member_count: { Args: { _org_id: string }; Returns: number }
       get_user_org_id: { Args: { user_id: string }; Returns: string }
       has_role:
         | {
