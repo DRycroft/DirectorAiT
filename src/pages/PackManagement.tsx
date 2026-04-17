@@ -12,11 +12,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, FileText, Calendar, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { Plus, FileText, Calendar, CheckCircle2, Clock, AlertCircle, Sparkles } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { supabase } from '@/integrations/supabase/client';
 import { PackTemplateBuilder } from '@/components/PackTemplateBuilder';
 import { DocumentUploads } from '@/components/DocumentUploads';
+import {
+  STANDARD_TEMPLATE_NAME,
+  STANDARD_TEMPLATE_DESCRIPTION,
+  STANDARD_SECTIONS,
+} from '@/lib/standardPackTemplate';
 import { toast } from "sonner";
 
 export default function PackManagement() {
@@ -29,11 +34,78 @@ export default function PackManagement() {
   const [newPackDate, setNewPackDate] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
-  const { templates, packs, isLoadingTemplates, isLoadingPacks, createPackFromTemplate, isCreatingPack } = useBoardPacks(boardId);
+  const { templates, packs, isLoadingTemplates, isLoadingPacks, createPackFromTemplate, isCreatingPack, createTemplate, isCreatingTemplate } = useBoardPacks(boardId);
+  const [canSeed, setCanSeed] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   useEffect(() => {
     loadBoards();
   }, []);
+
+  useEffect(() => {
+    if (!boardId) {
+      setCanSeed(false);
+      return;
+    }
+    void checkSeedPermission(boardId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boardId]);
+
+  const checkSeedPermission = async (bId: string) => {
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData?.user?.id;
+    if (!uid) { setCanSeed(false); return; }
+    const { data: board } = await supabase
+      .from('boards')
+      .select('org_id')
+      .eq('id', bId)
+      .maybeSingle();
+    if (!board?.org_id) { setCanSeed(false); return; }
+    const roles: Array<'super_admin' | 'org_admin' | 'chair'> = ['super_admin', 'org_admin', 'chair'];
+    const results = await Promise.all(
+      roles.map(async (r) => {
+        try {
+          const res = await supabase.rpc('has_role', {
+            _user_id: uid,
+            _role: r,
+            ...(r === 'super_admin' ? {} : { _org_id: board.org_id }),
+          } as any);
+          return res.data === true;
+        } catch {
+          return false;
+        }
+      }),
+    );
+    setCanSeed(results.some(Boolean));
+  };
+
+  const handleSeedStandardTemplate = async () => {
+    if (!boardId) return;
+    setIsSeeding(true);
+    try {
+      const { data: existing, error: existErr } = await supabase
+        .from('board_templates')
+        .select('id')
+        .eq('board_id', boardId)
+        .eq('name', STANDARD_TEMPLATE_NAME)
+        .maybeSingle();
+      if (existErr) throw existErr;
+      if (existing) {
+        toast.info(`"${STANDARD_TEMPLATE_NAME}" already exists for this board.`);
+        return;
+      }
+      createTemplate({
+        board_id: boardId,
+        name: STANDARD_TEMPLATE_NAME,
+        description: STANDARD_TEMPLATE_DESCRIPTION,
+        sections: STANDARD_SECTIONS,
+      });
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Failed to seed standard template');
+    } finally {
+      setIsSeeding(false);
+    }
+  };
 
   const loadBoards = async () => {
     const { data, error } = await supabase
@@ -141,17 +213,29 @@ export default function PackManagement() {
 
         {/* Templates Section */}
         <Card className="p-6 mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
             <div>
               <h2 className="text-2xl font-bold mb-1">Templates</h2>
               <p className="text-muted-foreground">
                 Reusable templates for board packs
               </p>
             </div>
-            <Button onClick={() => setShowTemplateBuilder(!showTemplateBuilder)}>
-              <Plus className="h-4 w-4 mr-2" />
-              {showTemplateBuilder ? 'Hide' : 'Create'} Template
-            </Button>
+            <div className="flex items-center gap-2">
+              {canSeed && (
+                <Button
+                  variant="outline"
+                  onClick={handleSeedStandardTemplate}
+                  disabled={isSeeding || isCreatingTemplate}
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  {isSeeding || isCreatingTemplate ? 'Creating…' : 'Create Standard Template'}
+                </Button>
+              )}
+              <Button onClick={() => setShowTemplateBuilder(!showTemplateBuilder)}>
+                <Plus className="h-4 w-4 mr-2" />
+                {showTemplateBuilder ? 'Hide' : 'Create'} Template
+              </Button>
+            </div>
           </div>
 
           {showTemplateBuilder && boardId && (
