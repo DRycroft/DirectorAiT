@@ -292,6 +292,7 @@ export function useBoardPacks(boardId?: string) {
           content: reportData.content,
           version_number: newVersion,
           created_by: user.data.user.id,
+          source: 'human',
         })
         .select()
         .single();
