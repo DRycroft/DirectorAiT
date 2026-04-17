@@ -138,6 +138,7 @@ export function useBoardPacks(boardId?: string) {
           order_index: section.order_index ?? index,
           is_required: section.is_required,
           is_enabled: section.is_enabled,
+          section_kind: section.section_kind ?? null,
         }));
 
         const { error: sectionsError } = await supabase
