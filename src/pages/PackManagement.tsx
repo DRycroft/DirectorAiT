@@ -34,11 +34,73 @@ export default function PackManagement() {
   const [newPackDate, setNewPackDate] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
-  const { templates, packs, isLoadingTemplates, isLoadingPacks, createPackFromTemplate, isCreatingPack } = useBoardPacks(boardId);
+  const { templates, packs, isLoadingTemplates, isLoadingPacks, createPackFromTemplate, isCreatingPack, createTemplate, isCreatingTemplate } = useBoardPacks(boardId);
+  const [canSeed, setCanSeed] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   useEffect(() => {
     loadBoards();
   }, []);
+
+  useEffect(() => {
+    if (!boardId) {
+      setCanSeed(false);
+      return;
+    }
+    void checkSeedPermission(boardId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boardId]);
+
+  const checkSeedPermission = async (bId: string) => {
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData?.user?.id;
+    if (!uid) { setCanSeed(false); return; }
+    const { data: board } = await supabase
+      .from('boards')
+      .select('org_id')
+      .eq('id', bId)
+      .maybeSingle();
+    if (!board?.org_id) { setCanSeed(false); return; }
+    const roles: Array<'super_admin' | 'org_admin' | 'chair'> = ['super_admin', 'org_admin', 'chair'];
+    const results = await Promise.all(
+      roles.map((r) =>
+        supabase.rpc('has_role', {
+          _user_id: uid,
+          _role: r,
+          ...(r === 'super_admin' ? {} : { _org_id: board.org_id }),
+        } as any).then((res) => res.data === true).catch(() => false),
+      ),
+    );
+    setCanSeed(results.some(Boolean));
+  };
+
+  const handleSeedStandardTemplate = async () => {
+    if (!boardId) return;
+    setIsSeeding(true);
+    try {
+      const { data: existing, error: existErr } = await supabase
+        .from('board_templates')
+        .select('id')
+        .eq('board_id', boardId)
+        .eq('name', STANDARD_TEMPLATE_NAME)
+        .maybeSingle();
+      if (existErr) throw existErr;
+      if (existing) {
+        toast.info(`"${STANDARD_TEMPLATE_NAME}" already exists for this board.`);
+        return;
+      }
+      createTemplate({
+        board_id: boardId,
+        name: STANDARD_TEMPLATE_NAME,
+        description: STANDARD_TEMPLATE_DESCRIPTION,
+        sections: STANDARD_SECTIONS,
+      });
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Failed to seed standard template');
+    } finally {
+      setIsSeeding(false);
+    }
+  };
 
   const loadBoards = async () => {
     const { data, error } = await supabase
