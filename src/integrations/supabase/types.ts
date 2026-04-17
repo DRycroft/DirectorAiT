@@ -2729,6 +2729,7 @@ export type Database = {
         Args: { _board_id?: string }
         Returns: string
       }
+      get_member_invite_email: { Args: { _member_id: string }; Returns: string }
       get_user_org_id: { Args: { user_id: string }; Returns: string }
       has_role:
         | {
@@ -2746,6 +2747,11 @@ export type Database = {
             }
             Returns: boolean
           }
+      invite_exists_for_email: {
+        Args: { _board_id: string; _email: string }
+        Returns: boolean
+      }
+      invite_token_exists: { Args: { _token: string }; Returns: boolean }
       is_board_admin_for_member: {
         Args: { _member_id: string; _user_id: string }
         Returns: boolean
@@ -2772,6 +2778,20 @@ export type Database = {
           _old_value?: string
         }
         Returns: undefined
+      }
+      lookup_invite_by_token: {
+        Args: { _token: string }
+        Returns: {
+          board_id: string
+          board_title: string
+          full_name: string
+          id: string
+          invite_email: string
+          invite_expires_at: string
+          org_id: string
+          org_name: string
+          public_contact_email: string
+        }[]
       }
       unlock_board_pack: { Args: { _pack_id: string }; Returns: undefined }
       user_can_create_in_org: {
