@@ -2783,6 +2783,20 @@ export type Database = {
         }
         Returns: undefined
       }
+      lookup_action_invite: {
+        Args: { _token: string }
+        Returns: {
+          completed_at: string
+          effective_status: string
+          expires_at: string
+          id: string
+          invite_type: string
+          recipient_email: string
+          recipient_name: string
+          status: string
+          target_type: string
+        }[]
+      }
       lookup_invite_by_token: {
         Args: { _token: string }
         Returns: {
@@ -2796,6 +2810,15 @@ export type Database = {
           org_name: string
           public_contact_email: string
         }[]
+      }
+      submit_action_response: {
+        Args: {
+          _payload: Json
+          _respondent_email?: string
+          _respondent_name?: string
+          _token: string
+        }
+        Returns: string
       }
       unlock_board_pack: { Args: { _pack_id: string }; Returns: undefined }
       user_can_create_in_org: {
