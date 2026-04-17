@@ -142,6 +142,13 @@ const MemberApproval = () => {
       });
       if (auditError) console.error("Audit log failed:", auditError);
 
+      // Fire-and-forget: notify member
+      supabase.functions.invoke("notify-member-lifecycle", {
+        body: { member_id: memberId, event: "approved" },
+      }).then(({ error }) => {
+        if (error) console.error("notify-member-lifecycle (approved) failed:", error);
+      });
+
       toast.success("The member profile has been approved and is now active");
 
       navigate(-1);
@@ -196,6 +203,13 @@ const MemberApproval = () => {
         _new_value: "rejected",
       });
       if (auditError) console.error("Audit log failed:", auditError);
+
+      // Fire-and-forget: notify member
+      supabase.functions.invoke("notify-member-lifecycle", {
+        body: { member_id: memberId, event: "rejected", comments: comments.trim() },
+      }).then(({ error }) => {
+        if (error) console.error("notify-member-lifecycle (rejected) failed:", error);
+      });
 
       toast.success("The member will be notified to make changes");
 

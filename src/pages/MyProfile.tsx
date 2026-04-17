@@ -223,6 +223,13 @@ const MyProfile = () => {
         }).then(({ error }) => {
           if (error) console.error("Audit log (profile_submitted) failed:", error);
         });
+
+        // Fire-and-forget: notify admins
+        supabase.functions.invoke("notify-member-lifecycle", {
+          body: { member_id: member.id, event: "profile_submitted" },
+        }).then(({ error }) => {
+          if (error) console.error("notify-member-lifecycle (submitted) failed:", error);
+        });
       }
 
       // Update local state so completion status reflects immediately
