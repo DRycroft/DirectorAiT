@@ -41,6 +41,8 @@ export default function PackSections() {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddSection, setShowAddSection] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState('');
+  const [canAutoFill, setCanAutoFill] = useState(false);
+  const [isAutoFilling, setIsAutoFilling] = useState(false);
 
   const isFinalised = pack?.status === 'finalised';
 
