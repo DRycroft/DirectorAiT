@@ -16,11 +16,12 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, FileText, CheckCircle2, Clock, Edit, Eye, Lock, ShieldCheck, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileText, CheckCircle2, Clock, Edit, Eye, Lock, ShieldCheck, Plus, Trash2, Sparkles, Loader2 } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 import { getUserFriendlyError } from '@/lib/errorHandling';
+import { autoPopulatePack } from '@/lib/autoPopulatePack';
 
 interface PackWithSections {
   id: string;
