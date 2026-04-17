@@ -229,6 +229,22 @@ export function PackTemplateBuilder({ boardId, onTemplateSaved }: PackTemplateBu
                 className="flex-1"
                 disabled={section.is_required}
               />
+
+              <Select
+                value={section.section_kind ?? FREE_FORM}
+                onValueChange={(v) => handleUpdateKind(index, v)}
+              >
+                <SelectTrigger className="w-44 flex-shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  {SECTION_KINDS.map((k) => (
+                    <SelectItem key={k.value} value={k.value}>
+                      {k.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               
               <div className="flex items-center gap-2 flex-shrink-0">
                 {section.is_required && (
