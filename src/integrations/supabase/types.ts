@@ -2709,6 +2709,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bootstrap_first_org_admin: {
+        Args: { _org_id: string }
+        Returns: undefined
+      }
       calculate_next_due_date: {
         Args: {
           freq: Database["public"]["Enums"]["compliance_frequency"]
