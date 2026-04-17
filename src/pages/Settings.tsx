@@ -303,6 +303,7 @@ const industryCategories: Record<string, string[]> = {
 };
 
 const Settings = () => {
+  const { count: pendingMemberCount } = usePendingMemberCount();
   const [selectedType, setSelectedType] = useState<string>("");
   const [sections, setSections] = useState<TemplateSection[]>([]);
   const [selectedStaffFormType, setSelectedStaffFormType] = useState<string>("");
