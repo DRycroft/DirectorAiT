@@ -11,9 +11,27 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { GripVertical, Save, Plus, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
+
+const FREE_FORM = '__free__';
+const SECTION_KINDS: { value: string; label: string }[] = [
+  { value: FREE_FORM, label: 'Free-form (manual)' },
+  { value: 'attendance', label: 'Attendance' },
+  { value: 'prior_minutes', label: 'Prior Minutes' },
+  { value: 'coi_register', label: 'COI Register' },
+  { value: 'actions_log', label: 'Actions Log' },
+  { value: 'decisions_log', label: 'Decisions Log' },
+  { value: 'members_directory', label: 'Members Directory' },
+];
 
 interface Section {
   id?: string;
@@ -21,18 +39,19 @@ interface Section {
   order_index: number;
   is_required: boolean;
   is_enabled: boolean;
+  section_kind?: string | null;
 }
 
 const defaultSections: Section[] = [
-  { title: 'Cover Page', order_index: 0, is_required: true, is_enabled: true },
-  { title: 'Declaration', order_index: 1, is_required: true, is_enabled: true },
-  { title: 'Table of Contents', order_index: 2, is_required: true, is_enabled: true },
-  { title: 'Board Chair Report', order_index: 3, is_required: false, is_enabled: true },
-  { title: 'CEO Report', order_index: 4, is_required: false, is_enabled: true },
-  { title: 'CFO Report', order_index: 5, is_required: false, is_enabled: true },
-  { title: 'Operations Manager Report', order_index: 6, is_required: false, is_enabled: true },
-  { title: 'Health & Safety Report', order_index: 7, is_required: false, is_enabled: true },
-  { title: 'Compliance Report', order_index: 8, is_required: false, is_enabled: true },
+  { title: 'Cover Page', order_index: 0, is_required: true, is_enabled: true, section_kind: null },
+  { title: 'Declaration', order_index: 1, is_required: true, is_enabled: true, section_kind: null },
+  { title: 'Table of Contents', order_index: 2, is_required: true, is_enabled: true, section_kind: null },
+  { title: 'Board Chair Report', order_index: 3, is_required: false, is_enabled: true, section_kind: null },
+  { title: 'CEO Report', order_index: 4, is_required: false, is_enabled: true, section_kind: null },
+  { title: 'CFO Report', order_index: 5, is_required: false, is_enabled: true, section_kind: null },
+  { title: 'Operations Manager Report', order_index: 6, is_required: false, is_enabled: true, section_kind: null },
+  { title: 'Health & Safety Report', order_index: 7, is_required: false, is_enabled: true, section_kind: null },
+  { title: 'Compliance Report', order_index: 8, is_required: false, is_enabled: true, section_kind: null },
 ];
 
 interface PackTemplateBuilderProps {
