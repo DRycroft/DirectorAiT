@@ -1,8 +1,33 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/components/ui/sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
 import { runBootstrapFromLocalStorage } from '@/lib/bootstrap';
+
+/** Public/auth paths where forceReauth must NOT redirect (avoid loops / breaking flows). */
+const PUBLIC_AUTH_PATHS = [
+  '/auth',
+  '/signup',
+  '/auth/callback',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/invite/',
+  '/action/',
+  '/',
+  '/pricing',
+  '/contact',
+  '/terms',
+  '/privacy',
+  '/health',
+];
+
+function isPublicAuthPath(pathname: string): boolean {
+  return PUBLIC_AUTH_PATHS.some((p) =>
+    p.endsWith('/') ? pathname.startsWith(p) : pathname === p
+  );
+}
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +45,8 @@ interface AuthContextType {
   onboardingComplete: boolean | null;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  /** Phase 4: forced re-auth on true auth death (expired/invalid refresh). De-duplicated. */
+  forceReauth: (reason?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,6 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isBootstrapping, setIsBootstrapping] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
+  const queryClient = useQueryClient();
+  const reauthInFlightRef = useRef(false);
 
   useEffect(() => {
     let initialSessionHandled = false;
@@ -159,22 +188,80 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [session]);
 
+  /** Clear all client-side auth/session state and React Query cache. */
+  const clearLocalAuthState = () => {
+    setUser(null);
+    setSession(null);
+    setOnboardingComplete(null);
+    setProfileLoading(false);
+    try {
+      queryClient.clear();
+    } catch (e) {
+      logger.error('Failed to clear query cache', e);
+    }
+  };
+
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      setOnboardingComplete(null);
-      setProfileLoading(false);
       logger.info('User signed out');
     } catch (error) {
       logger.error('Sign out error', error);
-      // Still clear local state on error
-      setUser(null);
-      setSession(null);
-      setOnboardingComplete(null);
-      setProfileLoading(false);
+    } finally {
+      clearLocalAuthState();
     }
+  };
+
+  /**
+   * Phase 4: forced re-auth on true auth death.
+   * De-duplicated via reauthInFlightRef. Safe on public/auth paths (no redirect).
+   */
+  const forceReauth = async (reason?: string) => {
+    if (reauthInFlightRef.current) return;
+    reauthInFlightRef.current = true;
+    logger.warn('forceReauth triggered', { reason });
+    try {
+      try {
+        await supabase.auth.signOut();
+      } catch (e) {
+        logger.error('forceReauth signOut error (continuing)', e);
+      }
+      clearLocalAuthState();
+
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname;
+        if (!isPublicAuthPath(path)) {
+          try {
+            toast.error('Your session has expired. Please sign in again.');
+          } catch {
+            // toast is best-effort
+          }
+          const redirectTo = encodeURIComponent(path + window.location.search);
+          window.location.replace(`/auth?redirect=${redirectTo}`);
+        }
+      }
+    } finally {
+      setTimeout(() => {
+        reauthInFlightRef.current = false;
+      }, 1000);
+    }
+  };
+
+  /** True if a Supabase auth error indicates the session is dead (not just RLS/permission). */
+  const isAuthDeathError = (error: any): boolean => {
+    if (!error) return false;
+    const msg = String(error.message || error.error_description || '').toLowerCase();
+    const code = String(error.code || error.error || '').toLowerCase();
+    return (
+      code === 'invalid_grant' ||
+      code === 'refresh_token_not_found' ||
+      msg.includes('invalid refresh token') ||
+      msg.includes('refresh token not found') ||
+      msg.includes('jwt expired') ||
+      msg.includes('invalid jwt') ||
+      msg.includes('token has expired') ||
+      msg.includes('user from sub claim in jwt does not exist')
+    );
   };
 
   const refreshSession = async () => {
@@ -182,6 +269,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.auth.refreshSession();
       if (error) {
         logger.error('Failed to refresh session', error);
+        if (isAuthDeathError(error)) {
+          await forceReauth('refresh_failed');
+        }
+      } else if (!data.session) {
+        await forceReauth('refresh_no_session');
       } else {
         setSession(data.session);
         setUser(data.session?.user ?? null);
@@ -189,6 +281,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       logger.error('Session refresh exception', error);
+      if (isAuthDeathError(error)) {
+        await forceReauth('refresh_exception');
+      }
     }
   };
 
@@ -201,6 +296,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     onboardingComplete,
     signOut,
     refreshSession,
+    forceReauth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
