@@ -218,7 +218,7 @@ const MyProfile = () => {
           _member_id: member.id,
           _field_name: "status",
           _change_type: "profile_submitted",
-          _old_value: member.status ?? null,
+          _old_value: member.status ?? undefined,
           _new_value: "pending",
         }).then(({ error }) => {
           if (error) console.error("Audit log (profile_submitted) failed:", error);
