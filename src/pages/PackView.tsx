@@ -680,9 +680,9 @@ export default function PackView() {
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">AI Governance Tools</h2>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={handleSummarisePack} disabled={governanceAI.isProcessing}>
+            <Button variant="outline" size="sm" onClick={handleSummarisePack} disabled={isSummarising}>
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              {governanceAI.isProcessing ? 'Processing…' : 'Summarise Pack'}
+              {isSummarising ? 'Summarising…' : (summary ? 'View Summary' : 'Summarise Pack')}
             </Button>
             <Button variant="outline" size="sm" onClick={handleHighlightRisks} disabled={governanceAI.isProcessing}>
               <AlertTriangle className="h-3.5 w-3.5 mr-1.5" />
@@ -693,6 +693,38 @@ export default function PackView() {
               New Director Briefing
             </Button>
           </div>
+
+          {summary && (
+            <Card className="mt-4 p-4 border-primary/20 bg-primary/[0.02]">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-semibold">Pack Summary</h3>
+                  <Badge variant="outline" className="text-xs font-normal">AI Generated</Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    {formatRelative(summary.generated_at)} • {summary.model}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRegenerateSummary}
+                    disabled={isSummarising || isFinalised}
+                    title={isFinalised ? 'Regeneration disabled on finalised packs' : 'Regenerate summary'}
+                  >
+                    {isSummarising ? 'Regenerating…' : 'Regenerate'}
+                  </Button>
+                </div>
+              </div>
+              <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap text-sm leading-relaxed">
+                {summary.summary_text}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                AI-generated summary. Always verify against source material before relying on it.
+              </p>
+            </Card>
+          )}
 
           {governanceAI.result && (
             <div className="mt-4">
