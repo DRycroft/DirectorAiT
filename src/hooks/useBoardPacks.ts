@@ -273,17 +273,34 @@ export function useBoardPacks(boardId?: string) {
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
 
-      // Check if document already exists
+      // Block submissions when parent pack is finalised
+      const { data: sectionRow, error: sectionErr } = await supabase
+        .from('pack_sections')
+        .select('pack_id')
+        .eq('id', reportData.section_id)
+        .single();
+      if (sectionErr) throw sectionErr;
+      if (sectionRow?.pack_id) {
+        const { data: packRow } = await supabase
+          .from('board_packs')
+          .select('status')
+          .eq('id', sectionRow.pack_id)
+          .single();
+        if (packRow?.status === 'finalised') {
+          throw new Error('Pack is finalised. Unlock it before editing sections.');
+        }
+      }
+
+      // Check existing documents (to detect override + version)
       const { data: existingDocs } = await supabase
         .from('section_documents')
-        .select('id, version_number')
+        .select('id, version_number, source')
         .eq('section_id', reportData.section_id)
-        .order('version_number', { ascending: false })
-        .limit(1);
+        .order('version_number', { ascending: false });
 
-      const newVersion = existingDocs && existingDocs.length > 0 
-        ? (existingDocs[0].version_number || 0) + 1 
-        : 1;
+      const latest = existingDocs && existingDocs.length > 0 ? existingDocs[0] : null;
+      const newVersion = latest ? (latest.version_number || 0) + 1 : 1;
+      const overrodeAuto = !!existingDocs?.some(d => d.source === 'auto');
 
       // Create new document
       const { data: document, error: docError } = await supabase
@@ -300,7 +317,6 @@ export function useBoardPacks(boardId?: string) {
 
       if (docError) throw docError;
 
-      // Update pack_section to reference this document and mark as submitted
       const { error: updateError } = await supabase
         .from('pack_sections')
         .update({
@@ -311,10 +327,14 @@ export function useBoardPacks(boardId?: string) {
 
       if (updateError) throw updateError;
 
-      return document;
+      return { document, overrodeAuto };
     },
-    onSuccess: () => {
-      toast.success("Your report has been submitted successfully.");
+    onSuccess: (res: any) => {
+      if (res?.overrodeAuto) {
+        toast.success('Manual content replaced the auto-generated draft.');
+      } else {
+        toast.success('Your report has been submitted successfully.');
+      }
     },
     onError: (error: Error) => {
       toast.error(getUserFriendlyError(error));

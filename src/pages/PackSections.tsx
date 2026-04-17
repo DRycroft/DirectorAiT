@@ -100,8 +100,21 @@ export default function PackSections() {
     try {
       const result = await autoPopulatePack(packId);
       const filled = result?.sections_filled ?? 0;
-      const skipped = (result?.sections_skipped_human ?? 0) + (result?.sections_skipped_unknown_kind ?? 0);
-      toast.success(`Auto-fill complete: ${filled} filled, ${skipped} skipped.`);
+      const skippedHuman = result?.sections_skipped_human ?? 0;
+      const skippedUnknown = result?.sections_skipped_unknown_kind ?? 0;
+      const errCount = result?.errors?.length ?? 0;
+
+      toast.success(`Auto-fill complete: ${filled} filled, ${skippedHuman + skippedUnknown} skipped${errCount ? `, ${errCount} error${errCount === 1 ? '' : 's'}` : ''}.`);
+
+      if (skippedHuman > 0 && result?.skipped_human_titles?.length) {
+        const list = result.skipped_human_titles.slice(0, 3).join(', ');
+        const more = result.skipped_human_titles.length > 3 ? ` +${result.skipped_human_titles.length - 3} more` : '';
+        toast.message('Sections preserved (manual content present)', { description: `${list}${more}` });
+      }
+      if (errCount > 0) {
+        const first = result.errors[0];
+        toast.error(`Some sections failed: ${first.section_title || first.section_id} — ${first.message}`);
+      }
       loadPackData();
     } catch (error: any) {
       toast.error(getUserFriendlyError(error));
@@ -262,11 +275,21 @@ export default function PackSections() {
           ) : (
             <div className="space-y-3">
               {sections.map((section) => {
-                const document = section.document?.[0];
-                const versionNumber = document?.version_number || null;
-                const isAutoSource = document?.source === 'auto';
+                const docs: any[] = Array.isArray(section.document) ? section.document : (section.document ? [section.document] : []);
+                const sortedDocs = [...docs].sort((a, b) => (b?.version_number || 0) - (a?.version_number || 0));
+                const latestDoc = sortedDocs[0];
+                const versionNumber = latestDoc?.version_number || null;
+                const latestSource = latestDoc?.source as 'auto' | 'human' | undefined;
+                const hasAutoDoc = sortedDocs.some(d => d?.source === 'auto');
+                const isOverride = latestSource === 'human' && hasAutoDoc;
                 const updatedAt = section.updated_at ? new Date(section.updated_at) : null;
-                
+
+                let label: 'Pending' | 'Auto' | 'Human' | 'Manual Override' = 'Pending';
+                let labelClass = 'bg-warning/10 text-warning';
+                if (isOverride) { label = 'Manual Override'; labelClass = 'bg-primary/10 text-primary'; }
+                else if (latestSource === 'human') { label = 'Human'; labelClass = 'bg-success/10 text-success'; }
+                else if (latestSource === 'auto') { label = 'Auto'; labelClass = 'bg-primary/10 text-primary'; }
+
                 return (
                   <Card
                     key={section.id}
@@ -279,18 +302,10 @@ export default function PackSections() {
                         <div>
                           <h3 className="font-semibold">{section.title}</h3>
                           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                              section.status === 'submitted' 
-                                ? 'bg-success/10 text-success' 
-                                : 'bg-warning/10 text-warning'
-                            }`}>
-                              {section.status === 'submitted' ? 'Submitted' : 'Pending'}
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium inline-flex items-center gap-1 ${labelClass}`}>
+                              {label === 'Auto' && <Sparkles className="h-3 w-3" />}
+                              {label}
                             </span>
-                            {isAutoSource && (
-                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary inline-flex items-center gap-1">
-                                <Sparkles className="h-3 w-3" /> Auto
-                              </span>
-                            )}
                             {versionNumber && <span>v{versionNumber}</span>}
                             {updatedAt && <span>Updated {updatedAt.toLocaleDateString()}</span>}
                           </div>
