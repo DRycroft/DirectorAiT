@@ -19,16 +19,21 @@ export interface AutoPopulateResult {
   sections_skipped_human: number;
   sections_skipped_unknown_kind: number;
   sections_total_with_kind: number;
+  skipped_human_titles: string[];
+  errors: { section_id: string; section_title?: string; message: string }[];
 }
 
 export async function autoPopulatePack(packId: string): Promise<AutoPopulateResult> {
   // 1. Load pack
   const { data: pack, error: packErr } = await supabase
     .from('board_packs')
-    .select('id, board_id, meeting_date')
+    .select('id, board_id, meeting_date, status')
     .eq('id', packId)
     .single();
   if (packErr || !pack) throw packErr || new Error('Pack not found');
+  if (pack.status === 'finalised') {
+    throw new Error('Pack is finalised. Unlock it before re-running auto-fill.');
+  }
 
   // 2. Load sections with kinds
   const { data: sectionsRaw, error: secErr } = await supabase
