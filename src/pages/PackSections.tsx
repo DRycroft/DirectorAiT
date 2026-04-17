@@ -28,6 +28,7 @@ interface PackWithSections {
   title: string;
   meeting_date: string;
   status: string | null;
+  board_id: string;
 }
 
 export default function PackSections() {
