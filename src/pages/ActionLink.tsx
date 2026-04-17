@@ -76,8 +76,8 @@ export default function ActionLink() {
       const { error: rpcError } = await supabase.rpc("submit_action_response", {
         _token: token,
         _payload: { message: message.trim() },
-        _respondent_name: name.trim() || null,
-        _respondent_email: email.trim() || null,
+        _respondent_name: name.trim() || undefined,
+        _respondent_email: email.trim() || undefined,
       });
       if (rpcError) {
         toast({
