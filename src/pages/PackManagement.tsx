@@ -213,17 +213,29 @@ export default function PackManagement() {
 
         {/* Templates Section */}
         <Card className="p-6 mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
             <div>
               <h2 className="text-2xl font-bold mb-1">Templates</h2>
               <p className="text-muted-foreground">
                 Reusable templates for board packs
               </p>
             </div>
-            <Button onClick={() => setShowTemplateBuilder(!showTemplateBuilder)}>
-              <Plus className="h-4 w-4 mr-2" />
-              {showTemplateBuilder ? 'Hide' : 'Create'} Template
-            </Button>
+            <div className="flex items-center gap-2">
+              {canSeed && (
+                <Button
+                  variant="outline"
+                  onClick={handleSeedStandardTemplate}
+                  disabled={isSeeding || isCreatingTemplate}
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  {isSeeding || isCreatingTemplate ? 'Creating…' : 'Create Standard Template'}
+                </Button>
+              )}
+              <Button onClick={() => setShowTemplateBuilder(!showTemplateBuilder)}>
+                <Plus className="h-4 w-4 mr-2" />
+                {showTemplateBuilder ? 'Hide' : 'Create'} Template
+              </Button>
+            </div>
           </div>
 
           {showTemplateBuilder && boardId && (
