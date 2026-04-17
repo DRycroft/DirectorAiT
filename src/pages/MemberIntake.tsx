@@ -61,8 +61,6 @@ const MemberIntake = () => {
       setLoading(false);
       return;
 
-      toast.success("We");
-
       // Reset form
       setFormData({
         name: "",

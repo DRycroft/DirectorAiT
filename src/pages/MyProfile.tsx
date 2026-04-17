@@ -83,7 +83,7 @@ const MyProfile = () => {
       if (error) throw error;
 
       if (!data || data.length === 0) {
-        toast.error("You don");
+        toast.error("You don't have any board memberships yet.");
         navigate("/dashboard", { replace: true });
         return;
       }
@@ -211,6 +211,19 @@ const MyProfile = () => {
         );
 
       if (sensitiveError) throw sensitiveError;
+
+      // Audit: profile_submitted (only on first completion or resubmission after rejection)
+      if (isFirstCompletion || member.status === "rejected") {
+        await supabase.rpc("log_board_member_audit", {
+          _member_id: member.id,
+          _field_name: "status",
+          _change_type: "profile_submitted",
+          _old_value: member.status ?? undefined,
+          _new_value: "pending",
+        }).then(({ error }) => {
+          if (error) console.error("Audit log (profile_submitted) failed:", error);
+        });
+      }
 
       // Update local state so completion status reflects immediately
       setAllMembers((prev) =>
