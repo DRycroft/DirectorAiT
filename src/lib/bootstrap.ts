@@ -144,24 +144,9 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
 
   console.log('[Bootstrap] Board created:', board.id);
 
-  // 6) Create board membership (owner)
-  console.log('[Bootstrap] Creating board membership...');
-  const { error: membershipCreateError } = await supabase
-    .from("board_memberships")
-    .insert({
-      board_id: board.id,
-      user_id: user.id,
-      role: "owner",
-    });
-
-  if (membershipCreateError) {
-    console.error('[Bootstrap] Failed to create board membership:', membershipCreateError);
-    throw membershipCreateError;
-  }
-
-  console.log('[Bootstrap] Board membership created');
-
-  // 7) Update profile with org
+  // 6) Update profile with org BEFORE creating board membership.
+  //    The bootstrap_first_board_owner RPC requires profile.org_id to match
+  //    the target board's org_id, so this must happen first.
   console.log('[Bootstrap] Updating profile with org_id...');
   const { error: profileUpdateError } = await supabase
     .from("profiles")
@@ -178,6 +163,25 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
   }
 
   console.log('[Bootstrap] Profile updated');
+
+  // 7) Create board membership (owner) via SECURITY DEFINER RPC.
+  //    Direct self-insert of role='owner' is no longer permitted by RLS;
+  //    this RPC re-validates bootstrap invariants server-side.
+  console.log('[Bootstrap] Creating first-board owner membership via bootstrap_first_board_owner...');
+  const { error: membershipCreateError } = await supabase.rpc('bootstrap_first_board_owner', {
+    _board_id: board.id,
+  });
+
+  // Treat "already has board memberships / board already has memberships" as idempotent success.
+  if (
+    membershipCreateError &&
+    !/already has (board memberships|memberships)/i.test(membershipCreateError.message)
+  ) {
+    console.error('[Bootstrap] Failed to create board membership:', membershipCreateError);
+    throw membershipCreateError;
+  }
+
+  console.log('[Bootstrap] Board membership created');
 
   // 8) Assign org_admin role via SECURITY DEFINER RPC (server-validated, idempotent)
   console.log('[Bootstrap] Assigning org_admin role via bootstrap_first_org_admin...');
