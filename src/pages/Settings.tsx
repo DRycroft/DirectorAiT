@@ -19,6 +19,7 @@ import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCi
 import { toast as sonnerToast } from "sonner";
 import BoardManagement from "@/components/settings/BoardManagement";
 import { BOARD_POSITIONS, EXECUTIVE_POSITIONS, KEY_STAFF_POSITIONS } from "@/config/positions";
+import { usePendingMemberCount } from "@/hooks/usePendingMemberCount";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { getUserFriendlyError } from '@/lib/errorHandling';
@@ -959,6 +960,16 @@ const Settings = () => {
               <TabsTrigger value="board">
                 <Users className="mr-2 h-4 w-4" />
                 Board Members
+                {pendingMemberCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="ml-2 h-5 min-w-5 px-1.5 text-xs"
+                    aria-label={`${pendingMemberCount} pending member approvals`}
+                    title={`${pendingMemberCount} pending member ${pendingMemberCount === 1 ? "approval" : "approvals"}`}
+                  >
+                    {pendingMemberCount}
+                  </Badge>
+                )}
               </TabsTrigger>
               <TabsTrigger value="executive">
                 <Briefcase className="mr-2 h-4 w-4" />
