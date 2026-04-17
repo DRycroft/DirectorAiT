@@ -9,19 +9,47 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isBootstrapping: boolean;
+  /** True while the profile (onboarding flag) is being read for the current user. */
+  profileLoading: boolean;
+  /**
+   * Tri-state onboarding flag for the current user:
+   * - null  : unknown / not yet loaded (or no user)
+   * - true  : profile.onboarding_complete = true
+   * - false : profile missing OR onboarding_complete = false (fail-safe)
+   */
+  onboardingComplete: boolean | null;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/** Fail-safe profile read: any error => treated as incomplete (false). */
+async function readOnboardingComplete(userId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('onboarding_complete')
+      .eq('id', userId)
+      .maybeSingle();
+    if (error || !data) return false;
+    return !!data.onboarding_complete;
+  } catch {
+    return false;
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isBootstrapping, setIsBootstrapping] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
 
   useEffect(() => {
+    let initialSessionHandled = false;
+
     // Set up auth state listener FIRST (before checking session)
     const {
       data: { subscription },
@@ -30,9 +58,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       setLoading(false);
-      
+
       logger.info('Auth state changed', { event, userId: newSession?.user?.id });
-      
+
+      // Phase 3: Clear onboarding state on SIGNED_OUT
+      if (event === 'SIGNED_OUT') {
+        setOnboardingComplete(null);
+        setProfileLoading(false);
+        return;
+      }
+
+      // Phase 3: load onboarding flag whenever we get a session via SIGNED_IN
+      // or the canonical INITIAL_SESSION seed (fires once on mount).
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && newSession?.user) {
+        const userId = newSession.user.id;
+        setProfileLoading(true);
+        setTimeout(async () => {
+          const complete = await readOnboardingComplete(userId);
+          setOnboardingComplete(complete);
+          setProfileLoading(false);
+        }, 0);
+      } else if (event === 'INITIAL_SESSION' && !newSession) {
+        // No restored session — nothing to load.
+        setOnboardingComplete(null);
+        setProfileLoading(false);
+      }
+
+      if (event === 'INITIAL_SESSION') {
+        initialSessionHandled = true;
+      }
+
       // Run bootstrap on sign-in using setTimeout to avoid deadlocks
       if (event === 'SIGNED_IN' && newSession?.user) {
         // Phase 1: skip bootstrap when an invite acceptance is in progress.
@@ -61,12 +116,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // THEN check for existing session
+    // Safety-net seed: if INITIAL_SESSION never fires (older SDKs / edge cases),
+    // fall back to an explicit getSession() read so `loading` is cleared.
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      if (initialSessionHandled) return;
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
       setLoading(false);
-      logger.info('Auth session initialized', { userId: existingSession?.user?.id });
+      logger.info('Auth session initialized (fallback)', { userId: existingSession?.user?.id });
+      if (existingSession?.user) {
+        const userId = existingSession.user.id;
+        setProfileLoading(true);
+        readOnboardingComplete(userId).then((complete) => {
+          setOnboardingComplete(complete);
+          setProfileLoading(false);
+        });
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -99,12 +164,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
+      setOnboardingComplete(null);
+      setProfileLoading(false);
       logger.info('User signed out');
     } catch (error) {
       logger.error('Sign out error', error);
       // Still clear local state on error
       setUser(null);
       setSession(null);
+      setOnboardingComplete(null);
+      setProfileLoading(false);
     }
   };
 
@@ -128,6 +197,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     isBootstrapping,
+    profileLoading,
+    onboardingComplete,
     signOut,
     refreshSession,
   };

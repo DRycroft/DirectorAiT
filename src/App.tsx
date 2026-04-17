@@ -1,7 +1,7 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense, useEffect, ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -60,9 +60,24 @@ const PageLoader = () => (
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { user, loading, isBootstrapping } = useAuth();
+  const { user, loading, isBootstrapping, profileLoading, onboardingComplete } = useAuth();
+  const location = useLocation();
+
   if (loading || isBootstrapping) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
+
+  // Phase 3: gate protected routes by onboarding completion.
+  // /onboarding itself is exempt so the user can actually complete it.
+  const isOnboardingRoute = location.pathname.startsWith("/onboarding");
+
+  if (!isOnboardingRoute) {
+    // Wait for the profile read before deciding (prevents wrong-page flash on refresh).
+    if (profileLoading || onboardingComplete === null) return <PageLoader />;
+    if (onboardingComplete === false) {
+      return <Navigate to="/onboarding" replace />;
+    }
+  }
+
   return <>{children}</>;
 };
 
