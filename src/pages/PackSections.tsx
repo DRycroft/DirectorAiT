@@ -210,10 +210,18 @@ export default function PackSections() {
               </span>
             </div>
           </div>
-          <Button onClick={() => navigate(`/pack/${packId}/view`)}>
-            <Eye className="h-4 w-4 mr-2" />
-            View Pack
-          </Button>
+          <div className="flex items-center gap-2">
+            {canAutoFill && !isFinalised && (
+              <Button variant="outline" onClick={handleAutoFill} disabled={isAutoFilling}>
+                {isAutoFilling ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                {isAutoFilling ? 'Auto-filling…' : 'Auto-fill from data'}
+              </Button>
+            )}
+            <Button onClick={() => navigate(`/pack/${packId}/view`)}>
+              <Eye className="h-4 w-4 mr-2" />
+              View Pack
+            </Button>
+          </div>
         </div>
 
         <Card className="p-6">
