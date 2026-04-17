@@ -63,13 +63,18 @@ export default function PackManagement() {
     if (!board?.org_id) { setCanSeed(false); return; }
     const roles: Array<'super_admin' | 'org_admin' | 'chair'> = ['super_admin', 'org_admin', 'chair'];
     const results = await Promise.all(
-      roles.map((r) =>
-        supabase.rpc('has_role', {
-          _user_id: uid,
-          _role: r,
-          ...(r === 'super_admin' ? {} : { _org_id: board.org_id }),
-        } as any).then((res) => res.data === true).catch(() => false),
-      ),
+      roles.map(async (r) => {
+        try {
+          const res = await supabase.rpc('has_role', {
+            _user_id: uid,
+            _role: r,
+            ...(r === 'super_admin' ? {} : { _org_id: board.org_id }),
+          } as any);
+          return res.data === true;
+        } catch {
+          return false;
+        }
+      }),
     );
     setCanSeed(results.some(Boolean));
   };
