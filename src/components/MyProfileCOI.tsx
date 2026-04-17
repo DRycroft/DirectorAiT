@@ -122,7 +122,7 @@ export const MyProfileCOI = ({ memberId }: Props) => {
         logAudit(memberId, "coi_updated", "board_member_coi", editing.declared_interest, form.declared_interest.trim());
         toast.success("Declaration updated");
       } else {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from("board_member_coi")
           .insert({
             member_id: memberId,
@@ -131,9 +131,7 @@ export const MyProfileCOI = ({ memberId }: Props) => {
             related_party_name: form.related_party_name.trim() || null,
             management_steps: form.management_steps.trim() || null,
             status: "active",
-          })
-          .select("id")
-          .single();
+          });
         if (error) throw error;
         logAudit(memberId, "coi_declared", "board_member_coi", undefined, form.declared_interest.trim());
         toast.success("Declaration added");

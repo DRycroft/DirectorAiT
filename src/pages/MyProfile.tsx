@@ -13,6 +13,7 @@ import { Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { MyProfileCOI } from "@/components/MyProfileCOI";
 
 interface BoardMemberRecord {
   id: string;
@@ -507,6 +508,8 @@ const MyProfile = () => {
               )}
             </CardContent>
           </Card>
+
+          {member && !loading && <MyProfileCOI memberId={member.id} />}
         </div>
       </div>
     </div>
