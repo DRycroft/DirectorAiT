@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+
+const INVITE_IN_PROGRESS_KEY = "invite_in_progress";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +32,10 @@ export default function AcceptInvite() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Phase 1: in-flight guard to prevent duplicate accept calls
+  // (Strict Mode double-invoke, re-renders, login + auto-accept race)
+  const acceptingRef = useRef(false);
 
   useEffect(() => {
     if (!token) return;
@@ -100,6 +106,7 @@ export default function AcceptInvite() {
     const tryAutoAccept = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
+        sessionStorage.setItem(INVITE_IN_PROGRESS_KEY, token || "1");
         await acceptInvite(session.user.id);
       }
     };
@@ -108,6 +115,9 @@ export default function AcceptInvite() {
 
   const acceptInvite = async (userId: string) => {
     if (!invite) return;
+    // In-flight guard: ignore concurrent / repeat invocations
+    if (acceptingRef.current) return;
+    acceptingRef.current = true;
     try {
       // (a) Check if board_membership already exists
       const { data: existing } = await supabase
@@ -183,6 +193,10 @@ export default function AcceptInvite() {
       }
     } catch (error) {
       toast.error(getUserFriendlyError(error));
+    } finally {
+      acceptingRef.current = false;
+      // Clear invite-in-progress flag once accept settles
+      sessionStorage.removeItem(INVITE_IN_PROGRESS_KEY);
     }
   };
 
@@ -202,6 +216,8 @@ export default function AcceptInvite() {
     }
     setSubmitting(true);
     try {
+      // Suppress bootstrap during invite-driven signup
+      sessionStorage.setItem(INVITE_IN_PROGRESS_KEY, token || "1");
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -223,12 +239,15 @@ export default function AcceptInvite() {
     e.preventDefault();
     setSubmitting(true);
     try {
+      // Suppress bootstrap during invite-driven login
+      sessionStorage.setItem(INVITE_IN_PROGRESS_KEY, token || "1");
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       if (data.user) {
         await acceptInvite(data.user.id);
       }
     } catch (error) {
+      sessionStorage.removeItem(INVITE_IN_PROGRESS_KEY);
       toast.error(getUserFriendlyError(error));
     } finally {
       setSubmitting(false);

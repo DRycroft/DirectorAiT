@@ -35,18 +35,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Run bootstrap on sign-in using setTimeout to avoid deadlocks
       if (event === 'SIGNED_IN' && newSession?.user) {
-        setIsBootstrapping(true);
-        setTimeout(async () => {
-          try {
-            await runBootstrapFromLocalStorage();
-            logger.info('Bootstrap completed after SIGNED_IN');
-          } catch (error) {
-            logger.error('Bootstrap failed on SIGNED_IN', error);
-            // Don't throw - bootstrap failure shouldn't block auth
-          } finally {
-            setIsBootstrapping(false);
-          }
-        }, 0);
+        // Phase 1: skip bootstrap when an invite acceptance is in progress.
+        // AcceptInvite will link the user to the inviter's org; bootstrapping
+        // here would race and risk creating a spurious "My Organization".
+        const inviteInProgress =
+          typeof window !== 'undefined' &&
+          !!sessionStorage.getItem('invite_in_progress');
+
+        if (inviteInProgress) {
+          logger.info('Bootstrap skipped: invite acceptance in progress');
+        } else {
+          setIsBootstrapping(true);
+          setTimeout(async () => {
+            try {
+              await runBootstrapFromLocalStorage();
+              logger.info('Bootstrap completed after SIGNED_IN');
+            } catch (error) {
+              logger.error('Bootstrap failed on SIGNED_IN', error);
+              // Don't throw - bootstrap failure shouldn't block auth
+            } finally {
+              setIsBootstrapping(false);
+            }
+          }, 0);
+        }
       }
     });
 

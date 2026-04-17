@@ -60,8 +60,8 @@ const PageLoader = () => (
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { user, loading } = useAuth();
-  if (loading) return <PageLoader />;
+  const { user, loading, isBootstrapping } = useAuth();
+  if (loading || isBootstrapping) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   return <>{children}</>;
 };
