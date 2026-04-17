@@ -173,6 +173,17 @@ export default function AcceptInvite() {
         .eq("id", invite.id);
       if (updateError) throw updateError;
 
+      // Audit: invite_accepted
+      await supabase.rpc("log_board_member_audit", {
+        _member_id: invite.id,
+        _field_name: "status",
+        _change_type: "invite_accepted",
+        _old_value: "invited",
+        _new_value: "pending",
+      }).then(({ error: auditError }) => {
+        if (auditError) console.error("Audit log (invite_accepted) failed:", auditError);
+      });
+
       // (e) Assign observer role in user_roles if not already present
       const orgId = profile?.org_id || invite.board.org_id;
       if (orgId) {

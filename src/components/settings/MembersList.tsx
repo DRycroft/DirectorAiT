@@ -85,6 +85,16 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
 
       if (error) throw error;
 
+      // Audit: invite_sent
+      await supabase.rpc("log_board_member_audit", {
+        _member_id: memberId,
+        _field_name: "invite_token",
+        _change_type: "invite_sent",
+        _new_value: "invited",
+      }).then(({ error: auditError }) => {
+        if (auditError) console.error("Audit log (invite_sent) failed:", auditError);
+      });
+
       // Fetch member details needed for the email. invite_email is no longer
       // directly selectable on board_members; fetch it via admin-gated RPC.
       const [memberRes, emailRes] = await Promise.all([
