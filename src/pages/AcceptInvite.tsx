@@ -129,7 +129,25 @@ export default function AcceptInvite() {
         .eq("board_id", invite.board_id)
         .maybeSingle();
 
-      // (b) Insert membership if not exists
+      // (b) Ensure profile.org_id is linked to this invite's org BEFORE inserting
+      // membership. The board_memberships self-insert RLS policy now requires
+      // the target board to be in the caller's org (root-cause α fix), so the
+      // profile must be linked first or the membership insert will be rejected.
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("org_id, onboarding_complete")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (profile && !profile.org_id) {
+        const { error: profileOrgError } = await supabase
+          .from("profiles")
+          .update({ org_id: invite.board.org_id })
+          .eq("id", userId);
+        if (profileOrgError) throw profileOrgError;
+      }
+
+      // (c) Insert membership if not exists
       if (!existing) {
         const { error: membershipError } = await supabase
           .from("board_memberships")
@@ -141,7 +159,7 @@ export default function AcceptInvite() {
         if (membershipError) throw membershipError;
       }
 
-      // (c) Update board_members row — clear token for single-use enforcement
+      // (d) Update board_members row — clear token for single-use enforcement
       // Set status to "pending" so the member must complete their profile
       // and receive admin approval before becoming "active"
       const { error: updateError } = await supabase
@@ -154,20 +172,6 @@ export default function AcceptInvite() {
         })
         .eq("id", invite.id);
       if (updateError) throw updateError;
-
-      // (d) Check if user's profile has org_id; if not, link to this org
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("org_id, onboarding_complete")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (profile && !profile.org_id) {
-        await supabase
-          .from("profiles")
-          .update({ org_id: invite.board.org_id })
-          .eq("id", userId);
-      }
 
       // (e) Assign observer role in user_roles if not already present
       const orgId = profile?.org_id || invite.board.org_id;
