@@ -38,7 +38,7 @@ export async function autoPopulatePack(packId: string): Promise<AutoPopulateResu
   // 2. Load sections with kinds
   const { data: sectionsRaw, error: secErr } = await supabase
     .from('pack_sections')
-    .select('id, section_kind, status')
+    .select('id, title, section_kind, status')
     .eq('pack_id', packId);
   if (secErr) throw secErr;
   const kindedSections = (sectionsRaw || []).filter(s => !!s.section_kind);
@@ -50,6 +50,8 @@ export async function autoPopulatePack(packId: string): Promise<AutoPopulateResu
       sections_skipped_human: 0,
       sections_skipped_unknown_kind: 0,
       sections_total_with_kind: 0,
+      skipped_human_titles: [],
+      errors: [],
     };
   }
 
@@ -61,7 +63,6 @@ export async function autoPopulatePack(packId: string): Promise<AutoPopulateResu
     .in('section_id', sectionIds)
     .order('version_number', { ascending: false });
 
-  // Map: section_id -> { hasHuman: boolean, autoDocId: string | null, latestVersion: number }
   const sectionDocState = new Map<string, { hasHuman: boolean; autoDocId: string | null; latestVersion: number }>();
   (docsRaw || []).forEach(d => {
     const cur = sectionDocState.get(d.section_id) || { hasHuman: false, autoDocId: null, latestVersion: 0 };
@@ -82,50 +83,59 @@ export async function autoPopulatePack(packId: string): Promise<AutoPopulateResu
   let filled = 0;
   let skippedHuman = 0;
   let skippedUnknown = 0;
+  const skippedHumanTitles: string[] = [];
+  const errors: { section_id: string; section_title?: string; message: string }[] = [];
 
   for (const section of kindedSections) {
-    const kind = section.section_kind as string;
-    const content = buildSectionContent(kind, snapshot);
-    if (!content) {
-      skippedUnknown++;
-      continue;
-    }
-    const state = sectionDocState.get(section.id) || { hasHuman: false, autoDocId: null, latestVersion: 0 };
-    if (state.hasHuman) {
-      skippedHuman++;
-      continue;
-    }
+    try {
+      const kind = section.section_kind as string;
+      const content = buildSectionContent(kind, snapshot);
+      if (!content) {
+        skippedUnknown++;
+        continue;
+      }
+      const state = sectionDocState.get(section.id) || { hasHuman: false, autoDocId: null, latestVersion: 0 };
+      if (state.hasHuman) {
+        skippedHuman++;
+        skippedHumanTitles.push((section as any).title || section.id);
+        continue;
+      }
 
-    const contentJson = content as unknown as Record<string, never>;
-    if (state.autoDocId) {
-      // Update existing auto doc in place — no new version
-      const { error: updErr } = await supabase
-        .from('section_documents')
-        .update({ content: contentJson })
-        .eq('id', state.autoDocId);
-      if (updErr) throw updErr;
-    } else {
-      const newVersion = (state.latestVersion || 0) + 1;
-      const { data: newDoc, error: insErr } = await supabase
-        .from('section_documents')
-        .insert([{
-          section_id: section.id,
-          content: contentJson,
-          version_number: newVersion,
-          created_by: userId,
-          source: 'auto',
-        }])
-        .select('id')
-        .single();
-      if (insErr) throw insErr;
-      // Point pack_section to the new auto doc; keep status compatible with existing UI ('submitted')
-      const { error: linkErr } = await supabase
-        .from('pack_sections')
-        .update({ document_id: newDoc.id, status: 'submitted' })
-        .eq('id', section.id);
-      if (linkErr) throw linkErr;
+      const contentJson = content as unknown as Record<string, never>;
+      if (state.autoDocId) {
+        const { error: updErr } = await supabase
+          .from('section_documents')
+          .update({ content: contentJson })
+          .eq('id', state.autoDocId);
+        if (updErr) throw updErr;
+      } else {
+        const newVersion = (state.latestVersion || 0) + 1;
+        const { data: newDoc, error: insErr } = await supabase
+          .from('section_documents')
+          .insert([{
+            section_id: section.id,
+            content: contentJson,
+            version_number: newVersion,
+            created_by: userId,
+            source: 'auto',
+          }])
+          .select('id')
+          .single();
+        if (insErr) throw insErr;
+        const { error: linkErr } = await supabase
+          .from('pack_sections')
+          .update({ document_id: newDoc.id, status: 'submitted' })
+          .eq('id', section.id);
+        if (linkErr) throw linkErr;
+      }
+      filled++;
+    } catch (e: any) {
+      errors.push({
+        section_id: section.id,
+        section_title: (section as any).title,
+        message: e?.message || String(e),
+      });
     }
-    filled++;
   }
 
   // 6. Audit (best-effort)
@@ -140,6 +150,9 @@ export async function autoPopulatePack(packId: string): Promise<AutoPopulateResu
         sections_skipped_human: skippedHuman,
         sections_skipped_unknown_kind: skippedUnknown,
         sections_total_with_kind: kindedSections.length,
+        skipped_human_titles: skippedHumanTitles,
+        error_count: errors.length,
+        errors: errors.slice(0, 20),
       },
     });
   } catch {
@@ -152,5 +165,7 @@ export async function autoPopulatePack(packId: string): Promise<AutoPopulateResu
     sections_skipped_human: skippedHuman,
     sections_skipped_unknown_kind: skippedUnknown,
     sections_total_with_kind: kindedSections.length,
+    skipped_human_titles: skippedHumanTitles,
+    errors,
   };
 }
