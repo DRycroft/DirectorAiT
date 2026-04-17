@@ -48,38 +48,40 @@ export default function AcceptInvite() {
 
   const fetchInvite = async () => {
     try {
-      // Server-side expiry enforcement: only match invites that are not yet expired
-      const { data, error } = await supabase
-        .from("board_members")
-        .select(`
-          id, full_name, public_contact_email, invite_email, invite_expires_at, board_id,
-          board:boards!board_members_board_id_fkey(title, org_id, organization:organizations!boards_org_id_fkey(name))
-        `)
-        .eq("invite_token", token!)
-        .eq("status", "invited")
-        .or("invite_expires_at.is.null,invite_expires_at.gt." + new Date().toISOString())
-        .maybeSingle();
+      // Server-side definer RPC: validates token, status='invited', and not expired.
+      // Invite columns are no longer directly readable from board_members for
+      // ordinary roles (containment fix for token leak), so we resolve via RPC.
+      const { data: rows, error } = await supabase.rpc("lookup_invite_by_token", {
+        _token: token!,
+      });
 
       if (error) throw error;
 
-      if (!data || !data.board) {
-        // If no match, check whether the token exists but is expired
-        const { data: expiredCheck } = await supabase
-          .from("board_members")
-          .select("id")
-          .eq("invite_token", token!)
-          .eq("status", "invited")
-          .maybeSingle();
+      const row = Array.isArray(rows) ? rows[0] : rows;
 
-        if (expiredCheck) {
+      if (!row) {
+        // Token didn't match a valid invite — distinguish "expired" from "unknown".
+        const { data: existsData } = await supabase.rpc("invite_token_exists", {
+          _token: token!,
+        });
+        if (existsData === true) {
           setExpired(true);
         }
         setInvite(null);
       } else {
-        const inviteData = data as unknown as InviteData;
+        const inviteData: InviteData = {
+          id: row.id,
+          full_name: row.full_name,
+          public_contact_email: row.public_contact_email,
+          board_id: row.board_id,
+          board: {
+            title: row.board_title,
+            org_id: row.org_id,
+            organization: { name: row.org_name },
+          },
+        };
         setInvite(inviteData);
-        // Pre-fill email from invite_email, then fall back to public_contact_email
-        const prefillEmail = (data as any).invite_email || inviteData.public_contact_email;
+        const prefillEmail = row.invite_email || row.public_contact_email;
         if (prefillEmail) {
           setEmail(prefillEmail);
         }

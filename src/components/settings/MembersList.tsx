@@ -85,17 +85,22 @@ export function MembersList({ boardId, memberType, organizationName, onRefresh: 
 
       if (error) throw error;
 
-      // Fetch member details needed for the email
-      const { data: memberData } = await supabase
-        .from("board_members")
-        .select(`
-          full_name, invite_email,
-          board:boards!board_members_board_id_fkey(title, org_id, organization:organizations!boards_org_id_fkey(name))
-        `)
-        .eq("id", memberId)
-        .single();
+      // Fetch member details needed for the email. invite_email is no longer
+      // directly selectable on board_members; fetch it via admin-gated RPC.
+      const [memberRes, emailRes] = await Promise.all([
+        supabase
+          .from("board_members")
+          .select(`
+            full_name,
+            board:boards!board_members_board_id_fkey(title, org_id, organization:organizations!boards_org_id_fkey(name))
+          `)
+          .eq("id", memberId)
+          .single(),
+        supabase.rpc("get_member_invite_email", { _member_id: memberId }),
+      ]);
 
-      const inviteEmail = (memberData as any)?.invite_email;
+      const memberData = memberRes.data;
+      const inviteEmail = (emailRes.data as string | null) ?? null;
       const boardName = (memberData as any)?.board?.title || "a board";
       const orgName = (memberData as any)?.board?.organization?.name || "an organisation";
 

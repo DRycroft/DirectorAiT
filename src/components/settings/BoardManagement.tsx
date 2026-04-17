@@ -103,17 +103,16 @@ const BoardManagement = ({ memberType, title, description, positions }: BoardMan
     }
 
     try {
-      // Duplicate invite prevention: check for existing pending invite on same email+board
+      // Duplicate invite prevention: invite_email is no longer directly
+      // selectable on board_members; check via admin-gated RPC.
       const normalizedEmail = formData.personal_email.trim().toLowerCase();
-      const { data: existingInvite } = await supabase
-        .from("board_members")
-        .select("id, status")
-        .eq("board_id", formData.board_id)
-        .eq("invite_email", normalizedEmail)
-        .in("status", ["invited", "active"])
-        .maybeSingle();
+      const { data: existingInvite, error: dupErr } = await supabase.rpc(
+        "invite_exists_for_email",
+        { _board_id: formData.board_id, _email: normalizedEmail }
+      );
 
-      if (existingInvite) {
+      if (dupErr) throw dupErr;
+      if (existingInvite === true) {
         toast.error("Operation completed");
         return;
       }
