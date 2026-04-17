@@ -99,8 +99,8 @@ export default function PackSections() {
     setIsAutoFilling(true);
     try {
       const result = await autoPopulatePack(packId);
-      const filled = result?.filled ?? 0;
-      const skipped = result?.skipped ?? 0;
+      const filled = result?.sections_filled ?? 0;
+      const skipped = (result?.sections_skipped_human ?? 0) + (result?.sections_skipped_unknown_kind ?? 0);
       toast.success(`Auto-fill complete: ${filled} filled, ${skipped} skipped.`);
       loadPackData();
     } catch (error: any) {
