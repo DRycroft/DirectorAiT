@@ -27,6 +27,7 @@ export interface TemplateSection {
   order_index: number;
   is_required: boolean;
   is_enabled: boolean;
+  section_kind?: string | null;
 }
 
 export interface BoardPack {
