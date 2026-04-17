@@ -2709,6 +2709,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bootstrap_first_board_owner: {
+        Args: { _board_id: string }
+        Returns: undefined
+      }
       bootstrap_first_org_admin: {
         Args: { _org_id: string }
         Returns: undefined
