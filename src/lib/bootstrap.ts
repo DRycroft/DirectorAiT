@@ -179,14 +179,14 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
 
   console.log('[Bootstrap] Profile updated');
 
-  // 8) Assign org_admin role via user_roles table (idempotent)
-  console.log('[Bootstrap] Assigning org_admin role...');
-  const { error: roleError } = await supabase
-    .from("user_roles")
-    .insert({ user_id: user.id, role: "org_admin", org_id: org.id });
+  // 8) Assign org_admin role via SECURITY DEFINER RPC (server-validated, idempotent)
+  console.log('[Bootstrap] Assigning org_admin role via bootstrap_first_org_admin...');
+  const { error: roleError } = await supabase.rpc('bootstrap_first_org_admin', {
+    _org_id: org.id,
+  });
 
-  // Ignore duplicate key error - means role already exists
-  if (roleError && !/duplicate key/i.test(roleError.message)) {
+  // Treat "already has roles / already has assignments" as idempotent success.
+  if (roleError && !/already has (roles|role assignments)/i.test(roleError.message)) {
     console.error('[Bootstrap] Failed to assign role:', roleError);
     throw roleError;
   }
