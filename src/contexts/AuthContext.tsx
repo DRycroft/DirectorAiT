@@ -73,6 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isBootstrapping, setIsBootstrapping] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
+  const queryClient = useQueryClient();
+  const reauthInFlightRef = useRef(false);
 
   useEffect(() => {
     let initialSessionHandled = false;
