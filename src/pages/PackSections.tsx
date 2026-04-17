@@ -65,7 +65,7 @@ export default function PackSections() {
     try {
       const { data: packData, error: packError } = await supabase
         .from('board_packs')
-        .select('id, title, meeting_date, status')
+        .select('id, title, meeting_date, status, board_id')
         .eq('id', packId)
         .single();
       if (packError) throw packError;
@@ -73,10 +73,40 @@ export default function PackSections() {
 
       const sectionsData = await fetchPackSections(packId);
       setSections(sectionsData || []);
+
+      // Role check: super_admin / org_admin (org-scoped) / chair (board-scoped)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && packData?.board_id) {
+        const { data: board } = await supabase
+          .from('boards').select('org_id').eq('id', packData.board_id).maybeSingle();
+        const orgId = board?.org_id;
+        const [superRes, adminRes, chairRes] = await Promise.all([
+          supabase.rpc('has_role', { _user_id: user.id, _role: 'super_admin' }),
+          orgId ? supabase.rpc('has_role', { _user_id: user.id, _role: 'org_admin', _org_id: orgId }) : Promise.resolve({ data: false } as any),
+          orgId ? supabase.rpc('has_role', { _user_id: user.id, _role: 'chair', _org_id: orgId }) : Promise.resolve({ data: false } as any),
+        ]);
+        setCanAutoFill(!!(superRes.data || adminRes.data || chairRes.data));
+      }
     } catch (error: any) {
       toast.error(getUserFriendlyError(error));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAutoFill = async () => {
+    if (!packId) return;
+    setIsAutoFilling(true);
+    try {
+      const result = await autoPopulatePack(packId);
+      const filled = result?.filled ?? 0;
+      const skipped = result?.skipped ?? 0;
+      toast.success(`Auto-fill complete: ${filled} filled, ${skipped} skipped.`);
+      loadPackData();
+    } catch (error: any) {
+      toast.error(getUserFriendlyError(error));
+    } finally {
+      setIsAutoFilling(false);
     }
   };
 
