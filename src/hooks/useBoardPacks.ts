@@ -199,6 +199,7 @@ export function useBoardPacks(boardId?: string) {
             title: section.title,
             order_index: section.order_index,
             status: 'pending',
+            section_kind: section.section_kind ?? null,
           }));
 
         const { error: sectionsError } = await supabase
