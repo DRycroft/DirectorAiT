@@ -2205,6 +2205,7 @@ export type Database = {
           id: string
           order_index: number
           pack_id: string
+          section_kind: string | null
           status: string | null
           title: string
           updated_at: string | null
@@ -2215,6 +2216,7 @@ export type Database = {
           id?: string
           order_index?: number
           pack_id: string
+          section_kind?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
@@ -2225,6 +2227,7 @@ export type Database = {
           id?: string
           order_index?: number
           pack_id?: string
+          section_kind?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null
@@ -2321,6 +2324,7 @@ export type Database = {
           created_by: string
           id: string
           section_id: string
+          source: string
           updated_at: string | null
           version_number: number | null
         }
@@ -2330,6 +2334,7 @@ export type Database = {
           created_by: string
           id?: string
           section_id: string
+          source?: string
           updated_at?: string | null
           version_number?: number | null
         }
@@ -2339,6 +2344,7 @@ export type Database = {
           created_by?: string
           id?: string
           section_id?: string
+          source?: string
           updated_at?: string | null
           version_number?: number | null
         }
@@ -2540,6 +2546,7 @@ export type Database = {
           is_enabled: boolean | null
           is_required: boolean | null
           order_index: number
+          section_kind: string | null
           template_id: string
           title: string
           updated_at: string | null
@@ -2550,6 +2557,7 @@ export type Database = {
           is_enabled?: boolean | null
           is_required?: boolean | null
           order_index?: number
+          section_kind?: string | null
           template_id: string
           title: string
           updated_at?: string | null
@@ -2560,6 +2568,7 @@ export type Database = {
           is_enabled?: boolean | null
           is_required?: boolean | null
           order_index?: number
+          section_kind?: string | null
           template_id?: string
           title?: string
           updated_at?: string | null
