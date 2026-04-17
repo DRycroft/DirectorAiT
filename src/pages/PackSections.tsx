@@ -16,17 +16,19 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, FileText, CheckCircle2, Clock, Edit, Eye, Lock, ShieldCheck, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileText, CheckCircle2, Clock, Edit, Eye, Lock, ShieldCheck, Plus, Trash2, Sparkles, Loader2 } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 import { getUserFriendlyError } from '@/lib/errorHandling';
+import { autoPopulatePack } from '@/lib/autoPopulatePack';
 
 interface PackWithSections {
   id: string;
   title: string;
   meeting_date: string;
   status: string | null;
+  board_id: string;
 }
 
 export default function PackSections() {
@@ -39,6 +41,8 @@ export default function PackSections() {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddSection, setShowAddSection] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState('');
+  const [canAutoFill, setCanAutoFill] = useState(false);
+  const [isAutoFilling, setIsAutoFilling] = useState(false);
 
   const isFinalised = pack?.status === 'finalised';
 
@@ -61,7 +65,7 @@ export default function PackSections() {
     try {
       const { data: packData, error: packError } = await supabase
         .from('board_packs')
-        .select('id, title, meeting_date, status')
+        .select('id, title, meeting_date, status, board_id')
         .eq('id', packId)
         .single();
       if (packError) throw packError;
@@ -69,10 +73,40 @@ export default function PackSections() {
 
       const sectionsData = await fetchPackSections(packId);
       setSections(sectionsData || []);
+
+      // Role check: super_admin / org_admin (org-scoped) / chair (board-scoped)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && packData?.board_id) {
+        const { data: board } = await supabase
+          .from('boards').select('org_id').eq('id', packData.board_id).maybeSingle();
+        const orgId = board?.org_id;
+        const [superRes, adminRes, chairRes] = await Promise.all([
+          supabase.rpc('has_role', { _user_id: user.id, _role: 'super_admin' }),
+          orgId ? supabase.rpc('has_role', { _user_id: user.id, _role: 'org_admin', _org_id: orgId }) : Promise.resolve({ data: false } as any),
+          orgId ? supabase.rpc('has_role', { _user_id: user.id, _role: 'chair', _org_id: orgId }) : Promise.resolve({ data: false } as any),
+        ]);
+        setCanAutoFill(!!(superRes.data || adminRes.data || chairRes.data));
+      }
     } catch (error: any) {
       toast.error(getUserFriendlyError(error));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAutoFill = async () => {
+    if (!packId) return;
+    setIsAutoFilling(true);
+    try {
+      const result = await autoPopulatePack(packId);
+      const filled = result?.sections_filled ?? 0;
+      const skipped = (result?.sections_skipped_human ?? 0) + (result?.sections_skipped_unknown_kind ?? 0);
+      toast.success(`Auto-fill complete: ${filled} filled, ${skipped} skipped.`);
+      loadPackData();
+    } catch (error: any) {
+      toast.error(getUserFriendlyError(error));
+    } finally {
+      setIsAutoFilling(false);
     }
   };
 
@@ -176,10 +210,18 @@ export default function PackSections() {
               </span>
             </div>
           </div>
-          <Button onClick={() => navigate(`/pack/${packId}/view`)}>
-            <Eye className="h-4 w-4 mr-2" />
-            View Pack
-          </Button>
+          <div className="flex items-center gap-2">
+            {canAutoFill && !isFinalised && (
+              <Button variant="outline" onClick={handleAutoFill} disabled={isAutoFilling}>
+                {isAutoFilling ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                {isAutoFilling ? 'Auto-filling…' : 'Auto-fill from data'}
+              </Button>
+            )}
+            <Button onClick={() => navigate(`/pack/${packId}/view`)}>
+              <Eye className="h-4 w-4 mr-2" />
+              View Pack
+            </Button>
+          </div>
         </div>
 
         <Card className="p-6">
@@ -222,6 +264,7 @@ export default function PackSections() {
               {sections.map((section) => {
                 const document = section.document?.[0];
                 const versionNumber = document?.version_number || null;
+                const isAutoSource = document?.source === 'auto';
                 const updatedAt = section.updated_at ? new Date(section.updated_at) : null;
                 
                 return (
@@ -243,6 +286,11 @@ export default function PackSections() {
                             }`}>
                               {section.status === 'submitted' ? 'Submitted' : 'Pending'}
                             </span>
+                            {isAutoSource && (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary inline-flex items-center gap-1">
+                                <Sparkles className="h-3 w-3" /> Auto
+                              </span>
+                            )}
                             {versionNumber && <span>v{versionNumber}</span>}
                             {updatedAt && <span>Updated {updatedAt.toLocaleDateString()}</span>}
                           </div>
