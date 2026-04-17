@@ -138,7 +138,18 @@ export default function PackView() {
   };
 
   useEffect(() => {
-    if (packId) loadAssembledPack();
+    if (packId) {
+      loadAssembledPack();
+      // Load any existing summary on mount (no AI call)
+      supabase
+        .from('pack_summaries')
+        .select('summary_text, model, generated_at')
+        .eq('pack_id', packId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setSummary(data as any);
+        });
+    }
   }, [packId]);
 
   const loadAssembledPack = async () => {
