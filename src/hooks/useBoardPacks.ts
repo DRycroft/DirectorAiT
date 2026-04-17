@@ -27,6 +27,7 @@ export interface TemplateSection {
   order_index: number;
   is_required: boolean;
   is_enabled: boolean;
+  section_kind?: string | null;
 }
 
 export interface BoardPack {
@@ -198,6 +199,7 @@ export function useBoardPacks(boardId?: string) {
             title: section.title,
             order_index: section.order_index,
             status: 'pending',
+            section_kind: section.section_kind ?? null,
           }));
 
         const { error: sectionsError } = await supabase
@@ -290,6 +292,7 @@ export function useBoardPacks(boardId?: string) {
           content: reportData.content,
           version_number: newVersion,
           created_by: user.data.user.id,
+          source: 'human',
         })
         .select()
         .single();
