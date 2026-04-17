@@ -329,6 +329,133 @@ export default function PackView() {
     }
   };
 
+  const KNOWN_AUTO_KINDS = ['attendance', 'prior_minutes', 'coi_register', 'actions_log', 'decisions_log', 'members_directory'];
+
+  const formatRelative = (iso?: string) => {
+    if (!iso) return '';
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const mins = Math.round(diffMs / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins} min ago`;
+    const hrs = Math.round(mins / 60);
+    if (hrs < 24) return `${hrs} hr ago`;
+    const days = Math.round(hrs / 24);
+    return `${days} day${days === 1 ? '' : 's'} ago`;
+  };
+
+  const renderAutoContent = (content: any) => {
+    const kind = content?.kind as string;
+    const empty = (msg: string) => <p className="text-sm text-muted-foreground italic">{msg}</p>;
+
+    switch (kind) {
+      case 'attendance': {
+        const rows = content.rows || [];
+        if (rows.length === 0) return empty('No attendance recorded for this meeting.');
+        return (
+          <div>
+            <div className="grid grid-cols-3 gap-2 text-sm font-medium border-b pb-2 mb-2">
+              <span>Member</span><span>Position</span><span>Status</span>
+            </div>
+            {rows.map((a: any, i: number) => (
+              <div key={i} className="grid grid-cols-3 gap-2 text-sm py-1">
+                <span>{a.name}</span>
+                <span className="text-muted-foreground">{a.position || '—'}</span>
+                <span>{a.attended ? <Badge variant="default" className="text-xs">Present</Badge> : <Badge variant="outline" className="text-xs">{a.apologies || 'Absent'}</Badge>}</span>
+              </div>
+            ))}
+          </div>
+        );
+      }
+      case 'prior_minutes': {
+        const pm = content.prior_minutes;
+        if (!pm) return empty('No prior meeting minutes available.');
+        return (
+          <div>
+            <p className="text-xs text-muted-foreground mb-2">
+              {pm.title} • {new Date(pm.meeting_date).toLocaleDateString()}
+            </p>
+            <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
+              {pm.content || empty('Minutes not yet recorded.')}
+            </div>
+          </div>
+        );
+      }
+      case 'coi_register': {
+        const rows = content.rows || [];
+        if (rows.length === 0) return empty('No active declarations of interest.');
+        return (
+          <div>
+            {rows.map((c: any, i: number) => (
+              <div key={i} className="flex items-start justify-between py-1 text-sm border-b last:border-0">
+                <div>
+                  <span className="font-medium">{c.member_name}</span>
+                  <span className="text-muted-foreground ml-2">({c.type})</span>
+                </div>
+                <span className="text-muted-foreground max-w-[50%] text-right">{c.interest}</span>
+              </div>
+            ))}
+          </div>
+        );
+      }
+      case 'actions_log': {
+        const rows = content.rows || [];
+        if (rows.length === 0) return empty('No open actions.');
+        return (
+          <div>
+            <div className="grid grid-cols-4 gap-2 text-sm font-medium border-b pb-2 mb-2">
+              <span>Action</span><span>Owner</span><span>Due</span><span>Status</span>
+            </div>
+            {rows.map((a: any, i: number) => (
+              <div key={i} className="grid grid-cols-4 gap-2 text-sm py-1">
+                <span>{a.title}</span>
+                <span className="text-muted-foreground">{a.owner || '—'}</span>
+                <span className="text-muted-foreground">{a.due_date ? new Date(a.due_date).toLocaleDateString() : '—'}</span>
+                <Badge variant={a.status === 'completed' ? 'default' : 'outline'} className="text-xs capitalize w-fit">{a.status || 'Pending'}</Badge>
+              </div>
+            ))}
+          </div>
+        );
+      }
+      case 'decisions_log': {
+        const rows = content.rows || [];
+        if (rows.length === 0) return empty('No decisions recorded for this meeting.');
+        return (
+          <div>
+            {rows.map((d: any, i: number) => (
+              <div key={i} className="flex items-center justify-between py-1.5 text-sm border-b last:border-0">
+                <span className="font-medium">{d.title}</span>
+                <div className="flex items-center gap-2">
+                  <Badge variant={d.outcome === 'approved' ? 'default' : 'outline'} className="text-xs capitalize">{d.outcome || 'Noted'}</Badge>
+                  {d.proposer && <span className="text-xs text-muted-foreground">{d.proposer}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      }
+      case 'members_directory': {
+        const rows = content.rows || [];
+        if (rows.length === 0) return empty('No active board members.');
+        return (
+          <div>
+            <div className="grid grid-cols-3 gap-2 text-sm font-medium border-b pb-2 mb-2">
+              <span>Name</span><span>Position</span><span>Type</span>
+            </div>
+            {rows.map((m: any, i: number) => (
+              <div key={i} className="grid grid-cols-3 gap-2 text-sm py-1">
+                <span>{m.name}</span>
+                <span className="text-muted-foreground">{m.position || '—'}</span>
+                <span className="text-muted-foreground capitalize">{m.member_type || '—'}</span>
+              </div>
+            ))}
+          </div>
+        );
+      }
+      default:
+        return null;
+    }
+  };
+
   const submittedCount = sections.filter(s => s.status === 'submitted').length;
   const distributedCount = acknowledgements.filter(a => a.ack_type === 'distributed').length;
   const readCount = acknowledgements.filter(a => a.ack_type === 'read').length;
@@ -648,22 +775,44 @@ export default function PackView() {
                   )
                 : null;
 
+              const content = latestDoc?.content as any;
+              const hasText = content && typeof content.text === 'string' && content.text.length > 0;
+              const isAuto = !hasText && content && typeof content.kind === 'string' && KNOWN_AUTO_KINDS.includes(content.kind);
+
               return (
                 <div key={section.id} className="break-inside-avoid">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-sm font-mono text-muted-foreground w-8">{idx + 1}.</span>
                     {getStatusIcon(section.status)}
                     <h2 className="text-2xl font-semibold">{section.title}</h2>
+                    {isAuto && (
+                      <Badge variant="secondary" className="text-xs gap-1 ml-2">
+                        <Sparkles className="h-3 w-3" /> Auto
+                      </Badge>
+                    )}
                     {latestDoc && (
-                      <span className="text-xs text-muted-foreground ml-auto">v{latestDoc.version_number}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">
+                        {isAuto && content?.generated_at && (
+                          <span className="mr-2">generated {formatRelative(content.generated_at)}</span>
+                        )}
+                        v{latestDoc.version_number}
+                      </span>
                     )}
                   </div>
 
                   <Card className="p-6">
                     {latestDoc ? (
-                      <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
-                        {(latestDoc.content as any)?.text || JSON.stringify(latestDoc.content, null, 2)}
-                      </div>
+                      hasText ? (
+                        <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
+                          {content.text}
+                        </div>
+                      ) : isAuto ? (
+                        renderAutoContent(content)
+                      ) : (
+                        <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
+                          {JSON.stringify(content, null, 2)}
+                        </div>
+                      )
                     ) : (
                       <p className="text-muted-foreground italic">
                         No content submitted yet for this section.
