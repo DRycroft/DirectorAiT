@@ -26,3 +26,6 @@ verify_jwt = true
 
 [functions.notify-member-lifecycle]
 verify_jwt = true
+
+[functions.summarise-pack]
+verify_jwt = true

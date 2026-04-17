@@ -2249,6 +2249,44 @@ export type Database = {
           },
         ]
       }
+      pack_summaries: {
+        Row: {
+          generated_at: string
+          generated_by: string | null
+          model: string
+          pack_id: string
+          prompt_version: string
+          source_hash: string
+          summary_text: string
+        }
+        Insert: {
+          generated_at?: string
+          generated_by?: string | null
+          model: string
+          pack_id: string
+          prompt_version?: string
+          source_hash: string
+          summary_text: string
+        }
+        Update: {
+          generated_at?: string
+          generated_by?: string | null
+          model?: string
+          pack_id?: string
+          prompt_version?: string
+          source_hash?: string
+          summary_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pack_summaries_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: true
+            referencedRelation: "board_packs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

@@ -81,13 +81,51 @@ export default function PackView() {
   const [isDistributing, setIsDistributing] = useState(false);
   const [canManagePack, setCanManagePack] = useState(false);
 
+  // Pack summary (V1)
+  const [summary, setSummary] = useState<{
+    summary_text: string;
+    model: string;
+    generated_at: string;
+  } | null>(null);
+  const [isSummarising, setIsSummarising] = useState(false);
+
   const isFinalised = pack?.status === 'finalised';
   const governanceAI = useGovernanceAI();
 
-  const handleSummarisePack = async () => {
+  const runSummarisePack = async (force: boolean) => {
     if (!packId) return;
-    await governanceAI.execute({ action: 'summarise-pack', packId });
+    setIsSummarising(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('summarise-pack', {
+        body: { pack_id: packId, force },
+      });
+      if (error) {
+        const msg = (error as any)?.context?.error || (error as any)?.message || 'Failed to summarise pack';
+        if (/rate limit/i.test(msg)) toast.error('Rate limit reached. Please wait a moment and try again.');
+        else if (/payment required/i.test(msg) || /add funds/i.test(msg)) toast.error('AI credits exhausted. Please top up your workspace.');
+        else if (/not enough content/i.test(msg)) toast.error('Not enough content to summarise.');
+        else if (/finalised/i.test(msg)) toast.error('Pack is finalised — regeneration is disabled.');
+        else if (/forbidden/i.test(msg)) toast.error('You do not have permission to summarise this pack.');
+        else toast.error(msg);
+        return;
+      }
+      if (data?.summary) {
+        setSummary({
+          summary_text: data.summary,
+          model: data.model,
+          generated_at: data.generated_at,
+        });
+        toast.success(data.cached ? 'Loaded cached summary.' : 'Summary generated.');
+      }
+    } catch (e: any) {
+      toast.error(getUserFriendlyError(e));
+    } finally {
+      setIsSummarising(false);
+    }
   };
+
+  const handleSummarisePack = () => runSummarisePack(false);
+  const handleRegenerateSummary = () => runSummarisePack(true);
 
   const handleHighlightRisks = async () => {
     if (!pack?.board_id) return;
@@ -100,7 +138,18 @@ export default function PackView() {
   };
 
   useEffect(() => {
-    if (packId) loadAssembledPack();
+    if (packId) {
+      loadAssembledPack();
+      // Load any existing summary on mount (no AI call)
+      supabase
+        .from('pack_summaries')
+        .select('summary_text, model, generated_at')
+        .eq('pack_id', packId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setSummary(data as any);
+        });
+    }
   }, [packId]);
 
   const loadAssembledPack = async () => {
@@ -631,9 +680,9 @@ export default function PackView() {
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">AI Governance Tools</h2>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={handleSummarisePack} disabled={governanceAI.isProcessing}>
+            <Button variant="outline" size="sm" onClick={handleSummarisePack} disabled={isSummarising}>
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              {governanceAI.isProcessing ? 'Processing…' : 'Summarise Pack'}
+              {isSummarising ? 'Summarising…' : (summary ? 'View Summary' : 'Summarise Pack')}
             </Button>
             <Button variant="outline" size="sm" onClick={handleHighlightRisks} disabled={governanceAI.isProcessing}>
               <AlertTriangle className="h-3.5 w-3.5 mr-1.5" />
@@ -644,6 +693,38 @@ export default function PackView() {
               New Director Briefing
             </Button>
           </div>
+
+          {summary && (
+            <Card className="mt-4 p-4 border-primary/20 bg-primary/[0.02]">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-semibold">Pack Summary</h3>
+                  <Badge variant="outline" className="text-xs font-normal">AI Generated</Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    {formatRelative(summary.generated_at)} • {summary.model}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRegenerateSummary}
+                    disabled={isSummarising || isFinalised}
+                    title={isFinalised ? 'Regeneration disabled on finalised packs' : 'Regenerate summary'}
+                  >
+                    {isSummarising ? 'Regenerating…' : 'Regenerate'}
+                  </Button>
+                </div>
+              </div>
+              <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap text-sm leading-relaxed">
+                {summary.summary_text}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                AI-generated summary. Always verify against source material before relying on it.
+              </p>
+            </Card>
+          )}
 
           {governanceAI.result && (
             <div className="mt-4">
