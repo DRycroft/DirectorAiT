@@ -264,6 +264,7 @@ export default function PackSections() {
               {sections.map((section) => {
                 const document = section.document?.[0];
                 const versionNumber = document?.version_number || null;
+                const isAutoSource = document?.source === 'auto';
                 const updatedAt = section.updated_at ? new Date(section.updated_at) : null;
                 
                 return (
@@ -285,6 +286,11 @@ export default function PackSections() {
                             }`}>
                               {section.status === 'submitted' ? 'Submitted' : 'Pending'}
                             </span>
+                            {isAutoSource && (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary inline-flex items-center gap-1">
+                                <Sparkles className="h-3 w-3" /> Auto
+                              </span>
+                            )}
                             {versionNumber && <span>v{versionNumber}</span>}
                             {updatedAt && <span>Updated {updatedAt.toLocaleDateString()}</span>}
                           </div>
