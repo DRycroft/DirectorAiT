@@ -81,13 +81,51 @@ export default function PackView() {
   const [isDistributing, setIsDistributing] = useState(false);
   const [canManagePack, setCanManagePack] = useState(false);
 
+  // Pack summary (V1)
+  const [summary, setSummary] = useState<{
+    summary_text: string;
+    model: string;
+    generated_at: string;
+  } | null>(null);
+  const [isSummarising, setIsSummarising] = useState(false);
+
   const isFinalised = pack?.status === 'finalised';
   const governanceAI = useGovernanceAI();
 
-  const handleSummarisePack = async () => {
+  const runSummarisePack = async (force: boolean) => {
     if (!packId) return;
-    await governanceAI.execute({ action: 'summarise-pack', packId });
+    setIsSummarising(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('summarise-pack', {
+        body: { pack_id: packId, force },
+      });
+      if (error) {
+        const msg = (error as any)?.context?.error || (error as any)?.message || 'Failed to summarise pack';
+        if (/rate limit/i.test(msg)) toast.error('Rate limit reached. Please wait a moment and try again.');
+        else if (/payment required/i.test(msg) || /add funds/i.test(msg)) toast.error('AI credits exhausted. Please top up your workspace.');
+        else if (/not enough content/i.test(msg)) toast.error('Not enough content to summarise.');
+        else if (/finalised/i.test(msg)) toast.error('Pack is finalised — regeneration is disabled.');
+        else if (/forbidden/i.test(msg)) toast.error('You do not have permission to summarise this pack.');
+        else toast.error(msg);
+        return;
+      }
+      if (data?.summary) {
+        setSummary({
+          summary_text: data.summary,
+          model: data.model,
+          generated_at: data.generated_at,
+        });
+        toast.success(data.cached ? 'Loaded cached summary.' : 'Summary generated.');
+      }
+    } catch (e: any) {
+      toast.error(getUserFriendlyError(e));
+    } finally {
+      setIsSummarising(false);
+    }
   };
+
+  const handleSummarisePack = () => runSummarisePack(false);
+  const handleRegenerateSummary = () => runSummarisePack(true);
 
   const handleHighlightRisks = async () => {
     if (!pack?.board_id) return;
