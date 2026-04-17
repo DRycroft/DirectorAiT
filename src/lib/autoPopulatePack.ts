@@ -91,24 +91,25 @@ export async function autoPopulatePack(packId: string): Promise<AutoPopulateResu
       continue;
     }
 
+    const contentJson = content as unknown as Record<string, never>;
     if (state.autoDocId) {
       // Update existing auto doc in place — no new version
       const { error: updErr } = await supabase
         .from('section_documents')
-        .update({ content })
+        .update({ content: contentJson })
         .eq('id', state.autoDocId);
       if (updErr) throw updErr;
     } else {
       const newVersion = (state.latestVersion || 0) + 1;
       const { data: newDoc, error: insErr } = await supabase
         .from('section_documents')
-        .insert({
+        .insert([{
           section_id: section.id,
-          content,
+          content: contentJson,
           version_number: newVersion,
           created_by: userId,
           source: 'auto',
-        })
+        }])
         .select('id')
         .single();
       if (insErr) throw insErr;
