@@ -2,56 +2,66 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-
-async function shouldOnboard(userId: string): Promise<boolean> {
-  try {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("onboarding_complete")
-      .eq("id", userId)
-      .single();
-    if (error || !data) return true;
-    return !data.onboarding_complete;
-  } catch {
-    return false;
-  }
-}
+import { resolvePostAuthRoute } from "@/lib/postAuthRoute";
 
 /**
  * AuthCallback handles Supabase redirect flows (email verification,
- * password recovery, OAuth). Uses a ref (not state) for the handled
- * flag to avoid stale-closure bugs in the fallback timer.
+ * password recovery, OAuth). Event-driven: waits for the SDK to emit
+ * SIGNED_IN / INITIAL_SESSION / PASSWORD_RECOVERY rather than polling
+ * on a fixed timer. A long safety-net timeout routes to /auth only if
+ * no event arrives at all (never silently to /dashboard).
  */
 export default function AuthCallback() {
   const navigate = useNavigate();
   const handledRef = useRef(false);
 
   useEffect(() => {
+    const resolveWithSession = async (userId: string) => {
+      const target = await resolvePostAuthRoute(userId);
+      navigate(target, { replace: true });
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event) => {
-        if (event === "PASSWORD_RECOVERY" && !handledRef.current) {
+      async (event, session) => {
+        if (handledRef.current) return;
+
+        if (event === "PASSWORD_RECOVERY") {
           handledRef.current = true;
           navigate("/auth/reset-password", { replace: true });
+          return;
+        }
+
+        if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
+          handledRef.current = true;
+          await resolveWithSession(session.user.id);
+          return;
+        }
+
+        // INITIAL_SESSION with no session and no hash to process → no auth.
+        if (event === "INITIAL_SESSION" && !session) {
+          handledRef.current = true;
+          navigate("/auth", { replace: true });
         }
       }
     );
 
-    const timer = setTimeout(async () => {
+    // Safety net: if no event arrives within 10s, fall back to /auth.
+    // Never falls through to /dashboard.
+    const safetyTimer = setTimeout(async () => {
       if (handledRef.current) return;
       handledRef.current = true;
 
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        const needsOnboarding = await shouldOnboard(session.user.id);
-        navigate(needsOnboarding ? "/onboarding" : "/dashboard", { replace: true });
+        await resolveWithSession(session.user.id);
       } else {
         navigate("/auth", { replace: true });
       }
-    }, 500);
+    }, 10000);
 
     return () => {
       subscription.unsubscribe();
-      clearTimeout(timer);
+      clearTimeout(safetyTimer);
     };
   }, [navigate]);
 
