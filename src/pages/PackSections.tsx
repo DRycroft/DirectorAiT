@@ -100,8 +100,21 @@ export default function PackSections() {
     try {
       const result = await autoPopulatePack(packId);
       const filled = result?.sections_filled ?? 0;
-      const skipped = (result?.sections_skipped_human ?? 0) + (result?.sections_skipped_unknown_kind ?? 0);
-      toast.success(`Auto-fill complete: ${filled} filled, ${skipped} skipped.`);
+      const skippedHuman = result?.sections_skipped_human ?? 0;
+      const skippedUnknown = result?.sections_skipped_unknown_kind ?? 0;
+      const errCount = result?.errors?.length ?? 0;
+
+      toast.success(`Auto-fill complete: ${filled} filled, ${skippedHuman + skippedUnknown} skipped${errCount ? `, ${errCount} error${errCount === 1 ? '' : 's'}` : ''}.`);
+
+      if (skippedHuman > 0 && result?.skipped_human_titles?.length) {
+        const list = result.skipped_human_titles.slice(0, 3).join(', ');
+        const more = result.skipped_human_titles.length > 3 ? ` +${result.skipped_human_titles.length - 3} more` : '';
+        toast.message('Sections preserved (manual content present)', { description: `${list}${more}` });
+      }
+      if (errCount > 0) {
+        const first = result.errors[0];
+        toast.error(`Some sections failed: ${first.section_title || first.section_id} — ${first.message}`);
+      }
       loadPackData();
     } catch (error: any) {
       toast.error(getUserFriendlyError(error));
