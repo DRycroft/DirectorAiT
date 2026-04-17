@@ -104,6 +104,11 @@ export function PackTemplateBuilder({ boardId, onTemplateSaved }: PackTemplateBu
     setSections(prev => prev.map((s, i) => i === index ? { ...s, title } : s));
   };
 
+  const handleUpdateKind = (index: number, value: string) => {
+    const kind = value === FREE_FORM ? null : value;
+    setSections(prev => prev.map((s, i) => i === index ? { ...s, section_kind: kind } : s));
+  };
+
   const handleDragStart = (index: number) => {
     setDraggedItem(index);
   };
