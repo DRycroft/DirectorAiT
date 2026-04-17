@@ -13,6 +13,7 @@ import { StaffFormTemplateEditor, FormField } from "@/components/StaffFormTempla
 import RoleManagement from "@/components/settings/RoleManagement";
 import AuditHistory from "@/components/AuditHistory";
 import AdminManagement from "@/components/settings/AdminManagement";
+import COIRegister from "@/components/settings/COIRegister";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCircle, Plus, X, Shield, LayoutDashboard } from "lucide-react";
@@ -982,7 +983,7 @@ const Settings = () => {
               </TabsTrigger>
               <TabsTrigger value="templates">Document Templates</TabsTrigger>
             </TabsList>
-            <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsList className="grid w-full grid-cols-4 h-auto">
               <TabsTrigger value="roles">
                 <Shield className="mr-2 h-4 w-4" />
                 Roles
@@ -990,6 +991,10 @@ const Settings = () => {
               <TabsTrigger value="admins">
                 <Shield className="mr-2 h-4 w-4" />
                 Admins
+              </TabsTrigger>
+              <TabsTrigger value="coi-register">
+                <AlertCircle className="mr-2 h-4 w-4" />
+                COI Register
               </TabsTrigger>
               <TabsTrigger value="audit">
                 <Clock className="mr-2 h-4 w-4" />
@@ -1799,6 +1804,10 @@ const Settings = () => {
             <AdminManagement />
           </TabsContent>
 
+          {/* COI Register Tab */}
+          <TabsContent value="coi-register">
+            <COIRegister />
+          </TabsContent>
 
           {/* Audit History Tab */}
           <TabsContent value="audit">

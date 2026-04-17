@@ -396,6 +396,8 @@ export type Database = {
           management_steps: string | null
           member_id: string
           related_party_name: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string | null
           type: string
           updated_at: string | null
@@ -408,6 +410,8 @@ export type Database = {
           management_steps?: string | null
           member_id: string
           related_party_name?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string | null
           type: string
           updated_at?: string | null
@@ -420,6 +424,8 @@ export type Database = {
           management_steps?: string | null
           member_id?: string
           related_party_name?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string | null
           type?: string
           updated_at?: string | null
