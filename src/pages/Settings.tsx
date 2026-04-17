@@ -1804,6 +1804,10 @@ const Settings = () => {
             <AdminManagement />
           </TabsContent>
 
+          {/* COI Register Tab */}
+          <TabsContent value="coi-register">
+            <COIRegister />
+          </TabsContent>
 
           {/* Audit History Tab */}
           <TabsContent value="audit">
