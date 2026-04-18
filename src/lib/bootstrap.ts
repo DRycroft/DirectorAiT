@@ -62,7 +62,7 @@ export async function runBootstrapFromLocalStorage(): Promise<void> {
   // Atomic server-side bootstrap (idempotent)
   console.log('[Bootstrap] Calling bootstrap_user_workspace RPC...');
   const { error } = await supabase.rpc('bootstrap_user_workspace', {
-    _company_name: companyName,
+    _company_name: companyName ?? undefined,
   });
   if (error) {
     console.error('[Bootstrap] RPC failed:', error);
