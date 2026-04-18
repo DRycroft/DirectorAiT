@@ -345,83 +345,6 @@ const Settings = () => {
     business_category: [] as string[],
     compliance_scan_completed: false,
   });
-  const [countryCode, setCountryCode] = useState("+64");
-
-  const countryCodes = [
-    { code: "+64", country: "New Zealand" },
-    { code: "+61", country: "Australia" },
-    { code: "+1", country: "USA/Canada" },
-    { code: "+44", country: "United Kingdom" },
-    { code: "+91", country: "India" },
-    { code: "+86", country: "China" },
-    { code: "+81", country: "Japan" },
-    { code: "+49", country: "Germany" },
-    { code: "+33", country: "France" },
-  ];
-
-  // Helper function to strip country code from phone number
-  const stripCountryCode = (phoneNumber: string): string => {
-    if (!phoneNumber) return "";
-    // Remove any country code prefix (e.g., "+64 ", "+64")
-    const stripped = phoneNumber.replace(/^\+\d{1,4}\s*/, "").trim();
-    return stripped;
-  };
-
-  // Helper function to detect country code from phone number
-  const detectCountryCode = (phoneNumber: string): string => {
-    if (!phoneNumber) return "+64";
-    const match = phoneNumber.match(/^(\+\d{1,4})/);
-    return match ? match[1] : "+64";
-  };
-
-  // Phone validation based on country code
-  const validatePhoneNumber = (phoneNumber: string, countryCode: string): { valid: boolean; message: string } => {
-    if (!phoneNumber || !phoneNumber.trim()) {
-      return { valid: true, message: "" }; // Empty is valid (optional field)
-    }
-
-    const cleanNumber = phoneNumber.replace(/[\s\-()]/g, "");
-    
-    // Validation rules by country code
-    const validationRules: Record<string, { pattern: RegExp; message: string }> = {
-      "+64": { // New Zealand
-        pattern: /^[2-9]\d{6,7}$/,
-        message: "NZ numbers should be 7-8 digits (mobile: typically starts with 2, 7)"
-      },
-      "+61": { // Australia
-        pattern: /^[2-9]\d{8}$/,
-        message: "AU numbers should be 9 digits"
-      },
-      "+1": { // US/Canada
-        pattern: /^[2-9]\d{9}$/,
-        message: "US/CA numbers should be 10 digits"
-      },
-      "+44": { // UK
-        pattern: /^[1-9]\d{9}$/,
-        message: "UK numbers should be 10 digits"
-      },
-      "+33": { // France
-        pattern: /^[1-9]\d{8}$/,
-        message: "FR numbers should be 9 digits"
-      },
-    };
-
-    const rule = validationRules[countryCode];
-    if (!rule) {
-      // For unknown country codes, just check it's numeric and reasonable length
-      if (!/^\d{7,15}$/.test(cleanNumber)) {
-        return { valid: false, message: "Phone number should be 7-15 digits" };
-      }
-      return { valid: true, message: "" };
-    }
-
-    if (!rule.pattern.test(cleanNumber)) {
-      return { valid: false, message: rule.message };
-    }
-
-    return { valid: true, message: "" };
-  };
-
   const [phoneErrors, setPhoneErrors] = useState({
     company_phone: "",
     primary_contact_phone: "",
@@ -477,24 +400,20 @@ const Settings = () => {
           .maybeSingle();
 
         if (org) {
-          // Detect country code from any phone number that has one
-          const detectedCode = detectCountryCode(org.company_phone || org.primary_contact_phone || org.admin_phone || "");
-          setCountryCode(detectedCode);
-
           setCompanyData({
             name: org.name || "",
             domain: org.domain || "",
             logo_url: org.logo_url || "",
             business_number: org.business_number || "",
-            company_phone: stripCountryCode(org.company_phone || ""),
+            company_phone: org.company_phone || "",
             primary_contact_name: org.primary_contact_name || "",
             primary_contact_role: org.primary_contact_role || "",
             primary_contact_email: org.primary_contact_email || "",
-            primary_contact_phone: stripCountryCode(org.primary_contact_phone || ""),
+            primary_contact_phone: org.primary_contact_phone || "",
             admin_name: org.admin_name || "",
             admin_role: org.admin_role || "",
             admin_email: org.admin_email || "",
-            admin_phone: stripCountryCode(org.admin_phone || ""),
+            admin_phone: org.admin_phone || "",
             reporting_frequency: org.reporting_frequency || "quarterly",
             gst_period: org.gst_period || "quarterly",
             financial_year_end: org.financial_year_end || "",
@@ -562,10 +481,10 @@ const Settings = () => {
         }
       }
 
-      // Validate phone numbers before saving
-      const companyPhoneValidation = validatePhoneNumber(companyData.company_phone || "", countryCode);
-      const primaryPhoneValidation = validatePhoneNumber(companyData.primary_contact_phone || "", countryCode);
-      const adminPhoneValidation = validatePhoneNumber(companyData.admin_phone || "", countryCode);
+      // Validate phone numbers (E.164) before saving
+      const companyPhoneValidation = validatePhoneNumber(companyData.company_phone || "");
+      const primaryPhoneValidation = validatePhoneNumber(companyData.primary_contact_phone || "");
+      const adminPhoneValidation = validatePhoneNumber(companyData.admin_phone || "");
 
       const newPhoneErrors = {
         company_phone: companyPhoneValidation.message,
@@ -575,18 +494,17 @@ const Settings = () => {
 
       setPhoneErrors(newPhoneErrors);
 
-      // Don't save if there are validation errors
       if (!companyPhoneValidation.valid || !primaryPhoneValidation.valid || !adminPhoneValidation.valid) {
         toast.error("Please fix phone number formatting errors before saving");
         return;
       }
 
-      // Format phone numbers with country code - only add if there's a number
+      // Phone numbers are already E.164 from PhoneInput; persist as-is (or null when empty)
       const formattedData = {
         ...companyData,
-        company_phone: companyData.company_phone?.trim() ? `${countryCode} ${companyData.company_phone.trim()}` : "",
-        primary_contact_phone: companyData.primary_contact_phone?.trim() ? `${countryCode} ${companyData.primary_contact_phone.trim()}` : "",
-        admin_phone: companyData.admin_phone?.trim() ? `${countryCode} ${companyData.admin_phone.trim()}` : "",
+        company_phone: companyData.company_phone?.trim() || null,
+        primary_contact_phone: companyData.primary_contact_phone?.trim() || null,
+        admin_phone: companyData.admin_phone?.trim() || null,
       };
 
       // Now update the organization with the provided data
