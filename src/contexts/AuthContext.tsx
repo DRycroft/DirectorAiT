@@ -47,6 +47,8 @@ interface AuthContextType {
   refreshSession: () => Promise<void>;
   /** Phase 4: forced re-auth on true auth death (expired/invalid refresh). De-duplicated. */
   forceReauth: (reason?: string) => Promise<void>;
+  /** Re-read profile.onboarding_complete for the current user (e.g. after completing onboarding). */
+  refreshOnboardingStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -291,6 +293,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshOnboardingStatus = async () => {
+    if (!user) return;
+    setProfileLoading(true);
+    const complete = await readOnboardingComplete(user.id);
+    setOnboardingComplete(complete);
+    setProfileLoading(false);
+  };
+
   const value = {
     user,
     session,
@@ -301,6 +311,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     refreshSession,
     forceReauth,
+    refreshOnboardingStatus,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

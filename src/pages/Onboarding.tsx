@@ -16,7 +16,7 @@ const PENDING_SIGNUP_KEY = "pendingSignUpV2";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshOnboardingStatus } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [checkingComplete, setCheckingComplete] = useState(true);
@@ -129,6 +129,10 @@ const Onboarding = () => {
       // Clean up session data
       sessionStorage.removeItem(PENDING_SIGNUP_KEY);
 
+      // Refresh AuthContext's cached onboarding flag BEFORE navigating,
+      // otherwise ProtectedRoute will bounce us back to /onboarding (loop).
+      await refreshOnboardingStatus();
+
       // Check if user has a board_members record (from invite flow) — send them to complete profile
       const { data: boardMember } = await supabase
         .from("board_members")
@@ -140,9 +144,9 @@ const Onboarding = () => {
       toast.success("Setup complete! Welcome to DirectorAiT.");
 
       if (boardMember) {
-        navigate("/my-profile");
+        navigate("/my-profile", { replace: true });
       } else {
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
       }
     } catch (error) {
       toast.error(getUserFriendlyError(error));
