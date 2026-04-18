@@ -293,6 +293,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshOnboardingStatus = async () => {
+    if (!user) return;
+    setProfileLoading(true);
+    const complete = await readOnboardingComplete(user.id);
+    setOnboardingComplete(complete);
+    setProfileLoading(false);
+  };
+
   const value = {
     user,
     session,
@@ -303,6 +311,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     refreshSession,
     forceReauth,
+    refreshOnboardingStatus,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
