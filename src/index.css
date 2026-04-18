@@ -150,6 +150,19 @@ All colors MUST be HSL.
   background-color: #fff !important;
 }
 
+/* Phone number input itself: inherit theme foreground so typed text is
+   readable against the dark wrapper background. */
+.PhoneInputInput {
+  background-color: transparent !important;
+  color: hsl(var(--foreground)) !important;
+  caret-color: hsl(var(--foreground)) !important;
+  border: 0 !important;
+  outline: none !important;
+}
+.PhoneInputInput::placeholder {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
 /* ── Print / PDF export styles ── */
 @media print {
   /* Hide all UI chrome */
