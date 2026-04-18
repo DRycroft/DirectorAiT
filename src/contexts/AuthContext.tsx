@@ -136,7 +136,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               logger.info('Bootstrap completed after SIGNED_IN');
             } catch (error) {
               logger.error('Bootstrap failed on SIGNED_IN', error);
-              // Don't throw - bootstrap failure shouldn't block auth
+              try {
+                toast.error('Workspace setup failed. Please reload and try again.');
+              } catch {
+                // toast is best-effort
+              }
             } finally {
               setIsBootstrapping(false);
             }
