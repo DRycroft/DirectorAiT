@@ -1,82 +1,50 @@
 import { describe, it, expect } from 'vitest';
-import { validatePhoneNumber, COUNTRY_CODES } from '../phoneValidation';
+import { validatePhoneNumber, phoneSchema } from '../phoneValidation';
 
 describe('phoneValidation', () => {
   describe('validatePhoneNumber', () => {
-    it('should validate NZ phone numbers', () => {
-      const result = validatePhoneNumber('212345678', '+64');
+    it('accepts a valid NZ E.164 mobile', () => {
+      const result = validatePhoneNumber('+64211234567');
       expect(result.valid).toBe(true);
-      expect(result.formatted).toBe('+64212345678');
-      expect(result.message).toBe('');
+      expect(result.formatted).toBe('+64211234567');
     });
 
-    it('should reject invalid NZ phone numbers', () => {
-      const result = validatePhoneNumber('12345', '+64');
-      expect(result.valid).toBe(false);
-      expect(result.message).toContain('Invalid');
-    });
-
-    it('should validate US phone numbers', () => {
-      const result = validatePhoneNumber('2025551234', '+1');
+    it('accepts a valid US E.164 number', () => {
+      const result = validatePhoneNumber('+12025551234');
       expect(result.valid).toBe(true);
-      expect(result.formatted).toBe('+12025551234');
     });
 
-    it('should validate UK phone numbers', () => {
-      const result = validatePhoneNumber('2012345678', '+44');
+    it('accepts a valid UK E.164 mobile', () => {
+      const result = validatePhoneNumber('+447911123456');
       expect(result.valid).toBe(true);
-      expect(result.formatted).toBe('+442012345678');
     });
 
-    it('should validate Australian phone numbers', () => {
-      const result = validatePhoneNumber('212345678', '+61');
-      expect(result.valid).toBe(true);
-      expect(result.formatted).toBe('+61212345678');
-    });
-
-    it('should handle empty phone numbers', () => {
-      const result = validatePhoneNumber('', '+64');
+    it('treats empty string as valid (optional)', () => {
+      const result = validatePhoneNumber('');
       expect(result.valid).toBe(true);
       expect(result.message).toBe('');
     });
 
-    it('should handle phone numbers with spaces', () => {
-      const result = validatePhoneNumber('21 234 5678', '+64');
-      expect(result.valid).toBe(true);
-      expect(result.formatted).toBe('+64212345678');
-    });
-
-    it('should handle phone numbers with dashes', () => {
-      const result = validatePhoneNumber('21-234-5678', '+64');
-      expect(result.valid).toBe(true);
-      expect(result.formatted).toBe('+64212345678');
-    });
-
-    it('should handle phone numbers with parentheses', () => {
-      const result = validatePhoneNumber('(21) 234 5678', '+64');
-      expect(result.valid).toBe(true);
-      expect(result.formatted).toBe('+64212345678');
-    });
-
-    it('should reject invalid country code', () => {
-      const result = validatePhoneNumber('212345678', '+999');
+    it('rejects numbers without + prefix', () => {
+      const result = validatePhoneNumber('64211234567');
       expect(result.valid).toBe(false);
-      expect(result.message).toBe('Invalid country code');
     });
 
-    it('should validate all supported country codes exist', () => {
-      expect(COUNTRY_CODES.length).toBe(16);
-      
-      const countryCodes = COUNTRY_CODES.map(c => c.code);
-      expect(countryCodes).toContain('+1');   // US/CA
-      expect(countryCodes).toContain('+44');  // UK
-      expect(countryCodes).toContain('+61');  // AU
-      expect(countryCodes).toContain('+64');  // NZ
-      expect(countryCodes).toContain('+33');  // FR
-      expect(countryCodes).toContain('+49');  // DE
-      expect(countryCodes).toContain('+81');  // JP
-      expect(countryCodes).toContain('+86');  // CN
-      expect(countryCodes).toContain('+91');  // IN
+    it('rejects clearly invalid numbers', () => {
+      const result = validatePhoneNumber('+123');
+      expect(result.valid).toBe(false);
+    });
+  });
+
+  describe('phoneSchema', () => {
+    it('accepts empty', () => {
+      expect(phoneSchema.safeParse('').success).toBe(true);
+    });
+    it('accepts valid E.164', () => {
+      expect(phoneSchema.safeParse('+64211234567').success).toBe(true);
+    });
+    it('rejects garbage', () => {
+      expect(phoneSchema.safeParse('not a number').success).toBe(false);
     });
   });
 });

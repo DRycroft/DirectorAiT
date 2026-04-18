@@ -9,8 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getUserFriendlyError } from "@/lib/errorHandling";
 import { useAuth } from "@/contexts/AuthContext";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Loader2 } from "lucide-react";
 
 const PENDING_SIGNUP_KEY = "pendingSignUpV2";
@@ -257,11 +256,9 @@ const Onboarding = () => {
                   <Label htmlFor="onboardingPhone">Phone</Label>
                   <PhoneInput
                     id="onboardingPhone"
-                    international
                     defaultCountry="NZ"
-                    value={profileData.phone}
-                    onChange={(value) => setProfileData({ ...profileData, phone: value || "" })}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 md:text-sm"
+                    value={profileData.phone || ""}
+                    onChange={(value) => setProfileData({ ...profileData, phone: value })}
                   />
                 </div>
 
