@@ -211,16 +211,7 @@ const Onboarding = () => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="website">Website (Optional)</Label>
-                  <Input
-                    id="website"
-                    type="url"
-                    placeholder="https://example.com"
-                    value={orgData.website}
-                    onChange={(e) => setOrgData({ ...orgData, website: e.target.value })}
-                  />
-                </div>
+                {/* Website field removed — not stored on organizations schema */}
 
                 <Button
                   className="w-full"
