@@ -31,24 +31,35 @@ const Onboarding = () => {
     phone: "" as string | undefined,
   });
 
-  // Guard: redirect if onboarding already complete
+  // Guard: redirect if onboarding already complete; self-heal missing org_id.
   useEffect(() => {
     if (authLoading || !user) {
       setCheckingComplete(false);
       return;
     }
-    supabase
-      .from("profiles")
-      .select("onboarding_complete")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.onboarding_complete) {
-          navigate("/dashboard", { replace: true });
-        } else {
-          setCheckingComplete(false);
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("onboarding_complete, org_id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (data?.onboarding_complete) {
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      // Self-heal: legacy users with no workspace
+      if (!data?.org_id) {
+        const { error } = await supabase.rpc("bootstrap_user_workspace", {
+          _company_name: undefined,
+        });
+        if (error) {
+          toast.error("Could not initialise your workspace. Please reload.");
         }
-      });
+      }
+      setCheckingComplete(false);
+    })();
   }, [authLoading, user, navigate]);
 
   useEffect(() => {
