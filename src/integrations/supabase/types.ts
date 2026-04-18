@@ -2869,6 +2869,7 @@ export type Database = {
           public_contact_email: string
         }[]
       }
+      shares_board_with: { Args: { _target_id: string }; Returns: boolean }
       submit_action_response: {
         Args: {
           _payload: Json
