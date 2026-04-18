@@ -24,6 +24,8 @@ import { usePendingMemberCount } from "@/hooks/usePendingMemberCount";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { getUserFriendlyError } from '@/lib/errorHandling';
+import { PhoneInput } from "@/components/ui/phone-input";
+import { validatePhoneNumber } from "@/lib/phoneValidation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -961,38 +963,21 @@ const Settings = () => {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="companyPhone">Country / Phone Number</Label>
-                          <div className="space-y-1">
-                            <div className="flex gap-2">
-                              <Select value={countryCode} onValueChange={setCountryCode}>
-                                <SelectTrigger className="w-[100px]">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {countryCodes.map((item) => (
-                                    <SelectItem key={item.code} value={item.code}>
-                                      {item.code}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <Input 
-                                id="companyPhone"
-                                type="tel"
-                                placeholder="21 123 4567"
-                                value={companyData.company_phone}
-                                onChange={(e) => {
-                                  setCompanyData({ ...companyData, company_phone: e.target.value });
-                                  const validation = validatePhoneNumber(e.target.value, countryCode);
-                                  setPhoneErrors({ ...phoneErrors, company_phone: validation.message });
-                                }}
-                                className={`flex-1 ${phoneErrors.company_phone ? "border-destructive" : ""}`}
-                              />
-                            </div>
-                            {phoneErrors.company_phone && (
-                              <p className="text-xs text-destructive">{phoneErrors.company_phone}</p>
-                            )}
-                          </div>
+                          <Label htmlFor="companyPhone">Company Phone</Label>
+                          <PhoneInput
+                            id="companyPhone"
+                            defaultCountry="NZ"
+                            value={companyData.company_phone}
+                            onChange={(value) => {
+                              setCompanyData({ ...companyData, company_phone: value });
+                              const validation = validatePhoneNumber(value);
+                              setPhoneErrors({ ...phoneErrors, company_phone: validation.message });
+                            }}
+                            hasError={!!phoneErrors.company_phone}
+                          />
+                          {phoneErrors.company_phone && (
+                            <p className="text-xs text-destructive">{phoneErrors.company_phone}</p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1027,30 +1012,20 @@ const Settings = () => {
                         </div>
                         <div className="space-y-1.5">
                           <Label htmlFor="primaryContactPhone">Phone</Label>
-                          <div className="space-y-1">
-                            <div className="flex gap-2">
-                              <Input 
-                                value={countryCode}
-                                disabled
-                                className="w-20"
-                              />
-                              <Input 
-                                id="primaryContactPhone" 
-                                type="tel"
-                                placeholder="21 123 4567"
-                                value={companyData.primary_contact_phone}
-                                onChange={(e) => {
-                                  setCompanyData({ ...companyData, primary_contact_phone: e.target.value });
-                                  const validation = validatePhoneNumber(e.target.value, countryCode);
-                                  setPhoneErrors({ ...phoneErrors, primary_contact_phone: validation.message });
-                                }}
-                                className={`flex-1 ${phoneErrors.primary_contact_phone ? "border-destructive" : ""}`}
-                              />
-                            </div>
-                            {phoneErrors.primary_contact_phone && (
-                              <p className="text-xs text-destructive">{phoneErrors.primary_contact_phone}</p>
-                            )}
-                          </div>
+                          <PhoneInput
+                            id="primaryContactPhone"
+                            defaultCountry="NZ"
+                            value={companyData.primary_contact_phone}
+                            onChange={(value) => {
+                              setCompanyData({ ...companyData, primary_contact_phone: value });
+                              const validation = validatePhoneNumber(value);
+                              setPhoneErrors({ ...phoneErrors, primary_contact_phone: validation.message });
+                            }}
+                            hasError={!!phoneErrors.primary_contact_phone}
+                          />
+                          {phoneErrors.primary_contact_phone && (
+                            <p className="text-xs text-destructive">{phoneErrors.primary_contact_phone}</p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1324,30 +1299,20 @@ const Settings = () => {
                         </div>
                         <div className="space-y-1.5">
                           <Label htmlFor="adminPhone">Phone</Label>
-                          <div className="space-y-1">
-                            <div className="flex gap-2">
-                              <Input 
-                                value={countryCode}
-                                disabled
-                                className="w-20"
-                              />
-                              <Input 
-                                id="adminPhone" 
-                                type="tel"
-                                placeholder="21 123 4567"
-                                value={companyData.admin_phone}
-                                onChange={(e) => {
-                                  setCompanyData({ ...companyData, admin_phone: e.target.value });
-                                  const validation = validatePhoneNumber(e.target.value, countryCode);
-                                  setPhoneErrors({ ...phoneErrors, admin_phone: validation.message });
-                                }}
-                                className={`flex-1 ${phoneErrors.admin_phone ? "border-destructive" : ""}`}
-                              />
-                            </div>
-                            {phoneErrors.admin_phone && (
-                              <p className="text-xs text-destructive">{phoneErrors.admin_phone}</p>
-                            )}
-                          </div>
+                          <PhoneInput
+                            id="adminPhone"
+                            defaultCountry="NZ"
+                            value={companyData.admin_phone}
+                            onChange={(value) => {
+                              setCompanyData({ ...companyData, admin_phone: value });
+                              const validation = validatePhoneNumber(value);
+                              setPhoneErrors({ ...phoneErrors, admin_phone: validation.message });
+                            }}
+                            hasError={!!phoneErrors.admin_phone}
+                          />
+                          {phoneErrors.admin_phone && (
+                            <p className="text-xs text-destructive">{phoneErrors.admin_phone}</p>
+                          )}
                         </div>
                       </div>
                     </div>
