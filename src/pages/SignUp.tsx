@@ -12,8 +12,8 @@ import { z } from "zod";
 import { getUserFriendlyError, logError } from "@/lib/errorHandling";
 import { passwordSchema } from "@/lib/passwordSchema";
 import zxcvbn from "zxcvbn";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { validatePhoneNumber } from "@/lib/phoneValidation";
 
 const signUpSchema = z.object({
   name: z.string()
@@ -27,7 +27,7 @@ const signUpSchema = z.object({
   phone: z.string()
     .optional()
     .refine(
-      (val) => !val || /^\+?[1-9]\d{1,14}$/.test(val.replace(/\s/g, '')),
+      (val) => !val || validatePhoneNumber(val).valid,
       "Please enter a valid phone number"
     ),
 
@@ -339,12 +339,11 @@ const SignUp = () => {
                   <Label htmlFor="phone">Phone (Optional)</Label>
                   <PhoneInput
                     id="phone"
-                    international
                     defaultCountry="NZ"
                     value={formData.phone}
-                    onChange={(value) => setFormData({ ...formData, phone: value || "" })}
+                    onChange={(value) => setFormData({ ...formData, phone: value })}
                     onBlur={() => validateField('phone', formData.phone)}
-                    className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 md:text-sm ${errors.phone ? 'border-destructive' : 'border-input'}`}
+                    hasError={!!errors.phone}
                   />
                   {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                 </div>
