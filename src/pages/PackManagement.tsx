@@ -161,7 +161,8 @@ export default function PackManagement() {
   if (boards.length === 0 && !isLoadingPacks) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto py-8 px-4">
+        <Navigation />
+        <div className="container mx-auto py-8 px-4 pt-24">
           <h1 className="text-4xl font-bold mb-2">Board Pack Management</h1>
           <p className="text-muted-foreground mb-8">
             Create templates and manage board packs for meetings
@@ -186,7 +187,8 @@ export default function PackManagement() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 px-4">
+      <Navigation />
+      <div className="container mx-auto py-8 px-4 pt-24">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Board Pack Management</h1>
           <p className="text-muted-foreground">
