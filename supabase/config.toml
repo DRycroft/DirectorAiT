@@ -19,7 +19,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.governance-ai]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-invite-email]
 verify_jwt = true
