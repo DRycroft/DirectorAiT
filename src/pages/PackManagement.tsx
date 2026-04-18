@@ -23,6 +23,7 @@ import {
   STANDARD_SECTIONS,
 } from '@/lib/standardPackTemplate';
 import { toast } from "sonner";
+import Navigation from "@/components/Navigation";
 
 export default function PackManagement() {
   const navigate = useNavigate();
