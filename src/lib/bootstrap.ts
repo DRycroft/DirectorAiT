@@ -19,180 +19,54 @@ import { supabase } from "@/integrations/supabase/client";
 export async function runBootstrapFromLocalStorage(): Promise<void> {
   console.log('[Bootstrap] Starting bootstrap check...');
 
-  // Guard: skip bootstrap if the user is on an invite acceptance path.
-  // Invited users should NOT get a spurious org/board created before
-  // the invite acceptance flow links them to the correct org.
+  // Guard: skip bootstrap on invite acceptance path.
   if (window.location.pathname.startsWith("/invite/")) {
-    console.log('[Bootstrap] Skipping — user is on invite acceptance path');
+    console.log('[Bootstrap] Skipping — invite acceptance path');
     return;
   }
-  
+
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
-  if (userError) {
-    console.error('[Bootstrap] Failed to get user:', userError);
-    throw userError;
-  }
-  
+  if (userError) throw userError;
   if (!user) {
-    console.log('[Bootstrap] No authenticated user, skipping bootstrap');
+    console.log('[Bootstrap] No authenticated user');
     return;
   }
 
-  console.log('[Bootstrap] Checking user:', user.id);
-
-  // 1) Check if profile already has org
-  const { data: existingProfile, error: profileError } = await supabase
+  // Short-circuit if profile already linked
+  const { data: existingProfile } = await supabase
     .from("profiles")
     .select("org_id")
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profileError) {
-    console.error('[Bootstrap] Failed to check profile:', profileError);
-    throw profileError;
-  }
-
   if (existingProfile?.org_id) {
-    console.log('[Bootstrap] User already has org_id, skipping bootstrap');
+    console.log('[Bootstrap] Already linked, skipping');
     cleanupPendingData();
     return;
   }
 
-  // 2) Check if user already has board membership
-  const { data: existingMemberships, error: membershipError } = await supabase
-    .from("board_memberships")
-    .select("id")
-    .eq("user_id", user.id)
-    .limit(1);
-
-  if (membershipError) {
-    console.error('[Bootstrap] Failed to check memberships:', membershipError);
-    throw membershipError;
-  }
-
-  if (existingMemberships && existingMemberships.length > 0) {
-    console.log('[Bootstrap] User already has board membership, skipping bootstrap');
-    cleanupPendingData();
-    return;
-  }
-
-  console.log('[Bootstrap] User needs bootstrap, proceeding...');
-
-  // 3) Load signup cache - V2 only stores company name (no PII)
-  // User data comes from auth metadata
-  let orgName = "My Organization";
-  
-  // Get user info from Supabase auth (secure source)
-  const contactName = user.user_metadata?.name || user.email?.split("@")[0] || "User";
-  const contactEmail = user.email || "";
-  const contactPhone: string | null = user.user_metadata?.phone || null;
-
-  // Try to get company name from V2 storage (minimal data approach)
+  // Read company name from V2 storage (non-PII)
+  let companyName: string | null = null;
   const raw = sessionStorage.getItem("pendingSignUpV2");
   if (raw) {
     try {
       const pending = JSON.parse(raw);
       if (!pending.expiresAt || pending.expiresAt >= Date.now()) {
-        orgName = pending.companyName || orgName;
-        console.log('[Bootstrap] Using cached company name:', orgName);
-      } else {
-        console.log('[Bootstrap] Cached signup data expired, using defaults');
+        companyName = pending.companyName ?? null;
       }
     } catch (e) {
-      console.warn('[Bootstrap] Failed to parse cached signup data:', e);
+      console.warn('[Bootstrap] Failed to parse pending signup', e);
     }
   }
 
-  // 4) Create organization
-  console.log('[Bootstrap] Creating organization:', orgName);
-  const { data: org, error: orgError } = await supabase
-    .from("organizations")
-    .insert({
-      name: orgName,
-      primary_contact_name: contactName,
-      primary_contact_email: contactEmail,
-      primary_contact_phone: contactPhone,
-    })
-    .select()
-    .single();
-
-  if (orgError) {
-    console.error('[Bootstrap] Failed to create organization:', orgError);
-    throw orgError;
-  }
-
-  console.log('[Bootstrap] Organization created:', org.id);
-
-  // 5) Create default board
-  console.log('[Bootstrap] Creating default board...');
-  const { data: board, error: boardError } = await supabase
-    .from("boards")
-    .insert({
-      org_id: org.id,
-      title: "Main Board",
-      board_type: "board",
-      status: "active",
-    })
-    .select()
-    .single();
-
-  if (boardError) {
-    console.error('[Bootstrap] Failed to create board:', boardError);
-    throw boardError;
-  }
-
-  console.log('[Bootstrap] Board created:', board.id);
-
-  // 6) Update profile with org BEFORE creating board membership.
-  //    The bootstrap_first_board_owner RPC requires profile.org_id to match
-  //    the target board's org_id, so this must happen first.
-  console.log('[Bootstrap] Updating profile with org_id...');
-  const { error: profileUpdateError } = await supabase
-    .from("profiles")
-    .update({
-      org_id: org.id,
-      name: contactName,
-      phone: contactPhone,
-    })
-    .eq("id", user.id);
-
-  if (profileUpdateError) {
-    console.error('[Bootstrap] Failed to update profile:', profileUpdateError);
-    throw profileUpdateError;
-  }
-
-  console.log('[Bootstrap] Profile updated');
-
-  // 7) Create board membership (owner) via SECURITY DEFINER RPC.
-  //    Direct self-insert of role='owner' is no longer permitted by RLS;
-  //    this RPC re-validates bootstrap invariants server-side.
-  console.log('[Bootstrap] Creating first-board owner membership via bootstrap_first_board_owner...');
-  const { error: membershipCreateError } = await supabase.rpc('bootstrap_first_board_owner', {
-    _board_id: board.id,
+  // Atomic server-side bootstrap (idempotent)
+  console.log('[Bootstrap] Calling bootstrap_user_workspace RPC...');
+  const { error } = await supabase.rpc('bootstrap_user_workspace', {
+    _company_name: companyName,
   });
-
-  // Treat "already has board memberships / board already has memberships" as idempotent success.
-  if (
-    membershipCreateError &&
-    !/already has (board memberships|memberships)/i.test(membershipCreateError.message)
-  ) {
-    console.error('[Bootstrap] Failed to create board membership:', membershipCreateError);
-    throw membershipCreateError;
-  }
-
-  console.log('[Bootstrap] Board membership created');
-
-  // 8) Assign org_admin role via SECURITY DEFINER RPC (server-validated, idempotent)
-  console.log('[Bootstrap] Assigning org_admin role via bootstrap_first_org_admin...');
-  const { error: roleError } = await supabase.rpc('bootstrap_first_org_admin', {
-    _org_id: org.id,
-  });
-
-  // Treat "already has roles / already has assignments" as idempotent success.
-  if (roleError && !/already has (roles|role assignments)/i.test(roleError.message)) {
-    console.error('[Bootstrap] Failed to assign role:', roleError);
-    throw roleError;
+  if (error) {
+    console.error('[Bootstrap] RPC failed:', error);
+    throw error;
   }
 
   console.log('[Bootstrap] Bootstrap completed successfully!');
