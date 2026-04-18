@@ -2770,6 +2770,10 @@ export type Database = {
         Args: { _org_id: string }
         Returns: undefined
       }
+      bootstrap_user_workspace: {
+        Args: { _company_name?: string }
+        Returns: string
+      }
       calculate_next_due_date: {
         Args: {
           freq: Database["public"]["Enums"]["compliance_frequency"]
