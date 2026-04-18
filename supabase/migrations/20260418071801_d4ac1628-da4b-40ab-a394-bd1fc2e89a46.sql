@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Users can self-insert non-elevated memberships" ON public.board_memberships;
