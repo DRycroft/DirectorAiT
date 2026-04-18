@@ -139,6 +139,17 @@ All colors MUST be HSL.
   }
 }
 
+/* ── react-phone-number-input: force readable native country dropdown ── */
+/* The library uses a native <select> for the country picker. Native <option>
+   elements are painted by the OS with a white background on most platforms,
+   but they inherit our dark-theme white foreground — making text invisible.
+   Force dark text on white so all options are readable. */
+.PhoneInputCountrySelect,
+.PhoneInputCountrySelect option {
+  color: #111 !important;
+  background-color: #fff !important;
+}
+
 /* ── Print / PDF export styles ── */
 @media print {
   /* Hide all UI chrome */
