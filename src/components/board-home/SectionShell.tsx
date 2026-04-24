@@ -25,7 +25,12 @@ export const SectionShell = ({
   muted = false,
   children,
 }: SectionShellProps) => {
-  const showBadge = badgeLabel ?? (typeof badgeCount === "number" && badgeCount > 0 ? String(badgeCount) : null);
+  const hasLabel = typeof badgeLabel === "string" && badgeLabel.length > 0;
+  const hasCount = typeof badgeCount === "number";
+  const badgeContent = hasLabel ? badgeLabel : hasCount ? String(badgeCount) : null;
+  // Zero counts get muted styling for stable layout; explicit labels keep their variant.
+  const effectiveVariant =
+    !hasLabel && hasCount && badgeCount === 0 ? "secondary" : badgeVariant;
 
   return (
     <AccordionItem value={value} className="border-b border-border">
@@ -35,9 +40,15 @@ export const SectionShell = ({
           <span className={cn("font-medium text-sm sm:text-base text-left", muted && "text-muted-foreground")}>
             {title}
           </span>
-          {showBadge && (
-            <Badge variant={badgeVariant} className="ml-auto mr-2 text-xs">
-              {showBadge}
+          {badgeContent !== null && (
+            <Badge
+              variant={effectiveVariant}
+              className={cn(
+                "ml-auto mr-2 text-xs min-w-[1.5rem] justify-center tabular-nums",
+                effectiveVariant === "secondary" && "text-muted-foreground",
+              )}
+            >
+              {badgeContent}
             </Badge>
           )}
         </div>
