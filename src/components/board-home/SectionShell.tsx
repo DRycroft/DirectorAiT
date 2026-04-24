@@ -44,8 +44,8 @@ export const SectionShell = ({
             <Badge
               variant={effectiveVariant}
               className={cn(
-                "ml-auto mr-2 text-xs min-w-[1.5rem] justify-center tabular-nums",
-                effectiveVariant === "secondary" && "text-muted-foreground",
+                "ml-auto mr-4 text-xs w-8 h-6 px-0 justify-center items-center tabular-nums font-semibold",
+                effectiveVariant === "secondary" && "bg-muted text-foreground/70 hover:bg-muted",
               )}
             >
               {badgeContent}
