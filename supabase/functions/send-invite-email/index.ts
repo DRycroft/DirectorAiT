@@ -54,12 +54,12 @@ serve(async (req: Request) => {
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: claimsData, error: claimsErr } =
-      await userClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims?.sub) {
+    const { data: userData, error: userErr } =
+      await userClient.auth.getUser(token);
+    if (userErr || !userData?.user?.id) {
       return jsonResponse({ error: "Unauthorized" }, 401);
     }
-    const userId = claimsData.claims.sub as string;
+    const userId = userData.user.id;
 
     // 2. Validate input
     const raw = await req.json().catch(() => null);
