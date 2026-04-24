@@ -2117,16 +2117,66 @@ export type Database = {
           },
         ]
       }
-      organizations: {
+      organization_sensitive: {
         Row: {
           admin_email: string | null
           admin_name: string | null
           admin_phone: string | null
           admin_role: string | null
-          agm_date: string | null
-          business_category: string[] | null
           business_number: string | null
           company_phone: string | null
+          created_at: string
+          org_id: string
+          primary_contact_email: string | null
+          primary_contact_name: string | null
+          primary_contact_phone: string | null
+          primary_contact_role: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_email?: string | null
+          admin_name?: string | null
+          admin_phone?: string | null
+          admin_role?: string | null
+          business_number?: string | null
+          company_phone?: string | null
+          created_at?: string
+          org_id: string
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          primary_contact_role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_email?: string | null
+          admin_name?: string | null
+          admin_phone?: string | null
+          admin_role?: string | null
+          business_number?: string | null
+          company_phone?: string | null
+          created_at?: string
+          org_id?: string
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          primary_contact_role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_sensitive_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          agm_date: string | null
+          business_category: string[] | null
           compliance_scan_completed: boolean | null
           compliance_scan_date: string | null
           created_at: string
@@ -2137,22 +2187,12 @@ export type Database = {
           industry_sector: string[] | null
           logo_url: string | null
           name: string
-          primary_contact_email: string | null
-          primary_contact_name: string | null
-          primary_contact_phone: string | null
-          primary_contact_role: string | null
           reporting_frequency: string | null
           updated_at: string
         }
         Insert: {
-          admin_email?: string | null
-          admin_name?: string | null
-          admin_phone?: string | null
-          admin_role?: string | null
           agm_date?: string | null
           business_category?: string[] | null
-          business_number?: string | null
-          company_phone?: string | null
           compliance_scan_completed?: boolean | null
           compliance_scan_date?: string | null
           created_at?: string
@@ -2163,22 +2203,12 @@ export type Database = {
           industry_sector?: string[] | null
           logo_url?: string | null
           name: string
-          primary_contact_email?: string | null
-          primary_contact_name?: string | null
-          primary_contact_phone?: string | null
-          primary_contact_role?: string | null
           reporting_frequency?: string | null
           updated_at?: string
         }
         Update: {
-          admin_email?: string | null
-          admin_name?: string | null
-          admin_phone?: string | null
-          admin_role?: string | null
           agm_date?: string | null
           business_category?: string[] | null
-          business_number?: string | null
-          company_phone?: string | null
           compliance_scan_completed?: boolean | null
           compliance_scan_date?: string | null
           created_at?: string
@@ -2189,10 +2219,6 @@ export type Database = {
           industry_sector?: string[] | null
           logo_url?: string | null
           name?: string
-          primary_contact_email?: string | null
-          primary_contact_name?: string | null
-          primary_contact_phone?: string | null
-          primary_contact_role?: string | null
           reporting_frequency?: string | null
           updated_at?: string
         }
