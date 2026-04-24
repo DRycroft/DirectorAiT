@@ -1582,34 +1582,35 @@ const Settings = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Open tailored interfaces for each board role
-                  </p>
-                  <div className="space-y-2">
-                    <Button
-                      className="w-full justify-between"
-                      variant="outline"
-                      onClick={() => window.location.href = '/interfaces/board-member'}
+                  <div>
+                    <Label htmlFor="interface-type">Select Interface Type</Label>
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        if (value === "board-member") {
+                          window.location.href = "/interfaces/board-member";
+                        }
+                      }}
                     >
-                      Board Member Interface
-                      <span className="text-xs text-muted-foreground">Open →</span>
-                    </Button>
-                    {[
-                      "Chair Interface",
-                      "Contributor Interface",
-                      "Secretary Interface",
-                      "Admin Interface",
-                    ].map((label) => (
-                      <Button
-                        key={label}
-                        className="w-full justify-between"
-                        variant="outline"
-                        disabled
-                      >
-                        {label}
-                        <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
-                      </Button>
-                    ))}
+                      <SelectTrigger id="interface-type" className="w-full mt-2 bg-background z-50">
+                        <SelectValue placeholder="Choose an interface..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="board-member">Board Member Interface</SelectItem>
+                        <SelectItem value="chair" disabled>
+                          Chair Interface (Coming Soon)
+                        </SelectItem>
+                        <SelectItem value="contributor" disabled>
+                          Contributor Interface (Coming Soon)
+                        </SelectItem>
+                        <SelectItem value="secretary" disabled>
+                          Secretary Interface (Coming Soon)
+                        </SelectItem>
+                        <SelectItem value="admin" disabled>
+                          Admin Interface (Coming Soon)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </CardContent>
               </Card>
