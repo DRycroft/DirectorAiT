@@ -22,6 +22,7 @@ import { UpcomingMeetingsSection } from "@/components/board-home/UpcomingMeeting
 import { MyActionsSection } from "@/components/board-home/MyActionsSection";
 import { SettingsSection } from "@/components/board-home/SettingsSection";
 import { PlaceholderSection } from "@/components/board-home/PlaceholderSection";
+import { SummaryStrip } from "@/components/board-home/SummaryStrip";
 
 const BoardMemberInterface = () => {
   const { user } = useAuth();
@@ -125,23 +126,26 @@ const BoardMemberInterface = () => {
             <Skeleton className="h-14 w-full" />
           </div>
         ) : (
-          <Accordion
-            type="single"
-            collapsible
-            defaultValue={defaultValue}
-            className="w-full rounded-lg border border-border bg-card px-3 sm:px-4"
-          >
-            <AttentionSection meetings={meetings} actions={actions} />
-            <ReleasedReportsSection reports={reports} />
-            <BoardPacksSection latestPack={latestPack} />
-            <UpcomingMeetingsSection meetings={meetings} />
-            <MyActionsSection actions={actions} />
-            <SettingsSection />
-            <PlaceholderSection value="decisions" icon={Vote} title="Decisions Awaiting Input" />
-            <PlaceholderSection value="questions" icon={MessageSquare} title="Questions & Discussion" />
-            <PlaceholderSection value="minutes" icon={ScrollText} title="Previous Minutes" />
-            <PlaceholderSection value="library" icon={Library} title="Documents Library" />
-          </Accordion>
+          <>
+            <SummaryStrip meetings={meetings} reports={reports} actions={actions} />
+            <Accordion
+              type="single"
+              collapsible
+              defaultValue={defaultValue}
+              className="w-full rounded-lg border border-border bg-card px-3 sm:px-4"
+            >
+              <AttentionSection meetings={meetings} actions={actions} />
+              <ReleasedReportsSection reports={reports} />
+              <BoardPacksSection latestPack={latestPack} />
+              <UpcomingMeetingsSection meetings={meetings} />
+              <MyActionsSection actions={actions} />
+              <SettingsSection />
+              <PlaceholderSection value="decisions" icon={Vote} title="Decisions Awaiting Input" />
+              <PlaceholderSection value="questions" icon={MessageSquare} title="Questions & Discussion" />
+              <PlaceholderSection value="minutes" icon={ScrollText} title="Previous Minutes" />
+              <PlaceholderSection value="library" icon={Library} title="Documents Library" />
+            </Accordion>
+          </>
         )}
       </main>
       <Footer />

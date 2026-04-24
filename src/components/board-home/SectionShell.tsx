@@ -10,7 +10,7 @@ interface SectionShellProps {
   title: string;
   badgeCount?: number;
   badgeLabel?: string;
-  badgeVariant?: "default" | "secondary" | "destructive" | "outline";
+  badgeVariant?: "default" | "secondary" | "destructive" | "outline" | "warning" | "success";
   muted?: boolean;
   children: ReactNode;
 }
