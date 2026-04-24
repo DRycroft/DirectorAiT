@@ -16,7 +16,7 @@ import AdminManagement from "@/components/settings/AdminManagement";
 import COIRegister from "@/components/settings/COIRegister";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCircle, Plus, X, Shield, LayoutDashboard } from "lucide-react";
+import { Save, Users, Briefcase, UserCog, Building2, Clock, AlertCircle, CheckCircle, Plus, X, Shield, LayoutDashboard, UserSquare2 } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import BoardManagement from "@/components/settings/BoardManagement";
 import { BOARD_POSITIONS, EXECUTIVE_POSITIONS, KEY_STAFF_POSITIONS } from "@/config/positions";
@@ -1567,6 +1567,50 @@ const Settings = () => {
                     <Plus className="h-4 w-4 mr-2" />
                     Build Dashboard
                   </Button>
+                </CardContent>
+              </Card>
+
+              {/* User Interfaces Menu */}
+              <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2">
+                    <UserSquare2 className="h-5 w-5" />
+                    User Interfaces
+                  </CardTitle>
+                  <CardDescription>
+                    Manage role-based user experiences
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Open tailored interfaces for each board role
+                  </p>
+                  <div className="space-y-2">
+                    <Button
+                      className="w-full justify-between"
+                      variant="outline"
+                      onClick={() => window.location.href = '/interfaces/board-member'}
+                    >
+                      Board Member Interface
+                      <span className="text-xs text-muted-foreground">Open →</span>
+                    </Button>
+                    {[
+                      "Chair Interface",
+                      "Contributor Interface",
+                      "Secretary Interface",
+                      "Admin Interface",
+                    ].map((label) => (
+                      <Button
+                        key={label}
+                        className="w-full justify-between"
+                        variant="outline"
+                        disabled
+                      >
+                        {label}
+                        <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+                      </Button>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </div>
