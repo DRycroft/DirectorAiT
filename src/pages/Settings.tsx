@@ -401,21 +401,28 @@ const Settings = () => {
           .eq("id", profile.org_id)
           .maybeSingle();
 
+        // Sensitive fields live in a separate admin-only table; non-admins get null
+        const { data: sensitive } = await supabase
+          .from("organization_sensitive")
+          .select("*")
+          .eq("org_id", profile.org_id)
+          .maybeSingle();
+
         if (org) {
           setCompanyData({
             name: org.name || "",
             domain: org.domain || "",
             logo_url: org.logo_url || "",
-            business_number: org.business_number || "",
-            company_phone: org.company_phone || "",
-            primary_contact_name: org.primary_contact_name || "",
-            primary_contact_role: org.primary_contact_role || "",
-            primary_contact_email: org.primary_contact_email || "",
-            primary_contact_phone: org.primary_contact_phone || "",
-            admin_name: org.admin_name || "",
-            admin_role: org.admin_role || "",
-            admin_email: org.admin_email || "",
-            admin_phone: org.admin_phone || "",
+            business_number: sensitive?.business_number || "",
+            company_phone: sensitive?.company_phone || "",
+            primary_contact_name: sensitive?.primary_contact_name || "",
+            primary_contact_role: sensitive?.primary_contact_role || "",
+            primary_contact_email: sensitive?.primary_contact_email || "",
+            primary_contact_phone: sensitive?.primary_contact_phone || "",
+            admin_name: sensitive?.admin_name || "",
+            admin_role: sensitive?.admin_role || "",
+            admin_email: sensitive?.admin_email || "",
+            admin_phone: sensitive?.admin_phone || "",
             reporting_frequency: org.reporting_frequency || "quarterly",
             gst_period: org.gst_period || "quarterly",
             financial_year_end: org.financial_year_end || "",
