@@ -15,6 +15,7 @@ export const UpcomingMeetingsSection = ({ meetings }: Props) => {
       icon={CalendarDays}
       title="Upcoming Meetings"
       badgeCount={meetings.length}
+      badgeVariant={meetings.length > 0 ? "default" : "secondary"}
     >
       {meetings.length === 0 ? (
         <p className="text-sm text-muted-foreground py-2">No upcoming meetings.</p>

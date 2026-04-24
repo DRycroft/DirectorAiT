@@ -15,6 +15,7 @@ export const ReleasedReportsSection = ({ reports }: Props) => {
       icon={FileText}
       title="Released Reports"
       badgeCount={reports.length}
+      badgeVariant={reports.length > 0 ? "default" : "secondary"}
     >
       {reports.length === 0 ? (
         <p className="text-sm text-muted-foreground py-2">No released reports.</p>

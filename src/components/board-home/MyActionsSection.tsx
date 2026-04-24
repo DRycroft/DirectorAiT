@@ -19,7 +19,7 @@ export const MyActionsSection = ({ actions }: Props) => {
       icon={ClipboardList}
       title="My Actions"
       badgeCount={actions.length}
-      badgeVariant={hasOverdue ? "destructive" : "secondary"}
+      badgeVariant={hasOverdue ? "destructive" : actions.length > 0 ? "warning" : "secondary"}
     >
       {actions.length === 0 ? (
         <p className="text-sm text-muted-foreground py-2">No open actions assigned.</p>

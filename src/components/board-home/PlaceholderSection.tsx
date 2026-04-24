@@ -9,8 +9,8 @@ interface Props {
 
 export const PlaceholderSection = ({ value, icon, title }: Props) => {
   return (
-    <SectionShell value={value} icon={icon} title={title} badgeLabel="Soon" badgeVariant="outline" muted>
-      <p className="text-sm text-muted-foreground py-2">Coming soon.</p>
+    <SectionShell value={value} icon={icon} title={title} muted>
+      <p className="text-xs text-muted-foreground/70 py-1 italic">Coming soon</p>
     </SectionShell>
   );
 };
