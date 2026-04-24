@@ -508,24 +508,55 @@ const Settings = () => {
         return;
       }
 
-      // Phone numbers are already E.164 from PhoneInput; persist as-is (or null when empty)
-      const formattedData = {
-        ...companyData,
+      // Split persistence: non-sensitive on organizations, sensitive on organization_sensitive
+      const orgUpdate = {
+        name: companyData.name,
+        domain: companyData.domain,
+        logo_url: companyData.logo_url,
+        reporting_frequency: companyData.reporting_frequency,
+        gst_period: companyData.gst_period,
+        financial_year_end: companyData.financial_year_end || null,
+        agm_date: companyData.agm_date || null,
+        industry_sector: companyData.industry_sector,
+        business_category: companyData.business_category,
+        compliance_scan_completed: companyData.compliance_scan_completed,
+      };
+
+      const sensitiveUpsert = {
+        org_id: orgId,
+        business_number: companyData.business_number?.trim() || null,
         company_phone: companyData.company_phone?.trim() || null,
+        primary_contact_name: companyData.primary_contact_name?.trim() || null,
+        primary_contact_role: companyData.primary_contact_role?.trim() || null,
+        primary_contact_email: companyData.primary_contact_email?.trim() || null,
         primary_contact_phone: companyData.primary_contact_phone?.trim() || null,
+        admin_name: companyData.admin_name?.trim() || null,
+        admin_role: companyData.admin_role?.trim() || null,
+        admin_email: companyData.admin_email?.trim() || null,
         admin_phone: companyData.admin_phone?.trim() || null,
       };
 
-      // Now update the organization with the provided data
       const { error } = await supabase
         .from("organizations")
-        .update(formattedData)
+        .update(orgUpdate)
         .eq("id", orgId);
 
       if (error) {
         console.error("Update error:", error);
         throw error;
       }
+
+      const { error: sensitiveError } = await supabase
+        .from("organization_sensitive")
+        .upsert(sensitiveUpsert, { onConflict: "org_id" });
+
+      if (sensitiveError) {
+        console.error("Sensitive update error:", sensitiveError);
+        throw sensitiveError;
+      }
+
+      // Maintain prior shape for downstream comparisons below
+      const formattedData = { ...companyData };
       
       // Check if industry/business category changed - trigger compliance scan
       const previousIndustrySector = companyData.industry_sector;
