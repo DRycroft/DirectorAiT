@@ -34,7 +34,7 @@ export const SectionShell = ({
 
   return (
     <AccordionItem value={value} className="border-b border-border">
-      <AccordionTrigger className="py-4 px-1 hover:no-underline">
+      <AccordionTrigger className="py-4 px-1 hover:no-underline [&>svg]:ml-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Icon className={cn("h-5 w-5 shrink-0", muted ? "text-muted-foreground" : "text-foreground")} />
           <span className={cn("font-medium text-sm sm:text-base text-left", muted && "text-muted-foreground")}>
@@ -44,8 +44,10 @@ export const SectionShell = ({
             <Badge
               variant={effectiveVariant}
               className={cn(
-                "ml-auto mr-4 text-xs w-8 h-6 px-0 justify-center items-center tabular-nums font-semibold",
-                effectiveVariant === "secondary" && "bg-muted text-foreground/70 hover:bg-muted",
+                "ml-auto inline-flex shrink-0 rounded-full border-0 text-xs font-semibold tabular-nums",
+                "min-w-[2rem] h-6 px-2 justify-center items-center leading-none",
+                effectiveVariant === "secondary" &&
+                  "bg-secondary text-secondary-foreground hover:bg-secondary",
               )}
             >
               {badgeContent}
