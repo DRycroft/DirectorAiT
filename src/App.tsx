@@ -51,6 +51,7 @@ const PackView = lazy(() => import("./pages/PackView"));
 const Meetings = lazy(() => import("./pages/Meetings"));
 const MeetingDetail = lazy(() => import("./pages/MeetingDetail"));
 const Actions = lazy(() => import("./pages/Actions"));
+const BoardMemberInterface = lazy(() => import("./pages/BoardMemberInterface"));
 // Loading fallback component
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -144,6 +145,7 @@ const App = () => {
                   <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
                   <Route path="/meetings/:meetingId" element={<ProtectedRoute><MeetingDetail /></ProtectedRoute>} />
                   <Route path="/actions" element={<ProtectedRoute><Actions /></ProtectedRoute>} />
+                  <Route path="/interfaces/board-member" element={<ProtectedRoute><BoardMemberInterface /></ProtectedRoute>} />
 
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
